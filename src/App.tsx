@@ -13,17 +13,12 @@ import {
   ChevronRight, 
   Menu, 
   X,
-  Filter,
   Info,
   LogOut,
   LogIn,
   AlertCircle,
-  Plus,
-  Trash2,
   Edit,
-  Save,
   ArrowLeft,
-  Upload,
   ExternalLink
 } from 'lucide-react';
 
@@ -33,23 +28,13 @@ import { contentfulClient } from './contentful';
 import { 
   auth, 
   db, 
-  storage,
   googleProvider, 
   signInWithPopup, 
   signOut, 
   onAuthStateChanged, 
   doc, 
   getDoc, 
-  setDoc, 
-  collection, 
-  query, 
-  where, 
-  onSnapshot,
-  runTransaction,
-  deleteDoc,
-  ref,
-  uploadBytes,
-  getDownloadURL
+  setDoc
 } from './firebase';
 
 import type { User as FirebaseUser } from "firebase/auth";
@@ -134,7 +119,7 @@ const generateMockClasses = (count: number) => {
   }));
 };
 
-const MOCK_CLASSES = generateMockClasses(200);
+//const MOCK_CLASSES = generateMockClasses(200);
 
 const AboutPage = () => (
   <main className="container mx-auto px-4 py-32 flex-grow max-w-4xl">
@@ -346,7 +331,7 @@ function LeapApp() {
       }
       
       try {
-        const response = await contentfulClient.getEntries({ content_type: 'class' });
+        const response = await contentfulClient.getEntries({ content_type: 'leapClass2026' });
         const classList = response.items.map((item: any) => ({
           id: item.sys.id,
           title: item.fields.title || '',
