@@ -9,8 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Calendar, MapPin, Users, ChevronRight,
   Menu, X, Info, LogOut, LogIn, AlertCircle,
-  Edit, ArrowLeft, ExternalLink, Sparkles, BookOpen,
-  Music, Palette, Code2, Heart, Leaf, Star, Mail, Phone, Clock
+  Edit, ArrowLeft, ExternalLink, Sparkles,
+  Heart, Leaf, Mail, Clock
 } from 'lucide-react';
 
 import { contentfulClient } from './contentful';
@@ -20,9 +20,6 @@ import {
 } from './firebase';
 import type { User as FirebaseUser } from "firebase/auth";
 import leapLogo from './assets/leap.png';
-import imgBayong  from './assets/3.png';
-import imgSalakot from './assets/4.png';
-import imgPalay1  from './assets/8.png';
 
 interface ErrorBoundaryProps { children: ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; error: any; }
