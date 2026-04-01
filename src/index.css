@@ -65,8 +65,6 @@ body::after {
    NAVIGATION — TRUE 3-COLUMN GRID
    [Logo left] [Links center] [Icons right]
 ════════════════════════════════════════════ */
-
-/* The nav inner wrapper uses CSS grid for perfect symmetry */
 .leap-nav-inner {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -97,7 +95,6 @@ body::after {
   gap: 0.5rem;
 }
 
-/* Nav icon buttons */
 .nav-icon-btn {
   width: 34px;
   height: 34px;
@@ -120,7 +117,6 @@ body::after {
   border-color: rgba(222,154,73,0.6);
 }
 
-/* Keep .nav-actions for any legacy usage */
 .nav-actions {
   display: flex;
   align-items: center;
@@ -213,6 +209,22 @@ body::after {
   flex-direction: column;
   justify-content: flex-start;
   position: relative;
+}
+
+/* ════════════════════════════════════════════
+   SCROLL PARALLAX — NAYON MOUNTAIN ZOOM
+   JS writes --nayon-scale and --nayon-ty
+   onto .hero-bg as you scroll down.
+   transform-origin: bottom center keeps
+   the ground anchored while peaks rise.
+════════════════════════════════════════════ */
+.hero-bg svg[viewBox="0 0 1440 480"] {
+  transform-origin: bottom center;
+  transform:
+    scale(var(--nayon-scale, 1))
+    translateY(var(--nayon-ty, 0px));
+  will-change: transform;
+  transition: transform 0.05s linear;
 }
 
 .leap-logo-hero {
@@ -345,15 +357,12 @@ body::after {
 
 /* ════════════════════════════════════════════
    MAIN EVENTS SECTION
-   Heading left + carousel arrows right,
-   3-column card grid below
 ════════════════════════════════════════════ */
 .main-events-section {
   padding: 3.5rem 0 3rem;
   border-bottom: 1px solid rgba(224,183,136,0.2);
 }
 
-/* Constrained inner wrapper — mirrors subthemes-inner */
 .main-events-inner {
   max-width: 1280px;
   margin: 0 auto;
@@ -407,7 +416,6 @@ body::after {
 @media (max-width: 900px) { .main-events-grid { grid-template-columns: repeat(2,1fr); } }
 @media (max-width: 600px) { .main-events-grid { grid-template-columns: 1fr; } }
 
-/* Main event card */
 .main-event-card {
   background: rgba(254,250,232,0.88);
   border: 1px solid rgba(224,183,136,0.24);
@@ -475,7 +483,6 @@ body::after {
   background: rgba(249,236,182,0.6);
 }
 
-/* Centered inner wrapper */
 .subthemes-inner {
   max-width: 1280px;
   margin: 0 auto;
@@ -506,7 +513,6 @@ body::after {
   align-items: stretch;
 }
 
-/* All pills exactly equal size for perfect symmetry */
 .subtheme-pill {
   display: flex;
   flex-direction: column;
@@ -557,7 +563,6 @@ body::after {
 
 /* ════════════════════════════════════════════
    LEAP DAYS + CLASS LIST LAYOUT
-   Left sidebar | Right class grid
 ════════════════════════════════════════════ */
 .leap-days-layout {
   display: grid;
@@ -1253,7 +1258,7 @@ body::after {
 .palm-d3   { animation-duration:3.4s; animation-delay:0.2s; }
 @keyframes palmSway { from{ transform:rotate(-4deg); } to{ transform:rotate(4deg); } }
 
-.bird    { animation: birdFly 9s ease-in-out infinite; }
+.bird    { animation: birdFly 10s ease-in-out infinite; }
 .bird-d0 { animation-delay:0s; }
 .bird-d1 { animation-delay:0.3s; }
 .bird-d2 { animation-delay:0.15s; }
@@ -1276,12 +1281,17 @@ body::after {
 @keyframes starTwinkle { from{ opacity:0.1; } to{ opacity:0.42; } }
 
 .palay-border    { animation: palayBorderSway 2.5s ease-in-out infinite alternate; transform-origin: center 44px; }
-.palay-border-d0 { animation-duration:2.2s; animation-delay:0s; }
-.palay-border-d1 { animation-duration:2.8s; animation-delay:0.3s; }
-.palay-border-d2 { animation-duration:2.5s; animation-delay:0.6s; }
-.palay-border-d3 { animation-duration:3s;   animation-delay:0.2s; }
-.palay-border-d4 { animation-duration:2.3s; animation-delay:0.5s; }
-@keyframes palayBorderSway { from{ transform:rotate(-3deg); } to{ transform:rotate(3deg); } }
+.palay-border-d0 { animation-duration:20.2s; animation-delay:0s; }
+.palay-border-d1 { animation-duration:20.8s; animation-delay:0.3s; }
+.palay-border-d2 { animation-duration:20.5s; animation-delay:0.6s; }
+.palay-border-d3 { animation-duration:30s;   animation-delay:0.2s; }
+.palay-border { margin-left: 20px; }
+.palay-border, .palay-stalk {
+  position: absolute; /* Assuming you are absolute positioning it */
+  z-index: 100; /* Forces it to sit on top of background elements */
+}
+.palay-border-d4 { animation-duration:20.3s; animation-delay:0.5s; }
+@keyframes palayBorderSway { from{ transform:rotate(-30deg); } to{ transform:rotate(-10deg); } }
 
 /* ════════════════════════════════════════════
    RESPONSIVE

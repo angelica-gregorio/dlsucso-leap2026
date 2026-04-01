@@ -618,7 +618,7 @@ const SUBTHEMES = [
 ];
 
 /* ══════════════════════════════════════════════════════
-   MAIN EVENTS SECTION — NEW
+   MAIN EVENTS SECTION
 ══════════════════════════════════════════════════════ */
 const MainEventsSection = () => {
   const events = [
@@ -690,7 +690,7 @@ const MainEventsSection = () => {
 };
 
 /* ══════════════════════════════════════════════════════
-   SUBTHEMES STRIP — FIXED: centered, symmetric
+   SUBTHEMES STRIP
 ══════════════════════════════════════════════════════ */
 const SubthemesStrip = ({ activeTheme, onSelect }: { activeTheme: string|null; onSelect: (t: string|null) => void }) => (
   <div className="subthemes-section">
@@ -959,7 +959,21 @@ function LeapApp() {
   const [currentView, setCurrentView] = useState('home');
   const [activeSubtheme, setActiveSubtheme] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAdminView, setIsAdminView] = useState(false);
   const ITEMS_PER_PAGE = 6;
+
+  /* ── SCROLL PARALLAX — mountain zooms as you scroll ── */
+  useEffect(() => {
+    const hero = document.querySelector('.hero-bg') as HTMLElement | null;
+    if (!hero) return;
+    const onScroll = () => {
+      const progress = Math.min(window.scrollY / hero.offsetHeight, 1);
+      hero.style.setProperty('--nayon-scale', String(1 + progress * 0.28));
+      hero.style.setProperty('--nayon-ty',    `${progress * 24}px`);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const filteredAndSortedClasses = React.useMemo(() => {
     let result = classes.filter(c =>
@@ -1051,8 +1065,6 @@ function LeapApp() {
     try { await signOut(auth); setIsMenuOpen(false); }
     catch (error) { console.error("Sign Out Error:", error); }
   };
-
-  const [isAdminView, setIsAdminView] = useState(false);
 
   const renderClassCard = (item: any, index: number) => (
     <motion.div
@@ -1156,16 +1168,12 @@ function LeapApp() {
   return (
     <div className="min-h-screen flex flex-col">
 
-      {/* ══ NAV — Fixed 3-column grid: Logo | Center Links | Right Icons ══ */}
+      {/* NAV */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${navClass}`}>
         <div className="leap-nav-inner">
-
-          {/* Left: Logo */}
           <div className="leap-nav-logo cursor-pointer" onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }}>
             <img src={leapLogo} alt="LEAP 2026" className="nav-logo-img" style={{ mixBlendMode: 'screen' }} />
           </div>
-
-          {/* Center: nav links — desktop */}
           <div className="leap-nav-center hidden md:flex">
             <button onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'home' ? 'active' : ''}`}>Home</button>
             <button onClick={() => { setCurrentView('about'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'about' ? 'active' : ''}`}>Overview</button>
@@ -1174,15 +1182,11 @@ function LeapApp() {
             <button onClick={() => { setCurrentView('faq'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'faq' ? 'active' : ''}`}>FAQs</button>
             {userProfile?.role === 'admin' && <button onClick={() => setIsAdminView(true)} className="leap-admin-link">Admin</button>}
           </div>
-
-          {/* Right: icon group + sign in/out */}
           <div className="leap-nav-right hidden md:flex">
             <button className="nav-icon-btn" onClick={() => { setCurrentView('home'); setIsSearchOpen(s => !s); setTimeout(() => { document.getElementById('classes-section')?.scrollIntoView({ behavior:'smooth' }); }, 100); }} title="Search classes">
               <Search size={15}/>
             </button>
-            <button className="nav-icon-btn" title="Saved classes">
-              <Bookmark size={15}/>
-            </button>
+            <button className="nav-icon-btn" title="Saved classes"><Bookmark size={15}/></button>
             {user ? (
               <>
                 <button className="nav-icon-btn" title={user.displayName || 'Profile'}>
@@ -1197,23 +1201,18 @@ function LeapApp() {
               </>
             ) : (
               <>
-                <button className="nav-icon-btn" title="Sign in" onClick={handleSignIn}>
-                  <User size={15}/>
-                </button>
+                <button className="nav-icon-btn" title="Sign in" onClick={handleSignIn}><User size={15}/></button>
                 <button onClick={handleSignIn} className="btn-leap-primary" style={{ padding:'0.45rem 1rem', fontSize:'0.72rem', borderRadius:6, gap:'0.4rem' }}>
                   <LogIn size={13}/> Register
                 </button>
               </>
             )}
           </div>
-
-          {/* Mobile hamburger */}
           <div className="flex md:hidden" style={{ justifySelf:'end' }}>
             <button className="p-2" style={{ color: currentView === 'home' && !scrolled ? '#f9ecb6' : '#334b46' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
-
         </div>
       </nav>
 
@@ -1274,7 +1273,7 @@ function LeapApp() {
             <NayonScene />
           </header>
 
-          {/* ══ SEARCH BAR ══ */}
+          {/* SEARCH BAR */}
           <section id="classes" className="search-section sticky top-16 z-30 py-4 px-4">
             <div className="container mx-auto max-w-5xl">
               <div className="flex flex-col md:flex-row gap-3">
@@ -1292,13 +1291,11 @@ function LeapApp() {
             </div>
           </section>
 
-          {/* ══ MAIN EVENTS SECTION — NEW ══ */}
           <MainEventsSection />
 
-          {/* ══ SUBTHEMES STRIP — centered & symmetric ══ */}
           <SubthemesStrip activeTheme={activeSubtheme} onSelect={(t) => { setActiveSubtheme(t); setCurrentPage(1); setSelectedDay(null); }} />
 
-          {/* ══ CLASSES SECTION ══ */}
+          {/* CLASSES SECTION */}
           <section id="classes-section">
             {!user ? (
               <div className="container mx-auto px-4 py-16">
@@ -1353,14 +1350,9 @@ function LeapApp() {
                 </div>
               </div>
             ) : (
-              /* ══ LEAP DAYS LAYOUT ══ */
               <div className="leap-days-layout" style={{ minHeight: '60vh' }}>
-
-                {/* Left sidebar */}
                 <aside className="leap-days-sidebar">
-                  <div className="leap-days-sidebar-title">
-                    LEAP<br/>Days
-                  </div>
+                  <div className="leap-days-sidebar-title">LEAP<br/>Days</div>
                   {uniqueDays.length === 0 ? (
                     <p style={{ padding:'1rem 1.5rem', fontFamily:"'DM Sans',sans-serif", fontSize:'0.82rem', color:'rgba(124,107,75,0.6)' }}>No days found.</p>
                   ) : (
@@ -1380,8 +1372,6 @@ function LeapApp() {
                     })
                   )}
                 </aside>
-
-                {/* Right: class grid */}
                 <main className="leap-classes-main">
                   {selectedDay === null ? (
                     <div>
