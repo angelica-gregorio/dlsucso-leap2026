@@ -9,8 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft,
   Menu, X, Info, LogOut, LogIn, AlertCircle,
-  Edit, ArrowLeft, ExternalLink, Sparkles, BookOpen,
-  Music, Palette, Code2, Heart, Leaf, Star, Mail, Phone, Clock
+  Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Heart, Leaf, Star, Mail, Clock,
+  Globe, Zap, Layers, Bookmark, User  // ← ADD THESE
 } from 'lucide-react';
 
 import { contentfulClient } from './contentful';
@@ -22,7 +22,7 @@ import type { User as FirebaseUser } from "firebase/auth";
 import leapLogo from './assets/leap.png';
 
 interface ErrorBoundaryProps { children: ReactNode; }
-interface ErrorBoundaryState { hasError: boolean; error: any; }
+interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState;
@@ -32,8 +32,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     this.state = { hasError: false, error: null };
     this.props = props;
   }
-  static getDerivedStateFromError(error: any): ErrorBoundaryState { return { hasError: true, error }; }
-  componentDidCatch(error: any, errorInfo: ErrorInfo) { console.error("Uncaught error:", error, errorInfo); }
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState { return { hasError: true, error }; }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) { console.error("Uncaught error:", error, errorInfo); }
   render() {
     if (this.state.hasError) {
       return (
@@ -940,21 +940,59 @@ const ContactPage = () => (
 /* ══════════════════════════════════════════════════════
    MAIN APP
 ══════════════════════════════════════════════════════ */
+interface LeapClass {
+  id: string;
+  title: string;
+  org: string;
+  modality: string;
+  date: string;
+  time: string;
+  venue: string;
+  slots: number;
+  subtheme: string;
+  image: string;
+  orgLogo: string | null;
+  googleFormUrl: string;
+  description: string;
+}
+
+interface UserProfile {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  role: 'student' | 'admin';
+  registeredClasses: string[];
+}
+
 function LeapApp() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('title-asc');
   const [scrolled, setScrolled] = useState(false);
-  const [classes, setClasses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<LeapClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewingClass, setViewingClass] = useState<any>(null);
+  const [viewingClass, setViewingClass] = useState<{
+    id: string;
+    title: string;
+    org: string;
+    modality: string;
+    date: string;
+    time: string;
+    venue: string;
+    slots: number;
+    subtheme: string;
+    image: string;
+    orgLogo: string | null;
+    googleFormUrl: string;
+    description: string;
+  } | null>(null);
   const [currentView, setCurrentView] = useState('home');
   const [activeSubtheme, setActiveSubtheme] = useState<string | null>(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
   const ITEMS_PER_PAGE = 6;
 
@@ -1001,9 +1039,16 @@ function LeapApp() {
       if (currentUser) {
         if (!currentUser.email?.endsWith('@dlsu.edu.ph')) { await signOut(auth); alert("Please use your @dlsu.edu.ph Google account to sign in."); return; }
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        if (userDoc.exists()) { setUserProfile(userDoc.data()); }
+        if (userDoc.exists()) { setUserProfile(userDoc.data() as UserProfile); }
         else {
-          const newProfile = { uid: currentUser.uid, email: currentUser.email, displayName: currentUser.displayName, photoURL: currentUser.photoURL, role: 'student', registeredClasses: [] };
+          const newProfile: UserProfile = {
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName,
+            photoURL: currentUser.photoURL,
+            role: 'student',
+            registeredClasses: [],
+          };
           await setDoc(doc(db, 'users', currentUser.uid), newProfile);
           setUserProfile(newProfile);
         }
@@ -1019,7 +1064,7 @@ function LeapApp() {
       if (!contentfulClient) { setLoading(false); return; }
       try {
         const response = await contentfulClient.getEntries({ content_type: 'leapClass2026' });
-        const classList = response.items.map((item: any) => {
+        const classList = response.items.map((item: { sys: { id: string }; fields: { title?: string; organizationInCharge?: string; classModality?: string; dateAndTime?: string; venue?: string; numberOfSlots?: number; subtheme?: string; posterPublishingMaterial?: { fields: { file?: { url: string } } }; organizationInChargeLogo?: { fields: { file?: { url: string } } }; registrationLink?: string; description?: string } }) => {
           let formattedDate = '', formattedTime = '';
           if (item.fields.dateAndTime) {
             const dateObj = new Date(item.fields.dateAndTime);
@@ -1062,7 +1107,21 @@ function LeapApp() {
     catch (error) { console.error("Sign Out Error:", error); }
   };
 
-  const renderClassCard = (item: any, index: number) => (
+  const renderClassCard = (item: {
+    id: string;
+    title: string;
+    org: string;
+    modality: string;
+    date: string;
+    time: string;
+    venue: string;
+    slots: number;
+    subtheme: string;
+    image: string;
+    orgLogo: string | null;
+    googleFormUrl: string;
+    description: string;
+  }, index: number) => (
     <motion.div
       key={item.id}
       initial={{ opacity: 0, y: 24 }}
@@ -1179,7 +1238,7 @@ function LeapApp() {
             {userProfile?.role === 'admin' && <button onClick={() => setIsAdminView(true)} className="leap-admin-link">Admin</button>}
           </div>
           <div className="leap-nav-right hidden md:flex">
-            <button className="nav-icon-btn" onClick={() => { setCurrentView('home'); setIsSearchOpen(s => !s); setTimeout(() => { document.getElementById('classes-section')?.scrollIntoView({ behavior:'smooth' }); }, 100); }} title="Search classes">
+            <button className="nav-icon-btn" onClick={() => { setCurrentView('home'); setTimeout(() => { document.getElementById('classes-section')?.scrollIntoView({ behavior:'smooth' }); }, 100); }} title="Search classes">
               <Search size={15}/>
             </button>
             <button className="nav-icon-btn" title="Saved classes"><Bookmark size={15}/></button>
