@@ -7,10 +7,10 @@ import React from 'react';
 import { useState, useEffect, useRef, type ErrorInfo, type ReactNode, Component } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Calendar, MapPin, Users, ChevronRight,
+  Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft,
   Menu, X, Info, LogOut, LogIn, AlertCircle,
-  Edit, ArrowLeft, ExternalLink, Sparkles,
-  Heart, Leaf, Mail, Clock
+  Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Heart, Leaf, Star, Mail, Clock,
+  Globe, Zap, Layers, Bookmark, User  // ← ADD THESE
 } from 'lucide-react';
 
 import { contentfulClient } from './contentful';
@@ -22,7 +22,7 @@ import type { User as FirebaseUser } from "firebase/auth";
 import leapLogo from './assets/leap.png';
 
 interface ErrorBoundaryProps { children: ReactNode; }
-interface ErrorBoundaryState { hasError: boolean; error: any; }
+interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState;
@@ -32,8 +32,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     this.state = { hasError: false, error: null };
     this.props = props;
   }
-  static getDerivedStateFromError(error: any): ErrorBoundaryState { return { hasError: true, error }; }
-  componentDidCatch(error: any, errorInfo: ErrorInfo) { console.error("Uncaught error:", error, errorInfo); }
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState { return { hasError: true, error }; }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) { console.error("Uncaught error:", error, errorInfo); }
   render() {
     if (this.state.hasError) {
       return (
@@ -188,7 +188,7 @@ const HeroStats = () => (
 );
 
 /* ══════════════════════════════════════════════════════
-   NAYON SCENE — Fixed salakot + all enhancements
+   NAYON SCENE
 ══════════════════════════════════════════════════════ */
 const TOOLTIPS: Record<string, { label:string; desc:string }> = {
   hut1:     { label:'Bahay Kubo',  desc:'Traditional Filipino stilt house'  },
@@ -265,7 +265,6 @@ const NayonScene = () => {
           <linearGradient id="palayG" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#f0c84a" /><stop offset="100%" stopColor="#d4922a" />
           </linearGradient>
-          {/* FIXED salakot gradient — warmer bamboo woven colour */}
           <linearGradient id="salakotG" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#e8c07a" /><stop offset="40%" stopColor="#c8963e" /><stop offset="100%" stopColor="#9a6820" />
           </linearGradient>
@@ -297,19 +296,16 @@ const NayonScene = () => {
           </filter>
         </defs>
 
-        {/* Stars */}
         {[[120,30],[280,18],[380,40],[540,14],[680,34],[820,12],[960,26],[1100,38],[1240,16],[1360,30],[160,52],[450,46],[750,42],[1050,50],[1300,54]].map(([x,y],i) => (
           <circle key={i} cx={x} cy={y} r="1.2" fill="#fae185" opacity="0.2" className={`star-twinkle star-d${i%5}`}/>
         ))}
 
-        {/* Birds */}
         {[[320,60,0.75,0],[380,48,0.6,0.3],[350,54,0.65,0.15],[1060,66,0.75,0.5],[1110,54,0.6,0.7]].map(([x,y,sc,dl],i) => (
           <g key={i} transform={`translate(${(x as number)+px(-4)},${(y as number)+py(-2)}) scale(${sc})`} className={`bird bird-d${i}`} style={{ animationDelay:`${dl}s` }}>
             <path d="M0 0 Q6 -5 12 0 Q18 -5 24 0" fill="none" stroke="rgba(222,154,73,0.4)" strokeWidth="2" strokeLinecap="round"/>
           </g>
         ))}
 
-        {/* Volcano */}
         <g transform={`translate(${px(-8)},${py(-5)})`}>
           <ellipse cx="900" cy="120" rx="300" ry="80" fill="url(#summitGlow)" />
           <path d="M900 18 L710 290 L1090 290 Z" fill="url(#volcanoG)" />
@@ -318,13 +314,11 @@ const NayonScene = () => {
           <ellipse cx="900" cy="22" rx="14" ry="9" fill="rgba(222,154,73,0.22)" className="volcano-pulse"/>
         </g>
 
-        {/* Far ridges */}
         <g transform={`translate(${px(-6)},${py(-4)})`}>
           <path d="M0 250 Q150 195 310 220 Q430 238 550 215 Q620 200 710 290 L0 290 Z" fill="url(#hill3G)" />
           <path d="M1090 290 Q1170 210 1280 200 Q1360 192 1440 220 L1440 290 Z" fill="url(#hill3G)" />
         </g>
 
-        {/* Back hill */}
         <g transform={`translate(${px(-5)},${py(-3)})`}>
           <path d="M0 295 Q130 255 280 272 Q430 290 560 258 Q680 228 800 265 Q920 302 1060 260 Q1180 225 1310 262 Q1390 282 1440 270 L1440 480 L0 480 Z" fill="url(#hill3G)" />
         </g>
@@ -339,7 +333,6 @@ const NayonScene = () => {
           <path d="M0 352 Q130 322 300 338 Q460 355 620 325 Q760 298 900 332 Q1050 368 1200 335 Q1330 308 1440 330 L1440 480 L0 480 Z" fill="url(#hill1G)" />
         </g>
 
-        {/* Ground */}
         <path d="M0 388 Q360 374 720 382 Q1080 390 1440 380 L1440 480 L0 480 Z" fill="url(#groundG)" />
         <rect x="0" y="408" width="1440" height="6" rx="3" fill="#1a4a22" opacity="0.5" />
         {[40,100,160,220,310,400,500,580,660,750,840,940,1040,1140,1240,1320,1380].map((x, i) => (
@@ -349,7 +342,6 @@ const NayonScene = () => {
           </g>
         ))}
 
-        {/* Coconut tree LEFT */}
         <g transform={`translate(${36+px(7)},${226+py(4)})`}>
           <path d="M0 190 Q3 152 -2 115 Q-5 86 0 56 Q4 26 2 0" stroke="#7a5a30" strokeWidth="9" fill="none" strokeLinecap="round"/>
           <path d="M0 190 Q3 152 -2 115 Q-5 86 0 56 Q4 26 2 0" stroke="#a07840" strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.3"/>
@@ -361,7 +353,6 @@ const NayonScene = () => {
           <ellipse cx="-5" cy="2" rx="6" ry="7" fill="#5a3a18"/>
         </g>
 
-        {/* Coconut tree RIGHT */}
         <g transform={`translate(${1398+px(9)},${238+py(4)})`}>
           <path d="M0 178 Q-3 143 2 106 Q5 80 0 52 Q-4 24 -2 0" stroke="#7a5a30" strokeWidth="8" fill="none" strokeLinecap="round"/>
           <path d="M0 178 Q-3 143 2 106 Q5 80 0 52 Q-4 24 -2 0" stroke="#a07840" strokeWidth="4" fill="none" strokeLinecap="round" opacity="0.28"/>
@@ -373,7 +364,6 @@ const NayonScene = () => {
           <ellipse cx="4" cy="4" rx="5" ry="6" fill="#5a3a18"/>
         </g>
 
-        {/* BAHAY KUBO 1 */}
         <g transform={`translate(${108+px(5)}, ${230+py(3)})`}
           style={{ cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('hut1')} onMouseLeave={() => setHovered(null)}
@@ -419,7 +409,6 @@ const NayonScene = () => {
           <line x1="88" y1="174" x2="103" y2="170" stroke="#7a5030" strokeWidth="3" strokeLinecap="round" />
         </g>
 
-        {/* BAHAY KUBO 2 */}
         <g transform={`translate(${980+px(3)}, ${255+py(2)})`}
           style={{ cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('hut2')} onMouseLeave={() => setHovered(null)}
@@ -453,7 +442,6 @@ const NayonScene = () => {
           <rect x="8" y="46" width="170" height="4" rx="2" fill="#c89850" opacity="0.4"/>
         </g>
 
-        {/* PALAY STALKS */}
         <g transform={`translate(${610+px(2)}, ${270+py(1.5)})`}
           style={{ cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('palay')} onMouseLeave={() => setHovered(null)}
@@ -499,52 +487,29 @@ const NayonScene = () => {
           ))}
         </g>
 
-        {/* ══════════════════════════════════════════
-            SALAKOT — COMPLETELY REDRAWN
-        ══════════════════════════════════════════ */}
         <g transform={`translate(${1218+px(4)}, ${315+py(2)})`}
           style={{ cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('salakot')} onMouseLeave={() => setHovered(null)}
           filter={hovered==='salakot' ? 'url(#glowF)' : undefined}>
-          
-          {/* Ground shadow */}
           <ellipse cx="0" cy="155" rx="70" ry="10" fill="rgba(0,0,0,0.25)"/>
-          
-          {/* Main Cone Body */}
           <path d="M0 0 L-85 85 Q-90 95 -80 100 Q0 108 80 100 Q90 95 85 85 Z" fill="url(#salakotG)"/>
-          
-          {/* Shadow side for depth */}
           <path d="M0 0 L85 85 Q90 95 80 100 Q40 105 0 105 Z" fill="rgba(0,0,0,0.15)"/>
-          
-          {/* Woven Textures: Concentric Bands */}
           {[25, 45, 65, 85].map((y, i) => {
             const w = 22 + (i * 16);
             return <path key={i} d={`M${-w} ${y} Q0 ${y-4} ${w} ${y}`} fill="none" stroke="rgba(100,60,10,0.25)" strokeWidth="1.5" />;
           })}
-          
-          {/* Woven Textures: Radial lines */}
           {[-70, -45, -20, 0, 20, 45, 70].map((ang, i) => (
              <line key={i} x1="0" y1="0" x2={Math.sin(ang * Math.PI/180)*90} y2={95} stroke="rgba(100,60,10,0.2)" strokeWidth="1.2" />
           ))}
-
-          {/* Top Peak (Tutubas) */}
           <circle cx="0" cy="0" r="6" fill="#b07020" />
           <circle cx="0" cy="0" r="3" fill="#de9a49" />
-
-          {/* Broad Rim Base */}
           <ellipse cx="0" cy="98" rx="95" ry="14" fill="url(#salakotRimG)" />
           <ellipse cx="0" cy="98" rx="95" ry="14" fill="none" stroke="#de9a49" strokeWidth="1.5" opacity="0.6" />
-
-          {/* Chin Strap (Cord) */}
           <path d="M-40 105 Q-35 125 -30 155" fill="none" stroke="#8a5c18" strokeWidth="2.5" strokeLinecap="round" />
           <path d="M40 105 Q35 125 30 155" fill="none" stroke="#8a5c18" strokeWidth="2.5" strokeLinecap="round" />
           <ellipse cx="0" cy="155" rx="30" ry="4" fill="#7a4c10" opacity="0.6" />
         </g>
 
-       
-
-
-        {/* BAYONG */}
         <g transform={`translate(${1340+px(5)}, ${348+py(3)})`}
           style={{ cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('bayong')} onMouseLeave={() => setHovered(null)}
@@ -568,7 +533,6 @@ const NayonScene = () => {
           <path d="M22 -4 Q32 -24 48 -4" fill="none" stroke="rgba(255,200,80,0.4)" strokeWidth="2" strokeLinecap="round" />
         </g>
 
-        {/* PANDESAL */}
         <g transform={`translate(${408+px(3)}, ${352+py(2)})`}
           style={{ cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('pandesal')} onMouseLeave={() => setHovered(null)}
@@ -601,7 +565,7 @@ const NayonScene = () => {
 };
 
 /* ══════════════════════════════════════════════════════
-   PAGE WRAPPER — shared animated container for sub-pages
+   PAGE WRAPPER
 ══════════════════════════════════════════════════════ */
 const PageWrapper = ({ children }: { children: ReactNode }) => (
   <motion.div
@@ -615,7 +579,7 @@ const PageWrapper = ({ children }: { children: ReactNode }) => (
 );
 
 /* ══════════════════════════════════════════════════════
-   PAGE HERO BANNER — reusable dark hero for sub-pages
+   PAGE HERO BANNER
 ══════════════════════════════════════════════════════ */
 const PageHero = ({ title, subtitle, accent }: { title: string; subtitle: string; accent: string }) => (
   <div className="page-hero" style={{ paddingTop: '10rem', paddingBottom: '4rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
@@ -638,7 +602,121 @@ const PageHero = ({ title, subtitle, accent }: { title: string; subtitle: string
 );
 
 /* ══════════════════════════════════════════════════════
-   ABOUT PAGE — fully redesigned
+   SUBTHEMES DATA
+══════════════════════════════════════════════════════ */
+const SUBTHEMES = [
+  { icon: <Star size={20}/>, label: 'Community' },
+  { icon: <Palette size={20}/>, label: 'Arts & Culture' },
+  { icon: <Leaf size={20}/>, label: 'Solidarity' },
+  { icon: <Globe size={20}/>, label: 'Leadership' },
+  { icon: <Zap size={20}/>, label: 'Spirituality' },
+  { icon: <Layers size={20}/>, label: 'Stewardship' },
+];
+
+/* ══════════════════════════════════════════════════════
+   MAIN EVENTS SECTION
+══════════════════════════════════════════════════════ */
+const MainEventsSection = () => {
+  const events = [
+    {
+      tag: 'Opening Ceremony',
+      date: 'June 20, 2026', time: '8:00 AM', venue: 'Henry Sy Sr. Hall',
+      title: 'LEAP 2026 Kickoff Rally',
+      desc: 'Live performances, special guests, and the ceremonial launch of a week that will change how you see learning.',
+      img: 'https://picsum.photos/seed/kickoff2026/600/400', accent: '#de9a49',
+    },
+    {
+      tag: 'Midweek Special',
+      date: 'June 23, 2026', time: '3:00 PM', venue: 'Agno Food Court Plaza',
+      title: 'Nayon Night Market',
+      desc: 'An open-air celebration of Filipino creativity — food, crafts, live music, and student showcases filling the campus.',
+      img: 'https://picsum.photos/seed/nightmarket/600/400', accent: '#4ab09a',
+    },
+    {
+      tag: 'Closing Night',
+      date: 'June 26, 2026', time: '6:00 PM', venue: 'Teresa Yuchengco Auditorium',
+      title: 'Culminating Night',
+      desc: 'Student output showcases, awards night, and a closing concert that sends LEAP 2026 off with a bang.',
+      img: 'https://picsum.photos/seed/culminating2026/600/400', accent: '#b05a32',
+    },
+  ];
+
+  return (
+    <section className="main-events-section">
+      <div className="main-events-inner">
+        <div className="main-events-header">
+          <div>
+            <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'0.58rem', fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase', color:'#de9a49', display:'block', marginBottom:'0.4rem' }}>
+              LEAP 2026 · Landmark Moments
+            </span>
+            <h2 className="main-events-title">Main Events</h2>
+          </div>
+          <div className="main-events-nav">
+            <button className="carousel-nav-btn"><ChevronLeft size={15}/></button>
+            <button className="carousel-nav-btn"><ChevronRight size={15}/></button>
+          </div>
+        </div>
+        <div className="main-events-grid">
+          {events.map((ev, i) => (
+            <motion.div key={i} initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ delay:i*0.1, duration:0.5 }} className="main-event-card">
+              <div className="main-event-img-wrap">
+                <img src={ev.img} alt={ev.title} className="main-event-img" referrerPolicy="no-referrer"/>
+                <div className="main-event-img-overlay"/>
+                <span className="main-event-tag">{ev.tag}</span>
+              </div>
+              <div className="main-event-body">
+                <div className="main-event-meta">
+                  <span className="main-event-meta-item"><Calendar size={11}/>{ev.date}</span>
+                  <span className="main-event-meta-item"><Clock size={11}/>{ev.time}</span>
+                  <span className="main-event-meta-item"><MapPin size={11}/>{ev.venue}</span>
+                </div>
+                <h3 className="main-event-title">{ev.title}</h3>
+                <p className="main-event-desc">{ev.desc}</p>
+                <div className="main-event-cta">
+                  <div style={{ height:2, width:28, background:ev.accent, borderRadius:2 }}/>
+                  <span className="main-event-link">View Details <ExternalLink size={11}/></span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ══════════════════════════════════════════════════════
+   SUBTHEMES STRIP
+══════════════════════════════════════════════════════ */
+const SubthemesStrip = ({ activeTheme, onSelect }: { activeTheme: string|null; onSelect: (t: string|null) => void }) => (
+  <div className="subthemes-section">
+    <div className="subthemes-inner">
+      <span className="subthemes-label">Subthemes</span>
+      <div className="subthemes-row">
+        <button
+          className={`subtheme-pill ${activeTheme === null ? 'active' : ''}`}
+          onClick={() => onSelect(null)}
+        >
+          <span className="subtheme-pill-icon"><Sparkles size={20}/></span>
+          <span className="subtheme-pill-label">All</span>
+        </button>
+        {SUBTHEMES.map((s, i) => (
+          <button
+            key={i}
+            className={`subtheme-pill ${activeTheme === s.label ? 'active' : ''}`}
+            onClick={() => onSelect(activeTheme === s.label ? null : s.label)}
+          >
+            <span className="subtheme-pill-icon">{s.icon}</span>
+            <span className="subtheme-pill-label">{s.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+/* ══════════════════════════════════════════════════════
+   ABOUT PAGE
 ══════════════════════════════════════════════════════ */
 const AboutPage = () => {
   const values = [
@@ -651,7 +729,6 @@ const AboutPage = () => {
     <PageWrapper>
       <PageHero title="About LEAP 2026" subtitle="Isang Nayon, Isang Layunin — One Village, One Purpose" accent="DLSU · Central Student Organization"/>
       <main className="container mx-auto px-4 pb-24 max-w-5xl">
-        {/* Intro block */}
         <div className="about-intro-grid">
           <motion.div initial={{ opacity:0, x:-24 }} whileInView={{ opacity:1, x:0 }} viewport={{ once:true }} transition={{ duration:0.6 }}>
             <h2 className="section-label">What is LEAP?</h2>
@@ -669,8 +746,6 @@ const AboutPage = () => {
             <div className="about-stat"><span className="about-stat-num">50+</span><span className="about-stat-lbl">Organizations</span></div>
           </motion.div>
         </div>
-
-        {/* Vision / Mission */}
         <div className="vm-grid">
           {[
             { label:'Our Vision', icon:'🌾', text:'A DLSU community where every student discovers their full potential through immersive, joyful, and transformative learning experiences rooted in Lasallian values.' },
@@ -683,8 +758,6 @@ const AboutPage = () => {
             </motion.div>
           ))}
         </div>
-
-        {/* Values */}
         <div className="values-section">
           <h2 className="section-heading">Core Values</h2>
           <div className="values-grid">
@@ -697,8 +770,6 @@ const AboutPage = () => {
             ))}
           </div>
         </div>
-
-        {/* Theme */}
         <motion.div initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} className="theme-banner">
           <div className="theme-banner-inner">
             <p className="theme-banner-eyebrow">2026 Theme</p>
@@ -712,7 +783,7 @@ const AboutPage = () => {
 };
 
 /* ══════════════════════════════════════════════════════
-   MAJOR EVENTS PAGE — fully redesigned
+   MAJOR EVENTS PAGE
 ══════════════════════════════════════════════════════ */
 const MajorEventsPage = () => {
   const events = [
@@ -769,7 +840,7 @@ const MajorEventsPage = () => {
 };
 
 /* ══════════════════════════════════════════════════════
-   FAQ PAGE — redesigned with accordion
+   FAQ PAGE
 ══════════════════════════════════════════════════════ */
 const FAQPage = () => {
   const [open, setOpen] = useState<number|null>(null);
@@ -806,7 +877,6 @@ const FAQPage = () => {
             </motion.div>
           ))}
         </div>
-        {/* Still have questions CTA */}
         <motion.div initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} className="faq-cta-card">
           <p style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', fontWeight:700, color:'#334b46', marginBottom:'0.5rem' }}>Still have questions?</p>
           <p style={{ color:'rgba(51,75,70,0.7)', marginBottom:'1.5rem' }}>Our team is always happy to help. Drop us a message.</p>
@@ -820,7 +890,7 @@ const FAQPage = () => {
 };
 
 /* ══════════════════════════════════════════════════════
-   CONTACT PAGE — redesigned
+   CONTACT PAGE
 ══════════════════════════════════════════════════════ */
 const ContactPage = () => (
   <PageWrapper>
@@ -870,20 +940,74 @@ const ContactPage = () => (
 /* ══════════════════════════════════════════════════════
    MAIN APP
 ══════════════════════════════════════════════════════ */
+interface LeapClass {
+  id: string;
+  title: string;
+  org: string;
+  modality: string;
+  date: string;
+  time: string;
+  venue: string;
+  slots: number;
+  subtheme: string;
+  image: string;
+  orgLogo: string | null;
+  googleFormUrl: string;
+  description: string;
+}
+
+interface UserProfile {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  role: 'student' | 'admin';
+  registeredClasses: string[];
+}
+
 function LeapApp() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('title-asc');
   const [scrolled, setScrolled] = useState(false);
-  const [classes, setClasses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<LeapClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewingClass, setViewingClass] = useState<any>(null);
+  const [viewingClass, setViewingClass] = useState<{
+    id: string;
+    title: string;
+    org: string;
+    modality: string;
+    date: string;
+    time: string;
+    venue: string;
+    slots: number;
+    subtheme: string;
+    image: string;
+    orgLogo: string | null;
+    googleFormUrl: string;
+    description: string;
+  } | null>(null);
   const [currentView, setCurrentView] = useState('home');
+  const [activeSubtheme, setActiveSubtheme] = useState<string | null>(null);
+  const [isAdminView, setIsAdminView] = useState(false);
   const ITEMS_PER_PAGE = 6;
+
+  /* ── SCROLL PARALLAX — mountain zooms as you scroll ── */
+  useEffect(() => {
+    const hero = document.querySelector('.hero-bg') as HTMLElement | null;
+    if (!hero) return;
+    const onScroll = () => {
+      const progress = Math.min(window.scrollY / hero.offsetHeight, 1);
+      hero.style.setProperty('--nayon-scale', String(1 + progress * 0.28));
+      hero.style.setProperty('--nayon-ty',    `${progress * 24}px`);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const filteredAndSortedClasses = React.useMemo(() => {
     let result = classes.filter(c =>
@@ -891,6 +1015,9 @@ function LeapApp() {
       c.org.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.subtheme.toLowerCase().includes(searchQuery.toLowerCase())
     );
+    if (activeSubtheme) {
+      result = result.filter(c => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
+    }
     result.sort((a, b) => {
       if (sortBy === 'title-asc') return a.title.localeCompare(b.title);
       if (sortBy === 'title-desc') return b.title.localeCompare(a.title);
@@ -899,7 +1026,12 @@ function LeapApp() {
       return 0;
     });
     return result;
-  }, [classes, searchQuery, sortBy]);
+  }, [classes, searchQuery, sortBy, activeSubtheme]);
+
+  const uniqueDays = React.useMemo(() => (
+    Array.from<string>(new Set(filteredAndSortedClasses.map(c => c.date as string)))
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+  ), [filteredAndSortedClasses]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -907,9 +1039,16 @@ function LeapApp() {
       if (currentUser) {
         if (!currentUser.email?.endsWith('@dlsu.edu.ph')) { await signOut(auth); alert("Please use your @dlsu.edu.ph Google account to sign in."); return; }
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        if (userDoc.exists()) { setUserProfile(userDoc.data()); }
+        if (userDoc.exists()) { setUserProfile(userDoc.data() as UserProfile); }
         else {
-          const newProfile = { uid: currentUser.uid, email: currentUser.email, displayName: currentUser.displayName, photoURL: currentUser.photoURL, role: 'student', registeredClasses: [] };
+          const newProfile: UserProfile = {
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName,
+            photoURL: currentUser.photoURL,
+            role: 'student',
+            registeredClasses: [],
+          };
           await setDoc(doc(db, 'users', currentUser.uid), newProfile);
           setUserProfile(newProfile);
         }
@@ -925,7 +1064,7 @@ function LeapApp() {
       if (!contentfulClient) { setLoading(false); return; }
       try {
         const response = await contentfulClient.getEntries({ content_type: 'leapClass2026' });
-        const classList = response.items.map((item: any) => {
+        const classList = response.items.map((item: { sys: { id: string }; fields: { title?: string; organizationInCharge?: string; classModality?: string; dateAndTime?: string; venue?: string; numberOfSlots?: number; subtheme?: string; posterPublishingMaterial?: { fields: { file?: { url: string } } }; organizationInChargeLogo?: { fields: { file?: { url: string } } }; registrationLink?: string; description?: string } }) => {
           let formattedDate = '', formattedTime = '';
           if (item.fields.dateAndTime) {
             const dateObj = new Date(item.fields.dateAndTime);
@@ -968,39 +1107,79 @@ function LeapApp() {
     catch (error) { console.error("Sign Out Error:", error); }
   };
 
-  const [isAdminView, setIsAdminView] = useState(false);
-
-  const renderClassCard = (item: any, index: number) => (
+  const renderClassCard = (item: {
+    id: string;
+    title: string;
+    org: string;
+    modality: string;
+    date: string;
+    time: string;
+    venue: string;
+    slots: number;
+    subtheme: string;
+    image: string;
+    orgLogo: string | null;
+    googleFormUrl: string;
+    description: string;
+  }, index: number) => (
     <motion.div
       key={item.id}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
       className="leap-class-card flex flex-col cursor-pointer"
     >
-      <div className="relative h-56 overflow-hidden">
-        <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-        <div className="absolute top-4 left-4 flex gap-2"><span className="leap-tag">{item.subtheme}</span></div>
-        {/* Slot indicator */}
-        <div className="absolute bottom-4 right-4" style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', borderRadius:6, padding:'3px 10px', fontSize:'0.65rem', fontWeight:700, letterSpacing:'0.1em', color:'#fae185', fontFamily:"'DM Sans',sans-serif" }}>
+      <div className="card-header-bar">
+        {item.orgLogo ? (
+          <img src={item.orgLogo} alt={item.org} className="card-org-logo" referrerPolicy="no-referrer"/>
+        ) : (
+          <div className="card-org-logo-placeholder">
+            {item.org.charAt(0).toUpperCase()}
+          </div>
+        )}
+        {item.subtheme && (
+          <span className="card-badge card-badge-theme">{item.subtheme}</span>
+        )}
+        {item.date && (
+          <span className="card-badge card-badge-day">
+            {item.date.split(' ').slice(0,2).join(' ')}
+          </span>
+        )}
+      </div>
+
+      <div className="relative overflow-hidden" style={{ height: '180px' }}>
+        <img src={item.image} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        <div className="absolute bottom-3 right-3" style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', borderRadius:4, padding:'2px 8px', fontSize:'0.6rem', fontWeight:800, letterSpacing:'0.12em', color:'#fae185', fontFamily:"'DM Sans',sans-serif" }}>
           {item.slots} SLOTS
         </div>
       </div>
-      <div className="p-6 flex flex-col flex-grow">
-        <div className="flex justify-between items-start mb-1">
-          <h3 className="text-xl font-bold text-leap-dark leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>{item.title}</h3>
+
+      <div className="p-5 flex flex-col flex-grow">
+        <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'0.65rem', fontWeight:800, letterSpacing:'0.16em', textTransform:'uppercase', color:'#de9a49', marginBottom:'0.35rem' }}>
+          {item.org}
+        </p>
+        <h3 className="text-lg font-bold text-leap-dark leading-tight mb-3" style={{ fontFamily: "'Playfair Display', serif" }}
+          onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+          {item.title}
+        </h3>
+        <div className="space-y-1.5 mb-4 text-sm text-leap-dark/60" style={{ fontSize:'0.78rem' }}>
+          <div className="flex items-center gap-2"><Calendar size={12} className="text-leap-gold flex-shrink-0" /><span>{item.date} · {item.time}</span></div>
+          <div className="flex items-center gap-2"><MapPin size={12} className="text-leap-gold flex-shrink-0" /><span>{item.venue} ({item.modality})</span></div>
         </div>
-        <p className="text-sm text-leap-rust font-semibold mb-4 uppercase tracking-wide">{item.org}</p>
-        <div className="space-y-2 mb-6 text-sm text-leap-dark/70">
-          <div className="flex items-center gap-2"><Calendar size={15} className="text-leap-gold flex-shrink-0" /><span>{item.date} · {item.time}</span></div>
-          <div className="flex items-center gap-2"><MapPin size={15} className="text-leap-gold flex-shrink-0" /><span>{item.venue} ({item.modality})</span></div>
+        <div className="mt-auto flex flex-col gap-1.5">
+          <a href={item.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="leap-register-btn">
+            Register via Google Forms <ExternalLink size={14} />
+          </a>
+          <button
+            onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            className="learn-more-link">
+            Learn More <ChevronRight size={14} />
+          </button>
         </div>
-        <a href={item.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="leap-register-btn w-full py-4 font-bold transition-all active:scale-95 mt-auto flex items-center justify-center gap-2">
-          Register via Google Forms <ExternalLink size={16} />
-        </a>
       </div>
     </motion.div>
   );
@@ -1046,29 +1225,49 @@ function LeapApp() {
 
       {/* NAV */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${navClass}`}>
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }}>
+        <div className="leap-nav-inner">
+          <div className="leap-nav-logo cursor-pointer" onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }}>
             <img src={leapLogo} alt="LEAP 2026" className="nav-logo-img" style={{ mixBlendMode: 'screen' }} />
           </div>
-          <div className="hidden md:flex items-center gap-8 font-medium text-sm">
+          <div className="leap-nav-center hidden md:flex">
             <button onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'home' ? 'active' : ''}`}>Home</button>
-            <button onClick={() => { setCurrentView('about'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'about' ? 'active' : ''}`}>About</button>
-            <button onClick={() => { setCurrentView('home'); window.scrollTo(0, document.getElementById('classes')?.offsetTop || 0); }} className="nav-link">Classes</button>
-            <button onClick={() => { setCurrentView('major-events'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'major-events' ? 'active' : ''}`}>Major Events</button>
+            <button onClick={() => { setCurrentView('about'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'about' ? 'active' : ''}`}>Overview</button>
+            <button onClick={() => { setCurrentView('major-events'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'major-events' ? 'active' : ''}`}>Featured</button>
+            <button onClick={() => { setCurrentView('home'); window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0); }} className="nav-link">Classes</button>
             <button onClick={() => { setCurrentView('faq'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'faq' ? 'active' : ''}`}>FAQs</button>
             {userProfile?.role === 'admin' && <button onClick={() => setIsAdminView(true)} className="leap-admin-link">Admin</button>}
+          </div>
+          <div className="leap-nav-right hidden md:flex">
+            <button className="nav-icon-btn" onClick={() => { setCurrentView('home'); setTimeout(() => { document.getElementById('classes-section')?.scrollIntoView({ behavior:'smooth' }); }, 100); }} title="Search classes">
+              <Search size={15}/>
+            </button>
+            <button className="nav-icon-btn" title="Saved classes"><Bookmark size={15}/></button>
             {user ? (
-              <div className="flex items-center gap-3">
-                <img src={user.photoURL || ''} alt="Profile" className="w-9 h-9 rounded-full border-2 shadow-sm" style={{ borderColor: 'rgba(222,154,73,0.5)' }} />
-                <button onClick={handleSignOut} className="btn-leap-primary px-5 py-2 rounded-xl text-sm flex items-center gap-2"><LogOut size={16} /> Sign Out</button>
-              </div>
+              <>
+                <button className="nav-icon-btn" title={user.displayName || 'Profile'}>
+                  {user.photoURL
+                    ? <img src={user.photoURL} alt="Profile" style={{ width:20, height:20, borderRadius:'50%', objectFit:'cover' }} referrerPolicy="no-referrer"/>
+                    : <User size={15}/>
+                  }
+                </button>
+                <button onClick={handleSignOut} className="btn-leap-primary" style={{ padding:'0.45rem 1rem', fontSize:'0.72rem', borderRadius:6, gap:'0.4rem' }}>
+                  <LogOut size={13}/> Sign Out
+                </button>
+              </>
             ) : (
-              <button onClick={handleSignIn} className="btn-leap-primary px-6 py-2.5 rounded-xl text-sm flex items-center gap-2"><LogIn size={16} /> Sign In</button>
+              <>
+                <button className="nav-icon-btn" title="Sign in" onClick={handleSignIn}><User size={15}/></button>
+                <button onClick={handleSignIn} className="btn-leap-primary" style={{ padding:'0.45rem 1rem', fontSize:'0.72rem', borderRadius:6, gap:'0.4rem' }}>
+                  <LogIn size={13}/> Register
+                </button>
+              </>
             )}
           </div>
-          <button className="md:hidden p-2" style={{ color: currentView === 'home' && !scrolled ? '#f9ecb6' : '#334b46' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
+          <div className="flex md:hidden" style={{ justifySelf:'end' }}>
+            <button className="p-2" style={{ color: currentView === 'home' && !scrolled ? '#f9ecb6' : '#334b46' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -1078,9 +1277,9 @@ function LeapApp() {
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-40 leap-mobile-menu pt-24 px-6 md:hidden">
             <div className="flex flex-col gap-6 text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#f9ecb6' }}>
               <button onClick={() => { setCurrentView('home'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">Home</button>
-              <button onClick={() => { setCurrentView('about'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">About</button>
-              <button onClick={() => { setCurrentView('home'); setIsMenuOpen(false); window.setTimeout(() => window.scrollTo(0, document.getElementById('classes')?.offsetTop || 0), 100); }} className="text-left hover:text-leap-yellow transition-colors">Classes</button>
-              <button onClick={() => { setCurrentView('major-events'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">Major Events</button>
+              <button onClick={() => { setCurrentView('about'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">Overview</button>
+              <button onClick={() => { setCurrentView('major-events'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">Featured</button>
+              <button onClick={() => { setCurrentView('home'); setIsMenuOpen(false); window.setTimeout(() => window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0), 100); }} className="text-left hover:text-leap-yellow transition-colors">Classes</button>
               <button onClick={() => { setCurrentView('faq'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">FAQs</button>
               {userProfile?.role === 'admin' && <button onClick={() => { setIsAdminView(true); setIsMenuOpen(false); }} className="text-left leap-admin-link text-2xl">Admin Dashboard</button>}
               {user ? (
@@ -1119,8 +1318,8 @@ function LeapApp() {
                   </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row gap-4 justify-center fade-up delay-3">
-                    <a href="#classes" className="btn-leap-primary px-10 py-4 rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center gap-2">Register Now <ChevronRight size={20} /></a>
-                    <button onClick={() => window.scrollTo(0, document.getElementById('classes')?.offsetTop || 0)} className="btn-leap-secondary px-10 py-4 rounded-2xl font-bold text-lg">View Schedule</button>
+                    <a href="#classes-section" className="btn-leap-primary px-10 py-4 rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center gap-2">Register Now <ChevronRight size={20} /></a>
+                    <button onClick={() => window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0)} className="btn-leap-secondary px-10 py-4 rounded-2xl font-bold text-lg">View Schedule</button>
                   </div>
                 )}
                 <HeroStats />
@@ -1129,43 +1328,52 @@ function LeapApp() {
             <NayonScene />
           </header>
 
-          {/* SEARCH */}
+          {/* SEARCH BAR */}
           <section id="classes" className="search-section sticky top-16 z-30 py-4 px-4">
             <div className="container mx-auto max-w-5xl">
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col md:flex-row gap-3">
                 <div className="relative flex-grow">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-leap-olive" size={18} />
-                  <input type="text" placeholder="Search classes, subthemes, or organizations..." className="leap-search w-full pl-12 pr-4 py-4" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                  <input type="text" placeholder="Search events, workshops, or themes…" className="leap-search w-full pl-12 pr-4 py-3.5" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
                 </div>
-                <div className="flex gap-2">
-                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="leap-select flex items-center gap-2 px-6 py-4 appearance-none">
-                    <option value="title-asc">Sort by: Title (A–Z)</option>
-                    <option value="title-desc">Sort by: Title (Z–A)</option>
-                    <option value="slots-desc">Sort by: Most Slots</option>
-                    <option value="slots-asc">Sort by: Fewest Slots</option>
-                  </select>
-                </div>
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="leap-select px-5 py-3.5 appearance-none">
+                  <option value="title-asc">Sort: Title (A–Z)</option>
+                  <option value="title-desc">Sort: Title (Z–A)</option>
+                  <option value="slots-desc">Sort: Most Slots</option>
+                  <option value="slots-asc">Sort: Fewest Slots</option>
+                </select>
               </div>
             </div>
           </section>
 
-          {/* CLASS GRID */}
-          <main className="container mx-auto px-4 py-12 flex-grow">
+          <MainEventsSection />
+
+          <SubthemesStrip activeTheme={activeSubtheme} onSelect={(t) => { setActiveSubtheme(t); setCurrentPage(1); setSelectedDay(null); }} />
+
+          {/* CLASSES SECTION */}
+          <section id="classes-section">
             {!user ? (
-              <div className="leap-info-card p-12 rounded-3xl text-center">
-                <div className="leap-detail-icon-wrap w-16 h-16 mx-auto mb-6" style={{ width: 64, height: 64 }}><Info size={32} /></div>
-                <h3 className="text-2xl font-bold text-leap-dark mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Sign in to see classes</h3>
-                <p className="text-leap-olive mb-8 text-lg">You must be signed in with your DLSU account to view and register for LEAP classes.</p>
-                <button onClick={handleSignIn} className="btn-leap-primary px-10 py-4 rounded-2xl font-bold text-lg shadow-xl">Sign In Now</button>
+              <div className="container mx-auto px-4 py-16">
+                <div className="leap-info-card p-12 rounded-3xl text-center max-w-xl mx-auto">
+                  <div className="leap-detail-icon-wrap w-16 h-16 mx-auto mb-6" style={{ width: 64, height: 64 }}><Info size={32} /></div>
+                  <h3 className="text-2xl font-bold text-leap-dark mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Sign in to see classes</h3>
+                  <p className="text-leap-olive mb-8 text-lg">You must be signed in with your DLSU account to view and register for LEAP classes.</p>
+                  <button onClick={handleSignIn} className="btn-leap-primary px-10 py-4 rounded-2xl font-bold text-lg shadow-xl">Sign In Now</button>
+                </div>
               </div>
             ) : viewingClass ? (
-              <div className="max-w-4xl mx-auto">
+              <div className="container mx-auto px-4 py-12 max-w-4xl">
                 <button onClick={() => { setViewingClass(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="leap-see-more mb-8"><ArrowLeft size={16} /> Back to Classes</button>
                 <div className="glass-card rounded-3xl overflow-hidden">
                   <div className="h-80 w-full relative">
                     <img src={viewingClass.image} alt={viewingClass.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                    <div className="absolute top-6 left-6 flex gap-2"><span className="leap-detail-badge">{viewingClass.subtheme}</span></div>
+                    <div className="absolute top-6 left-6 flex gap-2 items-center">
+                      {viewingClass.orgLogo ? (
+                        <img src={viewingClass.orgLogo} alt={viewingClass.org} style={{ width:32,height:32,borderRadius:6,objectFit:'cover',border:'2px solid rgba(222,154,73,0.5)' }} referrerPolicy="no-referrer"/>
+                      ) : null}
+                      <span className="leap-detail-badge">{viewingClass.subtheme}</span>
+                    </div>
                   </div>
                   <div className="p-10">
                     <h1 className="text-4xl font-bold text-leap-dark mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>{viewingClass.title}</h1>
@@ -1197,61 +1405,91 @@ function LeapApp() {
                 </div>
               </div>
             ) : (
-              <>
-                {selectedDay === null ? (
-                  <div>
-                    {Array.from<string>(new Set(filteredAndSortedClasses.map(c => c.date as string)))
-                      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-                      .map((date, dayIndex) => {
+              <div className="leap-days-layout" style={{ minHeight: '60vh' }}>
+                <aside className="leap-days-sidebar">
+                  <div className="leap-days-sidebar-title">LEAP<br/>Days</div>
+                  {uniqueDays.length === 0 ? (
+                    <p style={{ padding:'1rem 1.5rem', fontFamily:"'DM Sans',sans-serif", fontSize:'0.82rem', color:'rgba(124,107,75,0.6)' }}>No days found.</p>
+                  ) : (
+                    uniqueDays.map((date, dayIndex) => {
+                      const count = filteredAndSortedClasses.filter(c => c.date === date).length;
+                      return (
+                        <button
+                          key={date}
+                          className={`day-sidebar-item w-full text-left ${selectedDay === date ? 'active' : ''}`}
+                          onClick={() => { setSelectedDay(date === selectedDay ? null : date); setCurrentPage(1); }}
+                        >
+                          <span className="day-sidebar-num">Day {String(dayIndex + 1).padStart(2,'0')}</span>
+                          <span className="day-sidebar-name">{date.split(',')[0]}</span>
+                          <span className="day-sidebar-count">{count}</span>
+                        </button>
+                      );
+                    })
+                  )}
+                </aside>
+                <main className="leap-classes-main">
+                  {selectedDay === null ? (
+                    <div>
+                      {uniqueDays.map((date, dayIndex) => {
                         const dayClasses = filteredAndSortedClasses.filter(c => c.date === date);
                         const previewClasses = dayClasses.slice(0, 3);
                         return (
-                          <div key={date} className="mb-16">
-                            <div className="flex justify-between items-end mb-8">
+                          <div key={date} className="mb-14">
+                            <div className="flex justify-between items-end mb-6">
                               <div>
                                 <p className="day-eyebrow">Day {dayIndex + 1}</p>
                                 <h2 className="leap-day-label">{date}</h2>
                                 <p className="leap-day-count mt-1">{dayClasses.length} classes available</p>
                               </div>
                               {dayClasses.length > 3 && (
-                                <button onClick={() => { setSelectedDay(date); setCurrentPage(1); }} className="leap-see-more">See All <ChevronRight size={16} /></button>
+                                <button onClick={() => { setSelectedDay(date); setCurrentPage(1); }} className="leap-see-more">
+                                  See All <ChevronRight size={16} />
+                                </button>
                               )}
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                               {previewClasses.map((item, index) => renderClassCard(item, index))}
                             </div>
-                            {dayIndex < Array.from(new Set(filteredAndSortedClasses.map(c => c.date))).length - 1 && (
+                            {dayIndex < uniqueDays.length - 1 && (
                               <div className="leap-divider"><div className="leap-divider-icon" /></div>
                             )}
                           </div>
                         );
                       })}
-                    {filteredAndSortedClasses.length === 0 && <div className="text-center py-12 text-leap-olive">No classes found matching your search.</div>}
-                  </div>
-                ) : (
-                  <div>
-                    <div className="flex items-center gap-4 mb-8">
-                      <button onClick={() => { setSelectedDay(null); setCurrentPage(1); }} className="p-2 hover:bg-leap-tan/30 rounded-full transition-colors"><ArrowLeft size={24} /></button>
-                      <div>
-                        <p className="day-eyebrow">All Classes</p>
-                        <h2 className="leap-day-label">{selectedDay}</h2>
-                      </div>
+                      {filteredAndSortedClasses.length === 0 && (
+                        <div className="text-center py-16 text-leap-olive">
+                          <p style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:700, marginBottom:'0.5rem' }}>No classes found</p>
+                          <p style={{ fontSize:'0.9rem' }}>Try adjusting your search or filters.</p>
+                        </div>
+                      )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                      {filteredAndSortedClasses.filter(c => c.date === selectedDay).slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((item, index) => renderClassCard(item, index))}
-                    </div>
-                    {Math.ceil(filteredAndSortedClasses.filter(c => c.date === selectedDay).length / ITEMS_PER_PAGE) > 1 && (
-                      <div className="flex justify-center items-center gap-4">
-                        <button disabled={currentPage === 1} onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="leap-page-btn px-6 py-3 font-bold">Previous</button>
-                        <span className="font-bold text-leap-dark text-sm">Page {currentPage} of {Math.ceil(filteredAndSortedClasses.filter(c => c.date === selectedDay).length / ITEMS_PER_PAGE)}</span>
-                        <button disabled={currentPage === Math.ceil(filteredAndSortedClasses.filter(c => c.date === selectedDay).length / ITEMS_PER_PAGE)} onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="leap-page-btn px-6 py-3 font-bold">Next</button>
+                  ) : (
+                    <div>
+                      <div className="flex items-center gap-4 mb-8">
+                        <button onClick={() => { setSelectedDay(null); setCurrentPage(1); }} className="p-2 hover:bg-leap-tan/30 rounded-full transition-colors"><ArrowLeft size={24} /></button>
+                        <div>
+                          <p className="day-eyebrow">All Classes</p>
+                          <h2 className="leap-day-label">{selectedDay}</h2>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                )}
-              </>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                        {filteredAndSortedClasses.filter(c => c.date === selectedDay)
+                          .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                          .map((item, index) => renderClassCard(item, index))}
+                      </div>
+                      {Math.ceil(filteredAndSortedClasses.filter(c => c.date === selectedDay).length / ITEMS_PER_PAGE) > 1 && (
+                        <div className="flex justify-center items-center gap-4">
+                          <button disabled={currentPage === 1} onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="leap-page-btn px-6 py-3 font-bold flex items-center gap-2"><ChevronLeft size={16}/> Prev</button>
+                          <span className="font-bold text-leap-dark text-sm">Page {currentPage} of {Math.ceil(filteredAndSortedClasses.filter(c => c.date === selectedDay).length / ITEMS_PER_PAGE)}</span>
+                          <button disabled={currentPage === Math.ceil(filteredAndSortedClasses.filter(c => c.date === selectedDay).length / ITEMS_PER_PAGE)} onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="leap-page-btn px-6 py-3 font-bold flex items-center gap-2">Next <ChevronRight size={16}/></button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </main>
+              </div>
             )}
-          </main>
+          </section>
         </>
       )}
 
@@ -1276,7 +1514,7 @@ function LeapApp() {
             <h4 className="font-bold text-xs uppercase tracking-widest text-leap-gold mb-6">Quick Links</h4>
             <ul className="space-y-4 text-leap-cream/60 text-sm">
               <li><button onClick={() => { setCurrentView('about'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">About LEAP</button></li>
-              <li><button onClick={() => { setCurrentView('home'); window.scrollTo(0, document.getElementById('classes')?.offsetTop || 0); }} className="hover:text-white transition-colors">Class List</button></li>
+              <li><button onClick={() => { setCurrentView('home'); window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0); }} className="hover:text-white transition-colors">Class List</button></li>
               <li><button onClick={() => { setCurrentView('major-events'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">Major Events</button></li>
               <li><button onClick={() => { setCurrentView('faq'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">FAQs</button></li>
             </ul>
