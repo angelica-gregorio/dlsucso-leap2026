@@ -650,8 +650,8 @@ const MainEventsSection = () => {
             <h2 className="main-events-title">Main Events</h2>
           </div>
           <div className="main-events-nav">
-            <button className="carousel-nav-btn"><ChevronLeft size={15}/></button>
-            <button className="carousel-nav-btn"><ChevronRight size={15}/></button>
+            <button className="carousel-nav-btn" aria-label="Previous slide"><ChevronLeft size={15}/></button>
+            <button className="carousel-nav-btn" aria-label="Next slide"><ChevronRight size={15}/></button>
           </div>
         </div>
         <div className="main-events-grid">
@@ -1291,7 +1291,7 @@ function LeapApp() {
       </AnimatePresence>
 
       {currentView === 'home' && (
-        <>
+        <main className="flex-grow">
           {/* HERO */}
           <header className="relative overflow-hidden hero-bg" style={{ minHeight: '100vh', paddingTop: '7rem', paddingBottom: 'clamp(140px, 34vw, 490px)' }}>
             <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
@@ -1334,7 +1334,7 @@ function LeapApp() {
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-leap-olive" size={18} />
                   <input type="text" placeholder="Search events, workshops, or themes…" className="leap-search w-full pl-12 pr-4 py-3.5" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
                 </div>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="leap-select px-5 py-3.5 appearance-none">
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Sort events" className="leap-select px-5 py-3.5 appearance-none">
                   <option value="title-asc">Sort: Title (A–Z)</option>
                   <option value="title-desc">Sort: Title (Z–A)</option>
                   <option value="slots-desc">Sort: Most Slots</option>
@@ -1488,7 +1488,7 @@ function LeapApp() {
               </div>
             )}
           </section>
-        </>
+        </main>
       )}
 
       {currentView === 'about' && <AboutPage />}
