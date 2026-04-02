@@ -2,9 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-import React from 'react';
-
-import { useState, useEffect, useRef, type ErrorInfo, type ReactNode, Component } from 'react';
+import { useState, useEffect, useRef, useMemo, type CSSProperties, type ErrorInfo, type ReactNode, Component } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft,
@@ -145,7 +143,7 @@ const Fireflies = () => (
           animationDelay: `${f.delay}s, ${f.delay}s`,
           transform: `translate(0, 0)`,
           boxShadow: `0 0 ${f.size * 3}px ${f.size * 2}px rgba(250,225,133,0.7)`,
-        } as React.CSSProperties}
+        } as CSSProperties}
       />
     ))}
   </div>
@@ -605,12 +603,12 @@ const PageHero = ({ title, subtitle, accent }: { title: string; subtitle: string
    SUBTHEMES DATA
 ══════════════════════════════════════════════════════ */
 const SUBTHEMES = [
-  { icon: <Star size={20}/>, label: 'Community' },
-  { icon: <Palette size={20}/>, label: 'Arts & Culture' },
-  { icon: <Leaf size={20}/>, label: 'Solidarity' },
-  { icon: <Globe size={20}/>, label: 'Leadership' },
-  { icon: <Zap size={20}/>, label: 'Spirituality' },
-  { icon: <Layers size={20}/>, label: 'Stewardship' },
+  { icon: <Star size={20}/>, label: 'Palayan ng Karunungan' },
+  { icon: <Palette size={20}/>, label: 'Pamilihan ng Kakayahan' },
+  { icon: <Leaf size={20}/>, label: 'Plaza ng Malikhaing Diwa' },
+  { icon: <Globe size={20}/>, label: 'Dambana ng Pagkakaisa' },
+  { icon: <Zap size={20}/>, label: 'Palaisdaan ng Kalusugan' },
+  { icon: <Layers size={20}/>, label: 'Bahay ng Bayanihan' },
 ];
 
 /* ══════════════════════════════════════════════════════
@@ -1009,16 +1007,16 @@ function LeapApp() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const filteredAndSortedClasses = React.useMemo(() => {
-    let result = classes.filter(c =>
+  const filteredAndSortedClasses: LeapClass[] = useMemo(() => {
+    let result: LeapClass[] = classes.filter((c: LeapClass) =>
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.org.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.subtheme.toLowerCase().includes(searchQuery.toLowerCase())
     );
     if (activeSubtheme) {
-      result = result.filter(c => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
+      result = result.filter((c: LeapClass) => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
     }
-    result.sort((a, b) => {
+    result.sort((a: LeapClass, b: LeapClass) => {
       if (sortBy === 'title-asc') return a.title.localeCompare(b.title);
       if (sortBy === 'title-desc') return b.title.localeCompare(a.title);
       if (sortBy === 'slots-desc') return b.slots - a.slots;
@@ -1028,9 +1026,9 @@ function LeapApp() {
     return result;
   }, [classes, searchQuery, sortBy, activeSubtheme]);
 
-  const uniqueDays = React.useMemo(() => (
-    Array.from<string>(new Set(filteredAndSortedClasses.map(c => c.date as string)))
-      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+  const uniqueDays: string[] = useMemo(() => (
+    Array.from(new Set(filteredAndSortedClasses.map((c: LeapClass) => c.date)))
+      .sort((a: string, b: string) => new Date(a).getTime() - new Date(b).getTime())
   ), [filteredAndSortedClasses]);
 
   useEffect(() => {
@@ -1064,7 +1062,7 @@ function LeapApp() {
       if (!contentfulClient) { setLoading(false); return; }
       try {
         const response = await contentfulClient.getEntries({ content_type: 'leapClass2026' });
-        const classList = response.items.map((item: { sys: { id: string }; fields: { title?: string; organizationInCharge?: string; classModality?: string; dateAndTime?: string; venue?: string; numberOfSlots?: number; subtheme?: string; posterPublishingMaterial?: { fields: { file?: { url: string } } }; organizationInChargeLogo?: { fields: { file?: { url: string } } }; registrationLink?: string; description?: string } }) => {
+        const classList: LeapClass[] = response.items.map((item: { sys: { id: string }; fields: { title?: string; organizationInCharge?: string; classModality?: string; dateAndTime?: string; venue?: string; numberOfSlots?: number; subtheme?: string; posterPublishingMaterial?: { fields: { file?: { url: string } } }; organizationInChargeLogo?: { fields: { file?: { url: string } } }; registrationLink?: string; description?: string } }) => {
           let formattedDate = '', formattedTime = '';
           if (item.fields.dateAndTime) {
             const dateObj = new Date(item.fields.dateAndTime);
@@ -1411,8 +1409,8 @@ function LeapApp() {
                   {uniqueDays.length === 0 ? (
                     <p style={{ padding:'1rem 1.5rem', fontFamily:"'DM Sans',sans-serif", fontSize:'0.82rem', color:'rgba(124,107,75,0.6)' }}>No days found.</p>
                   ) : (
-                    uniqueDays.map((date, dayIndex) => {
-                      const count = filteredAndSortedClasses.filter(c => c.date === date).length;
+                    uniqueDays.map((date: string, dayIndex: number) => {
+                      const count = filteredAndSortedClasses.filter((c: LeapClass) => c.date === date).length;
                       return (
                         <button
                           key={date}
@@ -1430,8 +1428,8 @@ function LeapApp() {
                 <main className="leap-classes-main">
                   {selectedDay === null ? (
                     <div>
-                      {uniqueDays.map((date, dayIndex) => {
-                        const dayClasses = filteredAndSortedClasses.filter(c => c.date === date);
+                      {uniqueDays.map((date: string, dayIndex: number) => {
+                        const dayClasses = filteredAndSortedClasses.filter((c: LeapClass) => c.date === date);
                         const previewClasses = dayClasses.slice(0, 3);
                         return (
                           <div key={date} className="mb-14">
@@ -1448,7 +1446,7 @@ function LeapApp() {
                               )}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                              {previewClasses.map((item, index) => renderClassCard(item, index))}
+                              {previewClasses.map((item: LeapClass, index: number) => renderClassCard(item, index))}
                             </div>
                             {dayIndex < uniqueDays.length - 1 && (
                               <div className="leap-divider"><div className="leap-divider-icon" /></div>
@@ -1473,15 +1471,15 @@ function LeapApp() {
                         </div>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                        {filteredAndSortedClasses.filter(c => c.date === selectedDay)
+                        {filteredAndSortedClasses.filter((c: LeapClass) => c.date === selectedDay)
                           .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-                          .map((item, index) => renderClassCard(item, index))}
+                          .map((item: LeapClass, index: number) => renderClassCard(item, index))}
                       </div>
-                      {Math.ceil(filteredAndSortedClasses.filter(c => c.date === selectedDay).length / ITEMS_PER_PAGE) > 1 && (
+                      {Math.ceil(filteredAndSortedClasses.filter((c: LeapClass) => c.date === selectedDay).length / ITEMS_PER_PAGE) > 1 && (
                         <div className="flex justify-center items-center gap-4">
                           <button disabled={currentPage === 1} onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="leap-page-btn px-6 py-3 font-bold flex items-center gap-2"><ChevronLeft size={16}/> Prev</button>
-                          <span className="font-bold text-leap-dark text-sm">Page {currentPage} of {Math.ceil(filteredAndSortedClasses.filter(c => c.date === selectedDay).length / ITEMS_PER_PAGE)}</span>
-                          <button disabled={currentPage === Math.ceil(filteredAndSortedClasses.filter(c => c.date === selectedDay).length / ITEMS_PER_PAGE)} onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="leap-page-btn px-6 py-3 font-bold flex items-center gap-2">Next <ChevronRight size={16}/></button>
+                          <span className="font-bold text-leap-dark text-sm">Page {currentPage} of {Math.ceil(filteredAndSortedClasses.filter((c: LeapClass) => c.date === selectedDay).length / ITEMS_PER_PAGE)}</span>
+                          <button disabled={currentPage === Math.ceil(filteredAndSortedClasses.filter((c: LeapClass) => c.date === selectedDay).length / ITEMS_PER_PAGE)} onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="leap-page-btn px-6 py-3 font-bold flex items-center gap-2">Next <ChevronRight size={16}/></button>
                         </div>
                       )}
                     </div>
