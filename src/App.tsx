@@ -17,7 +17,7 @@ import {
   onAuthStateChanged, doc, getDoc, setDoc
 } from './firebase';
 import type { User as FirebaseUser } from "firebase/auth";
-import leapLogo from './assets/leap.png';
+import leapLogo from './assets/leap.webp';
 
 interface ErrorBoundaryProps { children: ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
