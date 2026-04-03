@@ -25,6 +25,7 @@ import FAQs from './pages/FAQs';
 import Classes from './pages/Classes';
 
 import leapLogo from './assets/leap.webp';
+import salakotCursor from './assets/salakot_cursor.webp';
 import styles from './App.module.css';
 
 interface ErrorBoundaryProps { children: ReactNode; }
@@ -82,29 +83,35 @@ const ScrollProgress = () => {
 ══════════════════════════════════════════════════════ */
 const CustomCursor = () => {
   const [dot, setDot] = useState({ x: -100, y: -100 });
-  const [ring, setRing] = useState({ x: -100, y: -100 });
-  const dotRef = useRef({ x: -100, y: -100 });
-  const ringRef = useRef({ x: -100, y: -100 });
+  const [isVisible, setIsVisible] = useState(false);
+
   useEffect(() => {
-    const mv = (e: MouseEvent) => { dotRef.current = { x: e.clientX, y: e.clientY }; setDot({ x: e.clientX, y: e.clientY }); };
-    window.addEventListener('mousemove', mv);
-    return () => window.removeEventListener('mousemove', mv);
-  }, []);
-  useEffect(() => {
-    let id: number;
-    const loop = () => {
-      ringRef.current = { x: ringRef.current.x + (dotRef.current.x - ringRef.current.x) * 0.12, y: ringRef.current.y + (dotRef.current.y - ringRef.current.y) * 0.12 };
-      setRing({ ...ringRef.current });
-      id = requestAnimationFrame(loop);
+    const mv = (e: MouseEvent) => { 
+      setDot({ x: e.clientX, y: e.clientY }); 
+      setIsVisible(true);
     };
-    id = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(id);
+    const leave = () => setIsVisible(false);
+    const enter = () => setIsVisible(true);
+
+    window.addEventListener('mousemove', mv);
+    document.addEventListener('mouseleave', leave);
+    document.addEventListener('mouseenter', enter);
+
+    return () => {
+      window.removeEventListener('mousemove', mv);
+      document.removeEventListener('mouseleave', leave);
+      document.removeEventListener('mouseenter', enter);
+    };
   }, []);
+
   return (
-    <>
-      <div style={{ position: 'fixed', pointerEvents: 'none', zIndex: 99999, left: dot.x - 5, top: dot.y - 5, width: 10, height: 10, borderRadius: '50%', background: '#de9a49', mixBlendMode: 'screen' }} />
-      <div style={{ position: 'fixed', pointerEvents: 'none', zIndex: 99998, left: ring.x - 18, top: ring.y - 18, width: 36, height: 36, borderRadius: '50%', border: '1.5px solid rgba(222,154,73,0.5)', mixBlendMode: 'screen' }} />
-    </>
+    <div style={{ 
+      position: 'fixed', pointerEvents: 'none', zIndex: 99999, 
+      left: dot.x, top: dot.y, transform: 'translate(-15%, -15%)',
+      opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease' 
+    }}>
+      <img src={salakotCursor} alt="Cursor" style={{ width: 32, height: 32, display: 'block' }} />
+    </div>
   );
 };
 
