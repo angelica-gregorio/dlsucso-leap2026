@@ -17,7 +17,7 @@ import {
   onAuthStateChanged, doc, getDoc, setDoc
 } from './firebase';
 import type { User as FirebaseUser } from "firebase/auth";
-import leapLogo from './assets/leap.png';
+import leapLogo from './assets/leap.webp';
 
 interface ErrorBoundaryProps { children: ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
@@ -53,14 +53,16 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
    PARALLAX MOUSE HOOK
 ══════════════════════════════════════════════════════ */
 function useParallaxMouse() {
-  const [pos, setPos] = useState({ x: 0, y: 0 });
   useEffect(() => {
-    const onMove = (e: MouseEvent) =>
-      setPos({ x: (e.clientX / window.innerWidth - 0.5) * 2, y: (e.clientY / window.innerHeight - 0.5) * 2 });
-    window.addEventListener('mousemove', onMove);
+    const onMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      document.documentElement.style.setProperty('--px', x.toString());
+      document.documentElement.style.setProperty('--py', y.toString());
+    };
+    window.addEventListener('mousemove', onMove, { passive: true });
     return () => window.removeEventListener('mousemove', onMove);
   }, []);
-  return pos;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -198,10 +200,8 @@ const TOOLTIPS: Record<string, { label:string; desc:string }> = {
 };
 
 const NayonScene = () => {
-  const mouse = useParallaxMouse();
+  useParallaxMouse();
   const [hovered, setHovered] = useState<string|null>(null);
-  const px = (s:number) => mouse.x * s;
-  const py = (s:number) => mouse.y * s;
 
   return (
     <>
@@ -299,12 +299,12 @@ const NayonScene = () => {
         ))}
 
         {[[320,60,0.75,0],[380,48,0.6,0.3],[350,54,0.65,0.15],[1060,66,0.75,0.5],[1110,54,0.6,0.7]].map(([x,y,sc,dl],i) => (
-          <g key={i} transform={`translate(${(x as number)+px(-4)},${(y as number)+py(-2)}) scale(${sc})`} className={`bird bird-d${i}`} style={{ animationDelay:`${dl}s` }}>
+          <g key={i} className={`bird bird-d${i}`} style={{ transform: `translate(calc(${x}px + var(--px, 0) * -4px), calc(${y}px + var(--py, 0) * -2px)) scale(${sc})`, animationDelay: `${dl}s` }}>
             <path d="M0 0 Q6 -5 12 0 Q18 -5 24 0" fill="none" stroke="rgba(222,154,73,0.4)" strokeWidth="2" strokeLinecap="round"/>
           </g>
         ))}
 
-        <g transform={`translate(${px(-8)},${py(-5)})`}>
+        <g style={{ transform: 'translate(calc(var(--px, 0) * -8px), calc(var(--py, 0) * -5px))' }}>
           <ellipse cx="900" cy="120" rx="300" ry="80" fill="url(#summitGlow)" />
           <path d="M900 18 L710 290 L1090 290 Z" fill="url(#volcanoG)" />
           <path d="M900 18 L1090 290 L1020 290 Z" fill="rgba(0,0,0,0.15)" />
@@ -312,22 +312,22 @@ const NayonScene = () => {
           <ellipse cx="900" cy="22" rx="14" ry="9" fill="rgba(222,154,73,0.22)" className="volcano-pulse"/>
         </g>
 
-        <g transform={`translate(${px(-6)},${py(-4)})`}>
+        <g style={{ transform: 'translate(calc(var(--px, 0) * -6px), calc(var(--py, 0) * -4px))' }}>
           <path d="M0 250 Q150 195 310 220 Q430 238 550 215 Q620 200 710 290 L0 290 Z" fill="url(#hill3G)" />
           <path d="M1090 290 Q1170 210 1280 200 Q1360 192 1440 220 L1440 290 Z" fill="url(#hill3G)" />
         </g>
 
-        <g transform={`translate(${px(-5)},${py(-3)})`}>
+        <g style={{ transform: 'translate(calc(var(--px, 0) * -5px), calc(var(--py, 0) * -3px))' }}>
           <path d="M0 295 Q130 255 280 272 Q430 290 560 258 Q680 228 800 265 Q920 302 1060 260 Q1180 225 1310 262 Q1390 282 1440 270 L1440 480 L0 480 Z" fill="url(#hill3G)" />
         </g>
-        <g transform={`translate(${px(-3)},${py(-2)})`}>
+        <g style={{ transform: 'translate(calc(var(--px, 0) * -3px), calc(var(--py, 0) * -2px))' }}>
           <path d="M0 278 Q360 260 720 275 Q1080 290 1440 272 L1440 310 Q1080 328 720 312 Q360 296 0 314 Z" fill="url(#mistG)" />
           <path d="M0 294 Q360 279 720 291 Q1080 303 1440 293 L1440 326 Q1080 326 720 314 Q360 302 0 314 Z" fill="url(#waterG)" />
         </g>
-        <g transform={`translate(${px(-3)},${py(-2)})`}>
+        <g style={{ transform: 'translate(calc(var(--px, 0) * -3px), calc(var(--py, 0) * -2px))' }}>
           <path d="M0 318 Q110 285 250 302 Q400 320 540 290 Q660 264 780 295 Q910 328 1060 290 Q1180 260 1310 290 Q1390 308 1440 298 L1440 480 L0 480 Z" fill="url(#hill2G)" />
         </g>
-        <g transform={`translate(${px(-1.5)},${py(-1)})`}>
+        <g style={{ transform: 'translate(calc(var(--px, 0) * -1.5px), calc(var(--py, 0) * -1px))' }}>
           <path d="M0 352 Q130 322 300 338 Q460 355 620 325 Q760 298 900 332 Q1050 368 1200 335 Q1330 308 1440 330 L1440 480 L0 480 Z" fill="url(#hill1G)" />
         </g>
 
@@ -340,7 +340,8 @@ const NayonScene = () => {
           </g>
         ))}
 
-        <g transform={`translate(${36+px(7)},${226+py(4)})`}>
+        
+        <g style={{ transform: 'translate(calc(36px + var(--px, 0) * 7px), calc(226px + var(--py, 0) * 4px))' }}>
           <path d="M0 190 Q3 152 -2 115 Q-5 86 0 56 Q4 26 2 0" stroke="#7a5a30" strokeWidth="9" fill="none" strokeLinecap="round"/>
           <path d="M0 190 Q3 152 -2 115 Q-5 86 0 56 Q4 26 2 0" stroke="#a07840" strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.3"/>
           {[[-140,88],[-110,104],[-80,98],[-50,92],[-20,85],[10,78],[40,72]].map(([angle,len],i) => {
@@ -351,7 +352,7 @@ const NayonScene = () => {
           <ellipse cx="-5" cy="2" rx="6" ry="7" fill="#5a3a18"/>
         </g>
 
-        <g transform={`translate(${1398+px(9)},${238+py(4)})`}>
+        <g style={{ transform: 'translate(calc(1398px + var(--px, 0) * 9px), calc(238px + var(--py, 0) * 4px))' }}>
           <path d="M0 178 Q-3 143 2 106 Q5 80 0 52 Q-4 24 -2 0" stroke="#7a5a30" strokeWidth="8" fill="none" strokeLinecap="round"/>
           <path d="M0 178 Q-3 143 2 106 Q5 80 0 52 Q-4 24 -2 0" stroke="#a07840" strokeWidth="4" fill="none" strokeLinecap="round" opacity="0.28"/>
           {[-150,-120,-90,-60,-30,0,30].map((angle,i) => {
@@ -362,8 +363,7 @@ const NayonScene = () => {
           <ellipse cx="4" cy="4" rx="5" ry="6" fill="#5a3a18"/>
         </g>
 
-        <g transform={`translate(${108+px(5)}, ${230+py(3)})`}
-          style={{ cursor:'pointer', pointerEvents:'all' }}
+        <g style={{ transform: 'translate(calc(108px + var(--px, 0) * 5px), calc(230px + var(--py, 0) * 3px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('hut1')} onMouseLeave={() => setHovered(null)}
           filter={hovered==='hut1' ? 'url(#glowF)' : undefined}>
           <ellipse cx="94" cy="190" rx="80" ry="13" fill="url(#hutGlowG)"/>
@@ -407,8 +407,7 @@ const NayonScene = () => {
           <line x1="88" y1="174" x2="103" y2="170" stroke="#7a5030" strokeWidth="3" strokeLinecap="round" />
         </g>
 
-        <g transform={`translate(${980+px(3)}, ${255+py(2)})`}
-          style={{ cursor:'pointer', pointerEvents:'all' }}
+        <g style={{ transform: 'translate(calc(980px + var(--px, 0) * 3px), calc(255px + var(--py, 0) * 2px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('hut2')} onMouseLeave={() => setHovered(null)}
           filter={hovered==='hut2' ? 'url(#softGlowF)' : undefined}>
           <ellipse cx="80" cy="162" rx="66" ry="11" fill="url(#hutGlowG)"/>
@@ -440,8 +439,7 @@ const NayonScene = () => {
           <rect x="8" y="46" width="170" height="4" rx="2" fill="#c89850" opacity="0.4"/>
         </g>
 
-        <g transform={`translate(${610+px(2)}, ${270+py(1.5)})`}
-          style={{ cursor:'pointer', pointerEvents:'all' }}
+        <g style={{ transform: 'translate(calc(610px + var(--px, 0) * 2px), calc(270px + var(--py, 0) * 1.5px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('palay')} onMouseLeave={() => setHovered(null)}
           filter={hovered==='palay' ? 'url(#softGlowF)' : undefined}>
           <ellipse cx="90" cy="152" rx="92" ry="8" fill="rgba(12,35,12,0.24)"/>
@@ -485,8 +483,7 @@ const NayonScene = () => {
           ))}
         </g>
 
-        <g transform={`translate(${1218+px(4)}, ${315+py(2)})`}
-          style={{ cursor:'pointer', pointerEvents:'all' }}
+        <g style={{ transform: 'translate(calc(1218px + var(--px, 0) * 4px), calc(315px + var(--py, 0) * 2px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('salakot')} onMouseLeave={() => setHovered(null)}
           filter={hovered==='salakot' ? 'url(#glowF)' : undefined}>
           <ellipse cx="0" cy="155" rx="70" ry="10" fill="rgba(0,0,0,0.25)"/>
@@ -508,8 +505,7 @@ const NayonScene = () => {
           <ellipse cx="0" cy="155" rx="30" ry="4" fill="#7a4c10" opacity="0.6" />
         </g>
 
-        <g transform={`translate(${1340+px(5)}, ${348+py(3)})`}
-          style={{ cursor:'pointer', pointerEvents:'all' }}
+        <g style={{ transform: 'translate(calc(1340px + var(--px, 0) * 5px), calc(348px + var(--py, 0) * 3px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('bayong')} onMouseLeave={() => setHovered(null)}
           filter={hovered==='bayong' ? 'url(#softGlowF)' : undefined}>
           <ellipse cx="40" cy="96" rx="44" ry="7" fill="rgba(12,35,12,0.22)"/>
@@ -531,8 +527,7 @@ const NayonScene = () => {
           <path d="M22 -4 Q32 -24 48 -4" fill="none" stroke="rgba(255,200,80,0.4)" strokeWidth="2" strokeLinecap="round" />
         </g>
 
-        <g transform={`translate(${408+px(3)}, ${352+py(2)})`}
-          style={{ cursor:'pointer', pointerEvents:'all' }}
+        <g style={{ transform: 'translate(calc(408px + var(--px, 0) * 3px), calc(352px + var(--py, 0) * 2px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('pandesal')} onMouseLeave={() => setHovered(null)}
           filter={hovered==='pandesal' ? 'url(#glowF)' : undefined}>
           <ellipse cx="55" cy="108" rx="68" ry="9" fill="rgba(12,35,12,0.24)"/>
@@ -650,8 +645,8 @@ const MainEventsSection = () => {
             <h2 className="main-events-title">Main Events</h2>
           </div>
           <div className="main-events-nav">
-            <button className="carousel-nav-btn"><ChevronLeft size={15}/></button>
-            <button className="carousel-nav-btn"><ChevronRight size={15}/></button>
+            <button className="carousel-nav-btn" aria-label="Previous slide"><ChevronLeft size={15}/></button>
+            <button className="carousel-nav-btn" aria-label="Next slide"><ChevronRight size={15}/></button>
           </div>
         </div>
         <div className="main-events-grid">
@@ -1291,7 +1286,7 @@ function LeapApp() {
       </AnimatePresence>
 
       {currentView === 'home' && (
-        <>
+        <main className="flex-grow">
           {/* HERO */}
           <header className="relative overflow-hidden hero-bg" style={{ minHeight: '100vh', paddingTop: '7rem', paddingBottom: 'clamp(140px, 34vw, 490px)' }}>
             <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
@@ -1334,7 +1329,7 @@ function LeapApp() {
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-leap-olive" size={18} />
                   <input type="text" placeholder="Search events, workshops, or themes…" className="leap-search w-full pl-12 pr-4 py-3.5" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
                 </div>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="leap-select px-5 py-3.5 appearance-none">
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Sort events" className="leap-select px-5 py-3.5 appearance-none">
                   <option value="title-asc">Sort: Title (A–Z)</option>
                   <option value="title-desc">Sort: Title (Z–A)</option>
                   <option value="slots-desc">Sort: Most Slots</option>
@@ -1488,7 +1483,7 @@ function LeapApp() {
               </div>
             )}
           </section>
-        </>
+        </main>
       )}
 
       {currentView === 'about' && <AboutPage />}
