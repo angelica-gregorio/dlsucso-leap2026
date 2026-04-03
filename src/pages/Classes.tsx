@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft, Info, ArrowLeft, X } from 'lucide-react';
+import { Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft, Info, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { User as FirebaseUser } from 'firebase/auth';
 
