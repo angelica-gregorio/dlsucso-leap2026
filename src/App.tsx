@@ -1068,8 +1068,10 @@ const LeapApp = () => {
   );
 
   const HeroExtras = hasAppAccess && currentView === 'home' ? (
-    <div style={{ background: '#f5edcc', padding: '0.6rem 0 0.75rem' }}>
-      <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.85rem', marginLeft: '50%', transform: 'translateX(-50%)' }}>
+    <div style={{ background: 'transparent', padding: '0 0 0.75rem' }}>
+      <div style={{ width: 'min(1500px, 98vw)', marginTop: '0', marginLeft: '50%', transform: 'translateX(-50%)', position: 'relative' }}>
+        <div className={styles.subthemesBackdropTop} />
+        <div className={styles.subthemesBackdropRight} />
         <SubthemesStrip activeTheme={activeSubtheme} onSelect={(t) => { setActiveSubtheme(t); setCurrentPage(1); setSelectedDay(null); }} compact />
         {activeSubtheme && (
           <div style={{ textAlign: 'center', marginTop: '0.45rem' }}>

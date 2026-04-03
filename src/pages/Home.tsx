@@ -43,6 +43,15 @@ interface HomeProps {
   renderClassCard: (item: LeapClass, index: number) => ReactNode;
 }
 
+const HOME_FLIES = Array.from({ length: 30 }, (_, i) => ({
+  id: i,
+  x: (i * 16.7 + (i % 4) * 19) % 96 + 2,
+  y: (i * 12.1 + (i % 6) * 11) % 94 + 2,
+  size: 2 + (i % 3),
+  delay: (i * 0.57) % 6.5,
+  dur: 3.2 + (i % 5) * 0.58,
+}));
+
 export default function Home({
   user,
   searchQuery,
@@ -78,11 +87,33 @@ export default function Home({
     classes: filteredAndSortedClasses.filter((item) => item.date === day),
   }));
 
+  const heroBackground = 'linear-gradient(180deg, rgba(7, 18, 8, 0.98) 0%, rgba(22, 43, 29, 0.96) 40%, rgba(42, 90, 70, 0.94) 74%, rgba(42, 90, 70, 0.94) 100%)';
+
   return (
-    <main className="flex-grow" style={{ background: '#f5edcc' }}>
+    <main className="flex-grow" style={{ background: heroBackground, position: 'relative', overflow: 'hidden', isolation: 'isolate' }}>
+
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
+        {HOME_FLIES.map((f) => (
+          <span
+            key={f.id}
+            className="firefly"
+            style={{
+              left: `${f.x}%`,
+              top: `${f.y}%`,
+              width: f.size,
+              height: f.size,
+              animationDelay: `${f.delay}s`,
+              animationDuration: `${f.dur}s`,
+              boxShadow: `0 0 ${f.size * 3}px ${f.size * 2}px rgba(250,225,133,0.62)`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
 
       {/* ── HERO SECTION ─────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #1a3a34 0%, #2b5a4e 40%, #3a7a65 70%, #f5edcc 100%)' }}>
+      <section className="relative overflow-hidden" style={{ background: 'transparent' }}>
         <div style={{
           position: 'absolute', inset: 0,
           background: 'radial-gradient(ellipse 80% 60% at 50% 15%, rgba(222,154,73,0.18) 0%, transparent 70%)',
@@ -90,28 +121,23 @@ export default function Home({
         }} />
         {HeroSection}
         {/* Bottom fade to cream */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '2.5rem',
-          background: 'linear-gradient(to bottom, transparent, #f5edcc)',
-          pointerEvents: 'none',
-        }} />
       </section>
 
       {HeroExtras}
 
       {/* ── CLASS CATALOG ─────────────────────────────────────────────── */}
-      <section id="classes-section" style={{ padding: '2rem 0 5rem', background: '#f5edcc' }}>
+      <section id="classes-section" style={{ padding: '1.5rem 0 5rem', background: 'transparent' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem' }}>
 
           {/* Search + Sort bar */}
           <div style={{
-            background: 'rgba(255,255,255,0.6)',
-            backdropFilter: 'blur(12px)',
-            borderRadius: 20,
-            border: '1px solid rgba(222,154,73,0.25)',
-            padding: '1.25rem 1.5rem',
-            marginBottom: '2rem',
-            boxShadow: '0 8px 32px rgba(51,75,70,0.08)',
+            background: 'linear-gradient(180deg, rgba(40, 81, 71, 0.9) 0%, rgba(26, 58, 52, 0.92) 100%)',
+            backdropFilter: 'blur(16px)',
+            borderRadius: 24,
+            border: '1px solid rgba(249,236,182,0.14)',
+            padding: '1.15rem 1.35rem',
+            marginBottom: '1.75rem',
+            boxShadow: '0 18px 42px rgba(12, 28, 25, 0.22)',
             display: 'flex',
             gap: '0.75rem',
             flexWrap: 'wrap' as const,
@@ -148,27 +174,27 @@ export default function Home({
           {/* Two-column layout: Sidebar + Main */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '200px 1fr',
+            gridTemplateColumns: '220px 1fr',
             gap: '1.5rem',
             alignItems: 'start',
           }}>
 
             {/* ── SIDEBAR ── */}
             <aside style={{
-              background: 'rgba(255,255,255,0.55)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: 20,
-              border: '1px solid rgba(222,154,73,0.2)',
-              padding: '1.25rem 1rem',
-              boxShadow: '0 8px 32px rgba(51,75,70,0.07)',
+              background: 'linear-gradient(180deg, rgba(40, 81, 71, 0.92) 0%, rgba(26, 58, 52, 0.95) 100%)',
+              backdropFilter: 'blur(12px)',
+              borderRadius: 24,
+              border: '1px solid rgba(249,236,182,0.14)',
+              padding: '1.15rem 1rem',
+              boxShadow: '0 18px 42px rgba(12, 28, 25, 0.2)',
               position: 'sticky',
               top: '5rem',
             }}>
               <p style={{
                 fontFamily: "'Playfair Display', serif",
-                fontSize: '1.1rem',
+                fontSize: '1rem',
                 fontWeight: 700,
-                color: '#334b46',
+                color: '#f9ecb6',
                 marginBottom: '0.25rem',
               }}>LEAP</p>
               <p style={{
@@ -176,7 +202,7 @@ export default function Home({
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.12em',
-                color: '#6b8a7a',
+                color: 'rgba(249,236,182,0.72)',
                 marginBottom: '1rem',
               }}>Days</p>
 
@@ -212,13 +238,13 @@ export default function Home({
                       <span style={{
                         fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase',
                         letterSpacing: '0.1em',
-                        color: isActive ? '#de9a49' : '#6b8a7a',
+                          color: isActive ? '#fae185' : 'rgba(249,236,182,0.6)',
                       }}>
                         Day {String(dayIndex + 1).padStart(2, '0')}
                       </span>
                       <span style={{
                         fontSize: '0.85rem', fontWeight: 700,
-                        color: isActive ? '#334b46' : '#4a6560',
+                          color: isActive ? '#f9ecb6' : 'rgba(249,236,182,0.86)',
                         marginTop: '0.1rem',
                       }}>
                         {day.split(',')[0]}
@@ -227,7 +253,7 @@ export default function Home({
                         marginTop: '0.2rem',
                         fontSize: '0.7rem',
                         fontWeight: 600,
-                        color: isActive ? '#de9a49' : '#6b8a7a',
+                          color: isActive ? '#fae185' : 'rgba(249,236,182,0.58)',
                       }}>
                         {count} classes
                       </span>
@@ -242,54 +268,55 @@ export default function Home({
               {!user ? (
                 /* Sign-in prompt */
                 <div style={{
-                  background: 'rgba(255,255,255,0.65)',
-                  borderRadius: 24,
-                  border: '1px solid rgba(222,154,73,0.25)',
-                  padding: '4rem 2rem',
+                  background: 'linear-gradient(180deg, rgba(40, 81, 71, 0.92) 0%, rgba(26, 58, 52, 0.96) 100%)',
+                  borderRadius: 28,
+                  border: '1px solid rgba(249,236,182,0.14)',
+                  padding: '3.5rem 2rem',
                   textAlign: 'center',
-                  boxShadow: '0 16px 48px rgba(51,75,70,0.08)',
+                  boxShadow: '0 18px 44px rgba(12,28,25,0.24)',
                 }}>
                   <div className="leap-detail-icon-wrap" style={{ width: 64, height: 64, margin: '0 auto 1.5rem' }}>
                     <Info size={28} />
                   </div>
                   <h3 style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontSize: '1.6rem', fontWeight: 700, color: '#334b46', marginBottom: '0.5rem',
+                    fontFamily: "'Tropikal', serif",
+                    fontSize: 'clamp(1.45rem, 2.4vw, 2rem)', fontWeight: 700, marginBottom: '0.5rem',
+                    color: '#f9ecb6',
                   }}>Sign in to see classes</h3>
-                  <p style={{ color: '#6b8a7a', fontSize: '1rem', marginBottom: '2rem' }}>
+                  <p style={{ color: 'rgba(249,236,182,0.72)', fontSize: '1rem', marginBottom: '2rem' }}>
                     You must be signed in with your DLSU account to view and register for LEAP classes.
                   </p>
-                  <button onClick={onSignIn} className="btn-leap-primary" style={{ padding: '0.9rem 2.5rem', fontSize: '1rem', borderRadius: 14 }}>
+                  <button onClick={onSignIn} className="btn-leap-primary" style={{ padding: '0.95rem 2.4rem', fontSize: '0.95rem', borderRadius: 16 }}>
                     Sign In Now
                   </button>
                 </div>
 
               ) : selectedDay === null ? (
                 /* All Days View */
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   {dayGroups.map(({ day, classes: dayClasses }, dayIndex) => {
                     const previewClasses = dayClasses.slice(0, 3);
                     return (
                       <div key={day} style={{
-                        background: 'rgba(255,255,255,0.52)',
-                        backdropFilter: 'blur(8px)',
-                        borderRadius: 22,
-                        border: '1px solid rgba(222,154,73,0.18)',
-                        padding: '1.5rem 1.5rem',
-                        boxShadow: '0 12px 36px rgba(51,75,70,0.06)',
+                          background: 'linear-gradient(180deg, rgba(40, 81, 71, 0.9) 0%, rgba(26, 58, 52, 0.94) 100%)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: 26,
+                          border: '1px solid rgba(249,236,182,0.12)',
+                        padding: '1.35rem 1.35rem',
+                          boxShadow: '0 16px 40px rgba(12,28,25,0.18)',
                       }}>
                         {/* Day header */}
                         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
                           <div>
                             <p style={{
-                              fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
-                              letterSpacing: '0.18em', color: '#de9a49', marginBottom: '0.25rem',
+                              fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase',
+                              letterSpacing: '0.22em', color: '#fae185', marginBottom: '0.25rem',
                             }}>Day {String(dayIndex + 1).padStart(2, '0')}</p>
                             <h2 style={{
-                              fontFamily: "'Playfair Display', serif",
-                              fontSize: '1.75rem', fontWeight: 700, color: '#334b46', lineHeight: 1.15,
+                              fontFamily: "'Tropikal', serif",
+                              fontSize: 'clamp(1.6rem, 2.4vw, 2.1rem)', fontWeight: 700, color: '#f9ecb6', lineHeight: 1.05,
                             }}>{day}</h2>
-                            <p style={{ fontSize: '0.8rem', color: '#6b8a7a', marginTop: '0.2rem', fontWeight: 500 }}>
+                            <p style={{ fontSize: '0.8rem', color: 'rgba(249,236,182,0.72)', marginTop: '0.2rem', fontWeight: 500 }}>
                               {dayClasses.length} classes available
                             </p>
                           </div>
@@ -339,21 +366,21 @@ export default function Home({
                     <button
                       onClick={() => { onDaySelect(null); onPageChange(1); }}
                       style={{
-                        background: 'rgba(255,255,255,0.6)',
-                        border: '1px solid rgba(222,154,73,0.25)',
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(249,236,182,0.18)',
                         borderRadius: 10,
                         padding: '0.5rem',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        color: '#334b46',
+                        color: '#f9ecb6',
                       }}
                     >
                       <ArrowLeft size={20} />
                     </button>
                     <div>
-                      <p style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#de9a49' }}>Filtered Day</p>
-                      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.6rem', fontWeight: 700, color: '#334b46' }}>{selectedDay}</h2>
+                      <p style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#fae185' }}>Filtered Day</p>
+                      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.6rem', fontWeight: 700, color: '#f9ecb6' }}>{selectedDay}</h2>
                     </div>
                   </div>
 
@@ -371,7 +398,7 @@ export default function Home({
                       >
                         <ChevronLeft size={16} /> Prev
                       </button>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334b46' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f9ecb6' }}>
                         Page {currentPage} of {selectedDayTotalPages}
                       </span>
                       <button
@@ -412,11 +439,11 @@ export default function Home({
             style={{
               width: 'min(1040px, 94vw)',
               maxHeight: 'calc(100vh - 2rem)',
-              background: '#fffaf0',
+              background: 'linear-gradient(180deg, rgba(40, 81, 71, 0.96) 0%, rgba(26, 58, 52, 0.98) 100%)',
               borderRadius: 18,
               overflow: 'hidden',
-              border: '1px solid rgba(222,154,73,0.28)',
-              boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
+              border: '1px solid rgba(249,236,182,0.16)',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.45)',
               position: 'relative',
             }}
           >
@@ -429,8 +456,8 @@ export default function Home({
                 right: 22,
                 zIndex: 2,
                 color: '#f9ecb6',
-                background: 'rgba(18, 12, 7, 0.84)',
-                border: '1px solid rgba(250, 225, 133, 0.3)',
+                background: 'rgba(10, 20, 16, 0.86)',
+                border: '1px solid rgba(250, 225, 133, 0.24)',
                 borderRadius: 999,
                 padding: '0.35rem 0.7rem',
               }}
@@ -456,10 +483,10 @@ export default function Home({
               </div>
 
               <div style={{ padding: 'clamp(1.1rem, 2.4vw, 2rem)', overflowY: 'auto', maxHeight: 'calc(100vh - 2rem)' }}>
-                <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(1.7rem, 3.4vw, 2.35rem)', fontWeight: 700, color: '#334b46', marginBottom: '0.5rem' }}>
+                <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(1.7rem, 3.4vw, 2.35rem)', fontWeight: 700, color: '#f9ecb6', marginBottom: '0.5rem' }}>
                   {viewingClass.title}
                 </h1>
-                <p style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#b05a32', marginBottom: '2rem' }}>
+                <p style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#fae185', marginBottom: '2rem' }}>
                   Organized by {viewingClass.org}
                 </p>
 
@@ -472,16 +499,16 @@ export default function Home({
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div className="leap-detail-icon-wrap">{item.icon}</div>
                       <div>
-                        <p style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6b8a7a', marginBottom: 2 }}>{item.label}</p>
-                        <p style={{ fontWeight: 600, color: '#334b46' }}>{item.value}</p>
+                        <p style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'rgba(249,236,182,0.68)', marginBottom: 2 }}>{item.label}</p>
+                        <p style={{ fontWeight: 600, color: '#f9ecb6' }}>{item.value}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
                 <div style={{ borderTop: '1px solid rgba(222,154,73,0.2)', paddingTop: '1.5rem', marginBottom: '1.75rem' }}>
-                  <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 700, color: '#334b46', marginBottom: '0.75rem' }}>About this class</h3>
-                  <p style={{ color: 'rgba(51,75,70,0.82)', lineHeight: 1.7, fontSize: '1rem' }}>{viewingClass.description || 'No description provided.'}</p>
+                  <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 700, color: '#f9ecb6', marginBottom: '0.75rem' }}>About this class</h3>
+                  <p style={{ color: 'rgba(249,236,182,0.82)', lineHeight: 1.7, fontSize: '1rem' }}>{viewingClass.description || 'No description provided.'}</p>
                 </div>
 
                 <a
@@ -498,6 +525,7 @@ export default function Home({
           </div>
         </div>
       )}
+      </div>
     </main>
   );
 }

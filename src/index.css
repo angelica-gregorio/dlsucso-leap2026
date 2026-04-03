@@ -478,11 +478,11 @@ body::after {
   font-family: 'DM Sans', sans-serif;
   font-size: 0.875rem;
   color: #334b46;
-  background: rgba(254, 250, 232, 0.94);
-  border: 1.5px solid rgba(224, 183, 136, 0.4);
-  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(255, 252, 241, 0.96) 0%, rgba(248, 239, 210, 0.98) 100%);
+  border: 1.5px solid rgba(224, 183, 136, 0.46);
+  border-radius: 12px;
   transition: border-color 0.2s, box-shadow 0.2s;
-  box-shadow: 0 1px 4px rgba(51, 75, 70, 0.05);
+  box-shadow: 0 8px 20px rgba(51, 75, 70, 0.06);
 }
 
 .leap-search:focus,
@@ -719,8 +719,10 @@ body::after {
 ════════════════════════════════════════════ */
 .subthemes-section {
   padding: 2.5rem 0;
-  border-bottom: 1px solid rgba(224, 183, 136, 0.2);
-  background: rgba(249, 236, 182, 0.6);
+  border-bottom: 1px solid rgba(224, 183, 136, 0.14);
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 0%, rgba(250, 225, 133, 0.16) 0%, transparent 62%),
+    linear-gradient(180deg, #1a3a34 0%, #23483f 48%, #2e5a4d 100%);
 }
 
 .subthemes-inner {
@@ -738,8 +740,8 @@ body::after {
   font-weight: 800;
   letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: rgba(51, 75, 70, 0.5);
-  border-bottom: 2px solid rgba(222, 154, 73, 0.45);
+  color: rgba(249, 236, 182, 0.78);
+  border-bottom: 2px solid rgba(249, 236, 182, 0.28);
   padding-bottom: 0.35rem;
   margin-bottom: 1.5rem;
   display: block;
@@ -1387,20 +1389,20 @@ body::after {
 }
 
 .page-hero-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(2.2rem, 5vw, 3.8rem);
-  font-weight: 800;
+  font-family: 'Tropikal', serif;
+  font-size: clamp(2.35rem, 5.2vw, 4.1rem);
+  font-weight: 700;
   color: #f9ecb6;
   margin: 0 auto 1rem;
   max-width: 700px;
-  text-shadow: 0 0 60px rgba(222, 154, 73, 0.3);
+  text-shadow: 0 0 52px rgba(222, 154, 73, 0.32);
 }
 
 .page-hero-subtitle {
   font-family: 'DM Sans', sans-serif;
   font-size: clamp(0.95rem, 1.8vw, 1.1rem);
-  font-weight: 300;
-  color: rgba(224, 210, 175, 0.62);
+  font-weight: 400;
+  color: rgba(224, 210, 175, 0.7);
   max-width: 500px;
   margin: 0 auto;
   line-height: 1.8;
