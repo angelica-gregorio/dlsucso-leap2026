@@ -47,6 +47,7 @@ const PageWrapper = ({ children }: PageWrapperProps) => (
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     className="flex-grow"
+    style={{ background: 'linear-gradient(180deg, #fffdf6 0%, #fff9eb 100%)' }}
   >
     {children}
   </motion.div>
@@ -103,8 +104,10 @@ export default function Classes({
 
   return (
     <PageWrapper>
-      <PageHero title="All Classes" subtitle="Choose from 200+ workshops, talks, and experiences" accent="LEAP 2026 · Class Catalog" />
-      <main className="container mx-auto px-4 pb-24 max-w-6xl">
+      <div style={{ background: 'linear-gradient(180deg, #fffdf6 0%, #fff9eb 100%)' }}>
+        <PageHero title="All Classes" subtitle="Choose from 200+ workshops, talks, and experiences" accent="LEAP 2026 · Class Catalog" />
+      </div>
+      <main className="container mx-auto px-4 pb-24 max-w-6xl" style={{ background: 'transparent' }}>
         {!user ? (
           <div className="leap-info-card p-12 rounded-3xl text-center max-w-xl mx-auto my-12">
             <div className="leap-detail-icon-wrap w-16 h-16 mx-auto mb-6" style={{ width: 64, height: 64 }}><Info size={32} /></div>
@@ -243,14 +246,14 @@ export default function Classes({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#fffaf0] border overflow-hidden relative"
+            className="bg-[#fffdf6] border overflow-hidden relative"
             style={{
               width: 'min(1040px, 94vw)',
               maxHeight: 'calc(100vh - 2rem)',
               margin: '0 auto',
-              borderColor: 'rgba(222,154,73,0.28)',
+              borderColor: 'rgba(224,183,136,0.34)',
               borderRadius: 18,
-              boxShadow: '0 24px 64px rgba(0,0,0,0.35)'
+              boxShadow: '0 24px 64px rgba(51, 75, 70, 0.16)'
             }}
           >
             <button
@@ -261,9 +264,9 @@ export default function Classes({
                 top: 18,
                 right: 22,
                 zIndex: 2,
-                color: '#f9ecb6',
-                background: 'rgba(18, 12, 7, 0.84)',
-                border: '1px solid rgba(250, 225, 133, 0.3)',
+                color: '#334b46',
+                background: 'rgba(255, 252, 241, 0.96)',
+                border: '1px solid rgba(224,183,136,0.28)',
                 borderRadius: 999,
                 padding: '0.35rem 0.7rem',
               }}
@@ -274,7 +277,7 @@ export default function Classes({
             <div className="grid grid-cols-1 md:grid-cols-[340px_1fr]" style={{ maxHeight: 'calc(100vh - 2rem)' }}>
               <div className="relative min-h-[250px]" style={{ maxHeight: 'calc(100vh - 2rem)' }}>
                 <img src={viewingClass.image} alt={viewingClass.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/42 via-black/8 to-transparent" />
                 <div className="absolute top-6 left-6 flex gap-2 items-center">
                   {viewingClass.orgLogo ? (
                     <img src={viewingClass.orgLogo} alt={viewingClass.org} style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover', border: '2px solid rgba(222,154,73,0.5)' }} referrerPolicy="no-referrer" />
@@ -308,7 +311,7 @@ export default function Classes({
                   </div>
                 </div>
 
-                <div className="mb-8 pb-8 border-b border-leap-cream/20">
+                <div className="mb-8 pb-8 border-b border-[#e5cfab]">
                   <h3 className="text-lg font-bold text-leap-dark mb-4">About this class</h3>
                   <p className="text-leap-dark/80 leading-relaxed">{viewingClass.description || 'No description provided.'}</p>
                 </div>

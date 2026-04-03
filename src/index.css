@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
 /* ════════════════════════════════════════════
+   FONT IMPORTS
+════════════════════════════════════════════ */
+@font-face {
+  font-family: 'Tropikal';
+  src: url('/fonts/Tropikal-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* ════════════════════════════════════════════
    EXACT LEAP 2026 BRAND PALETTE
 ════════════════════════════════════════════ */
 @theme {
@@ -2032,7 +2042,7 @@ body::after {
 
 body,
 body * {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-body);
 }
 
 h1,

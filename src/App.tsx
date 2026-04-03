@@ -14,7 +14,7 @@ import {
 import { contentfulClient } from './services/contentful';
 import {
   auth, db, googleProvider, signInWithPopup, signOut,
-  onAuthStateChanged, doc, getDoc, setDoc
+  onAuthStateChanged, doc, getDocFromServer, setDoc
 } from './services/firebase';
 import type { User as FirebaseUser } from "firebase/auth";
 
@@ -780,6 +780,7 @@ const LeapApp = () => {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewingClass, setViewingClass] = useState<LeapClass | null>(null);
+  const hasLoggedProfilePermissionIssue = useRef(false);
 
   const navigateTo = (view: 'home' | 'about' | 'major-events' | 'classes' | 'faq' | 'contact') => {
     setCurrentView(view);
@@ -816,39 +817,74 @@ const LeapApp = () => {
   const hasAppAccess = isVerifiedDlsuUser;
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        const currentEmail = currentUser.email?.toLowerCase();
-        if (!currentUser.emailVerified || !currentEmail?.endsWith('@dlsu.edu.ph')) {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      void (async () => {
+        try {
+          setUser(currentUser);
+          if (currentUser) {
+            const currentEmail = currentUser.email?.toLowerCase();
+            if (!currentUser.emailVerified || !currentEmail?.endsWith('@dlsu.edu.ph')) {
+              setUserProfile(null);
+              setIsAdminView(false);
+              navigateTo('home');
+              await signOut(auth);
+              alert('Please use a verified @dlsu.edu.ph Google account to sign in.');
+              return;
+            }
+
+            try {
+              const userDoc = await getDocFromServer(doc(db, 'users', currentUser.uid));
+              if (userDoc.exists()) {
+                setUserProfile(userDoc.data() as UserProfile);
+              } else {
+                const newProfile: UserProfile = {
+                  uid: currentUser.uid,
+                  email: currentUser.email,
+                  displayName: currentUser.displayName,
+                  photoURL: currentUser.photoURL,
+                  role: 'student',
+                  registeredClasses: [],
+                };
+                await setDoc(doc(db, 'users', currentUser.uid), newProfile);
+                setUserProfile(newProfile);
+              }
+            } catch (error: unknown) {
+              const isPermissionDenied =
+                typeof error === 'object' &&
+                error !== null &&
+                'code' in error &&
+                (error as { code?: string }).code === 'permission-denied';
+
+              if (isPermissionDenied) {
+                if (!hasLoggedProfilePermissionIssue.current) {
+                  console.warn('Firestore profile access denied by security rules. Using auth-only fallback profile.');
+                  hasLoggedProfilePermissionIssue.current = true;
+                }
+              } else {
+                console.error('Firestore profile bootstrap failed:', error);
+              }
+              // Fallback profile keeps the UI usable even when Firestore rules deny access.
+              setUserProfile({
+                uid: currentUser.uid,
+                email: currentUser.email,
+                displayName: currentUser.displayName,
+                photoURL: currentUser.photoURL,
+                role: 'student',
+                registeredClasses: [],
+              });
+            }
+          } else {
+            setUserProfile(null);
+            setIsAdminView(false);
+            setCurrentView('home');
+          }
+        } catch (error: unknown) {
+          console.error('Auth state handling failed:', error);
           setUserProfile(null);
-          setIsAdminView(false);
-          navigateTo('home');
-          await signOut(auth);
-          alert('Please use a verified @dlsu.edu.ph Google account to sign in.');
+        } finally {
           setLoading(false);
-          return;
         }
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        if (userDoc.exists()) { setUserProfile(userDoc.data() as UserProfile); }
-        else {
-          const newProfile: UserProfile = {
-            uid: currentUser.uid,
-            email: currentUser.email,
-            displayName: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-            role: 'student',
-            registeredClasses: [],
-          };
-          await setDoc(doc(db, 'users', currentUser.uid), newProfile);
-          setUserProfile(newProfile);
-        }
-      } else {
-        setUserProfile(null);
-        setIsAdminView(false);
-        setCurrentView('home');
-      }
-      setLoading(false);
+      })();
     });
     return () => unsubscribe();
   }, []);
@@ -1068,7 +1104,7 @@ const LeapApp = () => {
   );
 
   const HeroExtras = hasAppAccess && currentView === 'home' ? (
-    <div style={{ background: 'transparent', padding: '0 0 0.75rem' }}>
+    <div style={{ background: 'transparent', padding: '0' }}>
       <div style={{ width: 'min(1500px, 98vw)', marginTop: '0', marginLeft: '50%', transform: 'translateX(-50%)', position: 'relative' }}>
         <div className={styles.subthemesBackdropTop} />
         <div className={styles.subthemesBackdropRight} />
@@ -1203,9 +1239,7 @@ const LeapApp = () => {
           filteredAndSortedClasses={filteredAndSortedClasses}
           uniqueDays={uniqueDays}
           selectedDay={selectedDay}
-          onDaySelect={(day) => { setSelectedDay(day === selectedDay ? null : day); setCurrentPage(1); }}
-          currentPage={currentPage}
-          onPageChange={(page) => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onDaySelect={(day) => { setSelectedDay(day); setCurrentPage(1); }}
           viewingClass={viewingClass}
           onClassSelect={(leapClass) => { setViewingClass(leapClass); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           onSignIn={handleSignIn}
@@ -1228,7 +1262,7 @@ const LeapApp = () => {
           filteredAndSortedClasses={filteredAndSortedClasses}
           uniqueDays={uniqueDays}
           selectedDay={selectedDay}
-          onDaySelect={(day) => { setSelectedDay(day === selectedDay ? null : day); setCurrentPage(1); }}
+          onDaySelect={(day) => { setSelectedDay(day); setCurrentPage(1); }}
           currentPage={currentPage}
           onPageChange={(page) => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           viewingClass={viewingClass}
