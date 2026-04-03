@@ -609,35 +609,114 @@ const SubthemesStrip = ({
    MAIN EVENTS SECTION
 ══════════════════════════════════════════════════════ */
 const MainEventsSection = () => {
-  const events = [
-    {
-      label: 'Opening Ceremony',
-      image: 'https://placehold.co/812x510',
-    },
-    {
-      label: 'Midweek Special',
-      image: 'https://placehold.co/652x430',
-    },
-    {
-      label: 'Closing Night',
-      image: 'https://placehold.co/492x350',
-    },
-    {
-      label: 'Featured Talk',
-      image: 'https://placehold.co/492x350',
-    },
-    {
-      label: 'Community Event',
-      image: 'https://placehold.co/652x430',
-    },
-  ];
+  const [events, setEvents] = useState<any[]>([]);
+  const [activeIndex, setActiveIndex] = useState(1);
 
-  const [activeIndex, setActiveIndex] = useState(2);
+  useEffect(() => {
+    const fetchMainEvents = async () => {
+      if (!contentfulClient) return;
+      try {
+        const response = await contentfulClient.getEntries({ content_type: 'mainEvents', include: 2, limit: 5 });
+        
+        if (response.items.length > 0) {
+          const eventList = response.items.map((item: any) => {
+            const pubMat = item.fields.mainEventPosterPublishingMaterial;
+            const mediaAsset = Array.isArray(pubMat) ? pubMat[0] : pubMat;
+            
+            let imgUrl = `https://placehold.co/812x510?text=No+Image+Found`;
+            if (mediaAsset?.fields?.file?.url) {
+              imgUrl = mediaAsset.fields.file.url.startsWith('http') 
+                ? mediaAsset.fields.file.url 
+                : `https:${mediaAsset.fields.file.url}`;
+            }
+
+            let formattedDate = '', formattedTime = '';
+            if (item.fields.mainEventStartDate) {
+              const startObj = new Date(item.fields.mainEventStartDate);
+              formattedDate = startObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+              formattedTime = startObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+              
+              if (item.fields.mainEventEndDate) {
+                const endObj = new Date(item.fields.mainEventEndDate);
+                const endDateStr = endObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                if (formattedDate === endDateStr) {
+                  formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+                } else {
+                  formattedDate += ` to ${endDateStr}`;
+                  formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+                }
+              }
+            }
+
+            const orgLogoMat = item.fields.mainEventOrganizationInChargeLogo;
+            const orgLogoAsset = Array.isArray(orgLogoMat) ? orgLogoMat[0] : orgLogoMat;
+
+            return {
+              id: item.sys.id,
+              label: item.fields.mainEventTitle || 'Untitled Event',
+              image: imgUrl,
+              org: item.fields.mainEventOrganizationInCharge || '',
+              modality: item.fields.mainEventClassModality || 'Face-to-Face',
+              date: formattedDate,
+              time: formattedTime,
+              venue: item.fields.mainEventVenue || '',
+              slots: item.fields.mainEventNumberOfSlots || 0,
+              subtheme: item.fields.mainEventSubtheme || '',
+              orgLogo: orgLogoAsset?.fields?.file?.url ? `https:${orgLogoAsset.fields.file.url}` : null,
+              googleFormUrl: item.fields.mainEventRegistrationLink || '',
+              description: item.fields.mainEventDescription || ''
+            };
+          });
+          
+          if (eventList.length === 2) {
+            eventList.push({ ...eventList[0], id: `${eventList[0].id}-dup1` });
+            eventList.push({ ...eventList[1], id: `${eventList[1].id}-dup1` });
+          }
+          
+          setEvents(eventList);
+          setActiveIndex(0);
+        }
+      } catch (error) {
+        console.error("Contentful Error (Main Events):", error);
+      }
+    };
+
+    fetchMainEvents();
+
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const startPolling = () => {
+      if (!intervalId) intervalId = setInterval(fetchMainEvents, 60000);
+    };
+    const stopPolling = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+
+    startPolling();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchMainEvents();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stopPolling();
+    };
+  }, []);
 
   const goPrev = () => setActiveIndex((current) => (current - 1 + events.length) % events.length);
   const goNext = () => setActiveIndex((current) => (current + 1) % events.length);
 
   useEffect(() => {
+    if (events.length <= 1) return;
     const rotateInterval = window.setInterval(() => {
       setActiveIndex((current) => (current + 1) % events.length);
     }, 4200);
@@ -646,11 +725,22 @@ const MainEventsSection = () => {
   }, [events.length]);
 
   const totalEvents = events.length;
-  const visibleIndexes = [
-    (activeIndex - 1 + totalEvents) % totalEvents,
-    activeIndex,
-    (activeIndex + 1) % totalEvents,
-  ];
+  
+  if (totalEvents === 0) {
+    return (
+      <section className="relative overflow-hidden rounded-[28px] px-0 py-2 min-h-[400px] flex items-center justify-center">
+        <div className="leap-spinner" />
+      </section>
+    );
+  }
+
+  const visibleIndexes = totalEvents === 1
+    ? [0]
+    : [
+        (activeIndex - 1 + totalEvents) % totalEvents,
+        activeIndex,
+        (activeIndex + 1) % totalEvents,
+      ];
 
   return (
     <section className="relative overflow-hidden rounded-[28px] px-0 py-2">
@@ -662,11 +752,11 @@ const MainEventsSection = () => {
           <div className="flex items-center justify-center -space-x-10 sm:-space-x-16 lg:-space-x-24">
             {visibleIndexes.map((eventIndex, slot) => {
               const event = events[eventIndex];
-              const isCenter = slot === 1;
+              const isCenter = totalEvents === 1 ? true : slot === 1;
 
               return (
                 <motion.button
-                  key={`${event.label}-${eventIndex}-${activeIndex}`}
+                  key={`${event.label}-${eventIndex}-${activeIndex}-slot${slot}`}
                   type="button"
                   onClick={() => setActiveIndex(eventIndex)}
                   initial={false}
@@ -701,46 +791,100 @@ const MainEventsSection = () => {
                     className="absolute inset-0"
                     style={{
                       background: isCenter
-                        ? 'linear-gradient(to top, rgba(0,0,0,0.22), rgba(0,0,0,0.06) 40%, rgba(0,0,0,0))'
+                        ? 'linear-gradient(to top, rgba(0,0,0,0.22), rgba(0,0,0,0.6) 80%, rgba(0,0,0,0.8))'
                         : 'linear-gradient(to top, rgba(0,0,0,0.3), rgba(0,0,0,0.1) 45%, rgba(0,0,0,0))',
                     }}
                   />
+                  {isCenter && event.org && (
+                    <>
+                      <div className={styles.cardSlotsLabel} style={{ padding: '6px 14px', top: '32px', right: '32px', zIndex: 10 }}>
+                        {event.slots} SLOTS
+                      </div>
+                      
+                      <div className={styles.cardOverlayTopRow} style={{ position: 'absolute', top: '32px', left: '32px', zIndex: 10, margin: 0 }}>
+                        {event.orgLogo ? (
+                          <img src={event.orgLogo} alt={event.org} className={styles.cardOrgLogo} referrerPolicy="no-referrer" />
+                        ) : (
+                          <div className={styles.cardOrgLogoPlaceholder}>
+                            {event.org.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        {event.subtheme && (
+                          <span className={`${styles.cardBadge} ${styles.cardBadgeTheme}`}>{event.subtheme}</span>
+                        )}
+                      </div>
+
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.4 }}
+                        className={styles.cardOverlayContent}
+                        style={{ pointerEvents: 'none', padding: '36px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
+                      >
+                        <p className={styles.cardOrganization} style={{ textAlign: 'center', width: '100%', marginBottom: '4px' }}>{event.org}</p>
+                        <h3 className={styles.cardTitle} style={{ fontFamily: "'Playfair Display', serif", textAlign: 'center', width: '100%' }}>
+                          {event.label}
+                        </h3>
+
+                        <div className={styles.cardMetadataOverlay} style={{ alignItems: 'center' }}>
+                          <div className={styles.metadataItem}><Calendar size={12} className={styles.metadataIcon} /><span>{event.date} · {event.time}</span></div>
+                          <div className={styles.metadataItem}><MapPin size={12} className={styles.metadataIcon} /><span>{event.venue} ({event.modality})</span></div>
+                        </div>
+
+                        <div className={styles.cardActionsOverlay} style={{ pointerEvents: 'auto', justifyContent: 'center', width: '100%', marginTop: '4px' }}>
+                          <a href={event.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className={styles.registerBtnOverlay}>
+                            Register <ExternalLink size={13} />
+                          </a>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); }}
+                            className={styles.learnMoreBtnOverlay}>
+                            Learn More <ChevronRight size={13} />
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
                 </motion.button>
               );
             })}
           </div>
-          <div className="mt-4 flex items-center justify-center gap-4 sm:mt-5">
-            <button
-              type="button"
-              aria-label="Previous event"
-              onClick={goPrev}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(249,236,182,0.28)] bg-[rgba(12,9,4,0.72)] text-[#f9ecb6] shadow-[0_10px_24px_rgba(0,0,0,0.2)] transition hover:bg-[rgba(222,154,73,0.18)] hover:text-[#fae185]"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <div className="flex items-center gap-2">
-              {events.map((event, index) => {
-                const isActive = index === activeIndex;
-                return (
-                  <button
-                    key={event.label}
-                    type="button"
-                    aria-label={`Show ${event.label}`}
-                    onClick={() => setActiveIndex(index)}
-                    className={`transition-all duration-300 ${isActive ? 'h-2.5 w-9 rounded-full bg-[#fae185] shadow-[0_0_18px_rgba(250,225,133,0.65)]' : 'h-2.5 w-2.5 rounded-full bg-[rgba(249,236,182,0.35)] hover:bg-[rgba(250,225,133,0.7)]'}`}
-                  />
-                );
-              })}
+          
+          {totalEvents > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-4 sm:mt-5">
+              <button
+                type="button"
+                aria-label="Previous event"
+                onClick={goPrev}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(249,236,182,0.28)] bg-[rgba(12,9,4,0.72)] text-[#f9ecb6] shadow-[0_10px_24px_rgba(0,0,0,0.2)] transition hover:bg-[rgba(222,154,73,0.18)] hover:text-[#fae185]"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <div className="flex items-center gap-2">
+                {events.map((event, index) => {
+                  const isActive = index === activeIndex;
+                  return (
+                    <button
+                      key={`carousel-dot-${index}`}
+                      type="button"
+                      aria-label={`Show ${event.label}`}
+                      onClick={() => setActiveIndex(index)}
+                      className={`transition-all duration-300 ${isActive ? 'h-2.5 w-9 rounded-full bg-[#fae185] shadow-[0_0_18px_rgba(250,225,133,0.65)]' : 'h-2.5 w-2.5 rounded-full bg-[rgba(249,236,182,0.35)] hover:bg-[rgba(250,225,133,0.7)]'}`}
+                    />
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                aria-label="Next event"
+                onClick={goNext}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(249,236,182,0.28)] bg-[rgba(12,9,4,0.72)] text-[#f9ecb6] shadow-[0_10px_24px_rgba(0,0,0,0.2)] transition hover:bg-[rgba(222,154,73,0.18)] hover:text-[#fae185]"
+              >
+                <ChevronRight size={18} />
+              </button>
             </div>
-            <button
-              type="button"
-              aria-label="Next event"
-              onClick={goNext}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(249,236,182,0.28)] bg-[rgba(12,9,4,0.72)] text-[#f9ecb6] shadow-[0_10px_24px_rgba(0,0,0,0.2)] transition hover:bg-[rgba(222,154,73,0.18)] hover:text-[#fae185]"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </section>
