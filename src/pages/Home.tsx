@@ -1,4 +1,5 @@
 import { useState, useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, Calendar, MapPin, Users, ExternalLink, Info, X } from 'lucide-react';
 import type { User as FirebaseUser } from 'firebase/auth';
 
@@ -186,7 +187,7 @@ export default function Home({
         </section>
 
         {/* Mobile bottom-sheet drawer */}
-        {!isDesktop && mobileOpen && activeDay && user && (
+        {!isDesktop && mobileOpen && activeDay && user && createPortal (
           <div onClick={() => setMobileOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 900, background: 'rgba(8,10,8,0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '100vw', maxHeight: '85dvh', background: 'linear-gradient(180deg, #fffdf6 0%, #f9f1da 100%)', borderRadius: '24px 24px 0 0', border: '1px solid rgba(222,154,73,0.3)', boxShadow: '0 -12px 48px rgba(51,75,70,0.18)', overflowY: 'auto', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', justifyContent: 'center', padding: '0.75rem 0 0' }}>
@@ -208,11 +209,12 @@ export default function Home({
                   : activeDayClasses.map((item, idx) => renderClassCard(item, idx))}
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Class detail modal */}
-        {user && viewingClass && (
+        {user && viewingClass && createPortal (
           <div onClick={() => onClassSelect(null)} style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(8,10,8,0.78)', backdropFilter: 'blur(6px)', padding: 'clamp(0.5rem, 2vw, 1.5rem)', overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ width: 'min(1040px, 96vw)', maxHeight: 'calc(100dvh - 2rem)', background: 'linear-gradient(180deg, #fffdf6 0%, #f9f1da 100%)', borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(222,154,73,0.3)', boxShadow: '0 24px 64px rgba(51,75,70,0.18)', position: 'relative', margin: '1rem auto' }}>
               <button onClick={() => onClassSelect(null)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,252,241,0.96)', border: '1px solid rgba(222,154,73,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#334b46' }} aria-label="Close"><X size={18} /></button>
@@ -255,7 +257,8 @@ export default function Home({
                 </div>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </main>

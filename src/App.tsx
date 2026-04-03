@@ -1213,7 +1213,7 @@ const LeapApp = () => {
           </div>
           <p className={styles.cardOrganization}>{item.org}</p>
           <h3 className={styles.cardTitle} style={{ fontFamily: "'Playfair Display', serif" }}
-            onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            onClick={() => { setViewingClass(item)}}>
             {item.title}
           </h3>
           <div className={styles.cardMetadataOverlay}>
@@ -1224,7 +1224,7 @@ const LeapApp = () => {
             <a href={item.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className={styles.registerBtnOverlay}>
               Register <ExternalLink size={13} />
             </a>
-            <button onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={styles.learnMoreBtnOverlay}>
+            <button onClick={() => { setViewingClass(item)}} className={styles.learnMoreBtnOverlay}>
               Learn More <ChevronRight size={13} />
             </button>
           </div>
@@ -1534,7 +1534,7 @@ const LeapApp = () => {
           sortBy={sortBy} onSortChange={(s) => setSortBy(s)}
           filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
           selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
-          viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c) }}
           onSignIn={handleSignIn} onHeroScroll={() => navigateTo('classes')}
           HeroSection={HeroSection} HeroExtras={HeroExtras} renderClassCard={renderClassCard}
         />
@@ -1548,7 +1548,7 @@ const LeapApp = () => {
           filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
           selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
           currentPage={currentPage} onPageChange={(p) => { setCurrentPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c) }}
           onSignIn={handleSignIn} renderClassCard={renderClassCard}
         />
       )}
