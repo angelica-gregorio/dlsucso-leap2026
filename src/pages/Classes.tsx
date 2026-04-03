@@ -135,10 +135,13 @@ export default function Classes({
   renderClassCard,
 }: ClassesPageProps) {
   const ITEMS_PER_PAGE = 6;
-  const totalPages = Math.ceil(filteredAndSortedClasses.length / ITEMS_PER_PAGE);
+  const dateFilteredClasses = selectedDay 
+    ? filteredAndSortedClasses.filter((c) => c.date === selectedDay)
+    : filteredAndSortedClasses;
+  const totalPages = Math.ceil(dateFilteredClasses.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIdx = startIdx + ITEMS_PER_PAGE;
-  const paginatedClasses = filteredAndSortedClasses.slice(startIdx, endIdx);
+  const paginatedClasses = dateFilteredClasses.slice(startIdx, endIdx);
 
   return (
     <PageWrapper>
@@ -336,12 +339,12 @@ export default function Classes({
                     fontWeight: 500,
                   }}
                 >
-                  Showing {Math.min(startIdx + 1, filteredAndSortedClasses.length)}–{Math.min(endIdx, filteredAndSortedClasses.length)} of {filteredAndSortedClasses.length} classes
+                  Showing {Math.min(startIdx + 1, dateFilteredClasses.length)}–{Math.min(endIdx, dateFilteredClasses.length)} of {dateFilteredClasses.length} classes
                 </p>
               </div>
 
               {/* ── CLASSES GRID ── */}
-              {filteredAndSortedClasses.length === 0 ? (
+              {dateFilteredClasses.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
                   <p style={{ color: '#7c6b4b', fontSize: '1.1rem' }}>
                     No classes match your filters. Try adjusting your search.
