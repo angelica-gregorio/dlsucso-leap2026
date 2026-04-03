@@ -24,6 +24,7 @@ import MainEvents from './pages/MainEvents';
 import FAQs from './pages/FAQs';
 
 import leapLogo from './assets/leap.webp';
+import styles from './App.module.css';
 
 interface ErrorBoundaryProps { children: ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
@@ -41,12 +42,12 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-leap-cream p-6">
-          <div className="leap-info-card p-8 rounded-3xl max-w-md text-center">
+        <div className={styles.errorContainer}>
+          <div className={styles.errorCard}>
             <AlertCircle className="mx-auto text-leap-maroon mb-4" size={48} />
-            <h2 className="text-2xl font-bold text-leap-dark mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Something went wrong</h2>
-            <p className="text-leap-olive mb-6">We encountered an unexpected error. Please try refreshing the page.</p>
-            <button onClick={() => window.location.reload()} className="btn-leap-primary px-8 py-3 rounded-2xl font-bold shadow-lg">Refresh Page</button>
+            <h2 className={styles.errorTitle} style={{ fontFamily: "'Playfair Display', serif" }}>Something went wrong</h2>
+            <p className={styles.errorMessage}>We encountered an unexpected error. Please try refreshing the page.</p>
+            <button onClick={() => window.location.reload()} className={styles.errorButton}>Refresh Page</button>
           </div>
         </div>
       );
@@ -528,25 +529,25 @@ const SUBTHEMES = [
 ];
 
 const SubthemesStrip = ({ activeTheme, onSelect }: { activeTheme: string | null; onSelect: (t: string | null) => void }) => (
-  <div className="subthemes-section">
-    <div className="subthemes-inner">
-      <span className="subthemes-label">Subthemes</span>
-      <div className="subthemes-row">
+  <div className={styles.subthemesSection}>
+    <div className={styles.subthemesInner}>
+      <span className={styles.subthemesLabel}>Subthemes</span>
+      <div className={styles.subthemesRow}>
         <button
-          className={`subtheme-pill ${activeTheme === null ? 'active' : ''}`}
+          className={`${styles.subthemePill} ${activeTheme === null ? 'active' : ''}`}
           onClick={() => onSelect(null)}
         >
-          <span className="subtheme-pill-icon"><Sparkles size={20} /></span>
-          <span className="subtheme-pill-label">All</span>
+          <span className={styles.subthemePillIcon}><Sparkles size={20} /></span>
+          <span className={styles.subthemePillLabel}>All</span>
         </button>
         {SUBTHEMES.map((s, i) => (
           <button
             key={i}
-            className={`subtheme-pill ${activeTheme === s.label ? 'active' : ''}`}
+            className={`${styles.subthemePill} ${activeTheme === s.label ? 'active' : ''}`}
             onClick={() => onSelect(activeTheme === s.label ? null : s.label)}
           >
-            <span className="subtheme-pill-icon">{s.icon}</span>
-            <span className="subtheme-pill-label">{s.label}</span>
+            <span className={styles.subthemePillIcon}>{s.icon}</span>
+            <span className={styles.subthemePillLabel}>{s.label}</span>
           </button>
         ))}
       </div>
@@ -583,39 +584,39 @@ const MainEventsSection = () => {
   ];
 
   return (
-    <section className="main-events-section">
-      <div className="main-events-inner">
-        <div className="main-events-header">
+    <section className={styles.mainEventsSection}>
+      <div className={styles.mainEventsInner}>
+        <div className={styles.mainEventsHeader}>
           <div>
             <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.28em', textTransform: 'uppercase', color: '#de9a49', display: 'block', marginBottom: '0.4rem' }}>
               LEAP 2026 · Landmark Moments
             </span>
-            <h2 className="main-events-title">Main Events</h2>
+            <h2 className={styles.mainEventsTitle}>Main Events</h2>
           </div>
-          <div className="main-events-nav">
-            <button className="carousel-nav-btn" aria-label="Previous slide"><ChevronLeft size={15} /></button>
-            <button className="carousel-nav-btn" aria-label="Next slide"><ChevronRight size={15} /></button>
+          <div className={styles.mainEventsNav}>
+            <button className={styles.carouselNavBtn} aria-label="Previous slide"><ChevronLeft size={15} /></button>
+            <button className={styles.carouselNavBtn} aria-label="Next slide"><ChevronRight size={15} /></button>
           </div>
         </div>
-        <div className="main-events-grid">
+        <div className={styles.mainEventsGrid}>
           {events.map((ev, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }} className="main-event-card">
-              <div className="main-event-img-wrap">
-                <img src={ev.img} alt={ev.title} className="main-event-img" referrerPolicy="no-referrer" />
-                <div className="main-event-img-overlay" />
-                <span className="main-event-tag">{ev.tag}</span>
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }} className={styles.mainEventCard}>
+              <div className={styles.mainEventImgWrap}>
+                <img src={ev.img} alt={ev.title} className={styles.mainEventImg} referrerPolicy="no-referrer" />
+                <div className={styles.mainEventImgOverlay} />
+                <span className={styles.mainEventTag}>{ev.tag}</span>
               </div>
-              <div className="main-event-body">
-                <div className="main-event-meta">
-                  <span className="main-event-meta-item"><Calendar size={11} />{ev.date}</span>
-                  <span className="main-event-meta-item"><Clock size={11} />{ev.time}</span>
-                  <span className="main-event-meta-item"><MapPin size={11} />{ev.venue}</span>
+              <div className={styles.mainEventBody}>
+                <div className={styles.mainEventMeta}>
+                  <span className={styles.mainEventMetaItem}><Calendar size={11} />{ev.date}</span>
+                  <span className={styles.mainEventMetaItem}><Clock size={11} />{ev.time}</span>
+                  <span className={styles.mainEventMetaItem}><MapPin size={11} />{ev.venue}</span>
                 </div>
-                <h3 className="main-event-title">{ev.title}</h3>
-                <p className="main-event-desc">{ev.desc}</p>
-                <div className="main-event-cta">
+                <h3 className={styles.mainEventTitle}>{ev.title}</h3>
+                <p className={styles.mainEventDesc}>{ev.desc}</p>
+                <div className={styles.mainEventCta}>
                   <div style={{ height: 2, width: 28, background: ev.accent, borderRadius: 2 }} />
-                  <span className="main-event-link">View Details <ExternalLink size={11} /></span>
+                  <span className={styles.mainEventLink}>View Details <ExternalLink size={11} /></span>
                 </div>
               </div>
             </motion.div>
@@ -635,59 +636,59 @@ const Contact = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="flex-grow"
+      className={styles.contactMain}
     >
-      <div className="page-hero" style={{ paddingTop: '10rem', paddingBottom: '4rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div className="page-hero-glow" />
+      <div className={styles.pageHero}>
+        <div className={styles.pageHeroGlow} />
         <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#de9a49', marginBottom: '1rem' }}>
           LEAP 2026 · Get in Touch
         </motion.p>
         <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
-          className="page-hero-title">
+          className={styles.pageHeroTitle}>
           Contact Us
         </motion.h1>
         <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }}
-          className="page-hero-subtitle">
+          className={styles.pageHeroSubtitle}>
           We're here to help you make the most of LEAP 2026
         </motion.p>
         <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.4, duration: 0.6 }}
-          style={{ width: 60, height: 2, background: 'linear-gradient(90deg,transparent,#de9a49,transparent)', margin: '2rem auto 0' }} />
+          className={styles.pageHeroUnderline} />
       </div>
-      <main className="container mx-auto px-4 pb-24 max-w-4xl">
-        <div className="contact-grid">
-          <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="contact-info">
+      <main className={styles.contactMainWrapper}>
+        <div className={styles.contactGrid}>
+          <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className={styles.contactInfo}>
             {[
               { icon: MapPin, label: 'Visit Us', val: 'SPS Building, Room 302\nDe La Salle University, Manila' },
               { icon: Mail, label: 'Email Us', val: 'leap@dlsu.edu.ph' },
               { icon: Clock, label: 'Office Hours', val: 'Monday – Friday\n9:00 AM – 5:00 PM' },
               { icon: Users, label: 'LEAP Operations Team', val: 'Central Student Organization\nDe La Salle University' },
             ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="contact-item">
-                <div className="contact-icon-wrap"><item.icon size={20} /></div>
+              <motion.div key={i} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className={styles.contactItem}>
+                <div className={styles.contactIconWrap}><item.icon size={20} /></div>
                 <div>
-                  <p className="contact-item-label">{item.label}</p>
-                  <p className="contact-item-val">{item.val}</p>
+                  <p className={styles.contactItemLabel}>{item.label}</p>
+                  <p className={styles.contactItemValue}>{item.val}</p>
                 </div>
               </motion.div>
             ))}
           </motion.div>
-          <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="contact-card">
-            <h3 className="contact-card-title">Send a Message</h3>
-            <p className="contact-card-sub">For general inquiries, partnership opportunities, or technical issues during registration.</p>
-            <div className="contact-field">
-              <label className="contact-label">Your Name</label>
-              <input className="contact-input" placeholder="Juan dela Cruz" type="text" />
+          <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className={styles.contactCard}>
+            <h3 className={styles.contactCardTitle}>Send a Message</h3>
+            <p className={styles.contactCardSubtitle}>For general inquiries, partnership opportunities, or technical issues during registration.</p>
+            <div className={styles.contactField}>
+              <label className={styles.contactLabel}>Your Name</label>
+              <input className={styles.contactInput} placeholder="Juan dela Cruz" type="text" />
             </div>
-            <div className="contact-field">
-              <label className="contact-label">DLSU Email</label>
-              <input className="contact-input" placeholder="juandelacruz@dlsu.edu.ph" type="email" />
+            <div className={styles.contactField}>
+              <label className={styles.contactLabel}>DLSU Email</label>
+              <input className={styles.contactInput} placeholder="juandelacruz@dlsu.edu.ph" type="email" />
             </div>
-            <div className="contact-field">
-              <label className="contact-label">Message</label>
-              <textarea className="contact-input contact-textarea" placeholder="How can we help you?" />
+            <div className={styles.contactField}>
+              <label className={styles.contactLabel}>Message</label>
+              <textarea className={styles.contactTextarea} placeholder="How can we help you?" />
             </div>
-            <button className="btn-leap-primary" style={{ width: '100%', justifyContent: 'center' }}>
+            <button className={styles.contactSubmitBtn}>
               <Mail size={16} /> Send Message
             </button>
           </motion.div>
@@ -778,12 +779,27 @@ function LeapApp() {
       .sort((a: string, b: string) => new Date(a).getTime() - new Date(b).getTime())
   ), [filteredAndSortedClasses]);
 
+  const isVerifiedDlsuUser = Boolean(
+    user?.emailVerified && user.email?.toLowerCase().endsWith('@dlsu.edu.ph')
+  );
+
+  const hasAppAccess = isVerifiedDlsuUser && Boolean(userProfile);
+
   /* ── AUTH SETUP ── */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        if (!currentUser.email?.endsWith('@dlsu.edu.ph')) { await signOut(auth); alert("Please use your @dlsu.edu.ph Google account to sign in."); return; }
+        const currentEmail = currentUser.email?.toLowerCase();
+        if (!currentUser.emailVerified || !currentEmail?.endsWith('@dlsu.edu.ph')) {
+          setUserProfile(null);
+          setIsAdminView(false);
+          setCurrentView('home');
+          await signOut(auth);
+          alert('Please use a verified @dlsu.edu.ph Google account to sign in.');
+          setLoading(false);
+          return;
+        }
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         if (userDoc.exists()) { setUserProfile(userDoc.data() as UserProfile); }
         else {
@@ -798,7 +814,11 @@ function LeapApp() {
           await setDoc(doc(db, 'users', currentUser.uid), newProfile);
           setUserProfile(newProfile);
         }
-      } else { setUserProfile(null); }
+      } else {
+        setUserProfile(null);
+        setIsAdminView(false);
+        setCurrentView('home');
+      }
       setLoading(false);
     });
     return () => unsubscribe();
@@ -844,8 +864,12 @@ function LeapApp() {
   const handleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const email = result.user.email;
-      if (email && !email.endsWith('@dlsu.edu.ph')) { await signOut(auth); alert("Access Denied: Please use your official @dlsu.edu.ph email address to sign in."); return; }
+      const email = result.user.email?.toLowerCase();
+      if (!result.user.emailVerified || !email?.endsWith('@dlsu.edu.ph')) {
+        await signOut(auth);
+        alert('Access Denied: Please use your verified official @dlsu.edu.ph email address to sign in.');
+        return;
+      }
     } catch (error) { console.error("Sign In Error:", error); }
   };
 
@@ -861,55 +885,55 @@ function LeapApp() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="leap-class-card flex flex-col cursor-pointer"
+      className={styles.classCardWrapper}
     >
-      <div className="card-header-bar">
+      <div className={styles.cardHeaderBar}>
         {item.orgLogo ? (
-          <img src={item.orgLogo} alt={item.org} className="card-org-logo" referrerPolicy="no-referrer" />
+          <img src={item.orgLogo} alt={item.org} className={styles.cardOrgLogo} referrerPolicy="no-referrer" />
         ) : (
-          <div className="card-org-logo-placeholder">
+          <div className={styles.cardOrgLogoPlaceholder}>
             {item.org.charAt(0).toUpperCase()}
           </div>
         )}
         {item.subtheme && (
-          <span className="card-badge card-badge-theme">{item.subtheme}</span>
+          <span className={`${styles.cardBadge} ${styles.cardBadgeTheme}`}>{item.subtheme}</span>
         )}
         {item.date && (
-          <span className="card-badge card-badge-day">
+          <span className={`${styles.cardBadge} ${styles.cardBadgeDay}`}>
             {item.date.split(' ').slice(0, 2).join(' ')}
           </span>
         )}
       </div>
 
-      <div className="relative overflow-hidden" style={{ height: '180px' }}>
-        <img src={item.image} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-        <div className="absolute bottom-3 right-3" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', borderRadius: 4, padding: '2px 8px', fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.12em', color: '#fae185', fontFamily: "'DM Sans',sans-serif" }}>
+      <div className={styles.cardImageWrapper}>
+        <img src={item.image} alt={item.title} className={styles.cardImage} referrerPolicy="no-referrer" />
+        <div className={styles.cardImageGradient} />
+        <div className={styles.cardSlotsLabel}>
           {item.slots} SLOTS
         </div>
       </div>
 
-      <div className="p-5 flex flex-col flex-grow">
-        <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#de9a49', marginBottom: '0.35rem' }}>
+      <div className={styles.cardContent}>
+        <p className={styles.cardOrganization}>
           {item.org}
         </p>
-        <h3 className="text-lg font-bold text-leap-dark leading-tight mb-3" style={{ fontFamily: "'Playfair Display', serif" }}
+        <h3 className={styles.cardTitle} style={{ fontFamily: "'Playfair Display', serif" }}
           onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
           {item.title}
         </h3>
-        <div className="space-y-1.5 mb-4 text-sm text-leap-dark/60" style={{ fontSize: '0.78rem' }}>
-          <div className="flex items-center gap-2"><Calendar size={12} className="text-leap-gold flex-shrink-0" /><span>{item.date} · {item.time}</span></div>
-          <div className="flex items-center gap-2"><MapPin size={12} className="text-leap-gold flex-shrink-0" /><span>{item.venue} ({item.modality})</span></div>
+        <div className={styles.cardMetadata}>
+          <div className={styles.metadataItem}><Calendar size={12} className={styles.metadataIcon} /><span>{item.date} · {item.time}</span></div>
+          <div className={styles.metadataItem}><MapPin size={12} className={styles.metadataIcon} /><span>{item.venue} ({item.modality})</span></div>
         </div>
-        <div className="mt-auto flex flex-col gap-1.5">
+        <div className={styles.cardActions}>
           <a href={item.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="leap-register-btn">
+            className={styles.registerBtn}>
             Register via Google Forms <ExternalLink size={14} />
           </a>
           <button
             onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className="learn-more-link">
+            className={styles.learnMoreBtn}>
             Learn More <ChevronRight size={14} />
           </button>
         </div>
@@ -918,26 +942,26 @@ function LeapApp() {
   );
 
   const AdminDashboard = () => (
-    <div className="container mx-auto px-4 py-12">
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => setIsAdminView(false)} className="p-2 hover:bg-leap-tan/30 rounded-full transition-colors"><ArrowLeft size={24} /></button>
-        <h2 className="text-3xl font-bold text-leap-dark" style={{ fontFamily: "'Playfair Display', serif" }}>Admin Dashboard</h2>
+    <div className={styles.adminWrapper}>
+      <div className={styles.adminHeader}>
+        <button onClick={() => setIsAdminView(false)} className={styles.adminBackBtn}><ArrowLeft size={24} /></button>
+        <h2 className={styles.adminTitle} style={{ fontFamily: "'Playfair Display', serif" }}>Admin Dashboard</h2>
       </div>
-      <div className="glass-card p-12 rounded-3xl text-center max-w-2xl mx-auto">
-        <div className="leap-detail-icon-wrap w-20 h-20 mx-auto mb-6" style={{ width: 80, height: 80 }}><Edit size={36} /></div>
-        <h3 className="text-2xl font-bold text-leap-dark mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>Classes are managed in Contentful</h3>
-        <p className="text-leap-olive mb-8 text-lg">To add, edit, or delete classes, please use the Contentful CMS dashboard. The changes will automatically reflect here.</p>
-        <a href="https://app.contentful.com" target="_blank" rel="noopener noreferrer" className="btn-leap-primary inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold">Open Contentful <ExternalLink size={20} /></a>
+      <div className={styles.adminCard}>
+        <div className={styles.adminIconWrap} style={{ width: 80, height: 80 }}><Edit size={36} /></div>
+        <h3 className={styles.adminCardTitle} style={{ fontFamily: "'Playfair Display', serif" }}>Classes are managed in Contentful</h3>
+        <p className={styles.adminCardDesc}>To add, edit, or delete classes, please use the Contentful CMS dashboard. The changes will automatically reflect here.</p>
+        <a href="https://app.contentful.com" target="_blank" rel="noopener noreferrer" className={styles.adminCTABtn}>Open Contentful <ExternalLink size={20} /></a>
       </div>
     </div>
   );
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-leap-cream">
-        <div className="flex flex-col items-center gap-4">
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingContent}>
           <div className="leap-spinner" />
-          <p className="text-leap-olive text-sm font-medium tracking-wide uppercase">Loading LEAP 2026…</p>
+          <p className={styles.loadingText}>Loading LEAP 2026…</p>
         </div>
       </div>
     );
@@ -954,31 +978,31 @@ function LeapApp() {
       : 'light-page-nav py-4';
 
   const HeroSection = (
-    <header className="relative overflow-hidden hero-bg" style={{ minHeight: '100vh', paddingTop: '7rem', paddingBottom: 'clamp(140px, 34vw, 490px)' }}>
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div className="absolute top-16 left-8 w-72 h-72 rounded-full blur-3xl animate-pulse" style={{ background: 'rgba(222,154,73,0.08)', animationDuration: '4s' }} />
-        <div className="absolute top-24 right-12 w-80 h-80 rounded-full blur-3xl animate-pulse" style={{ background: 'rgba(74,176,154,0.06)', animationDuration: '5.5s', animationDelay: '1s' }} />
+    <header className={styles.heroSection}>
+      <div className={styles.heroBackdropContainer}>
+        <div className={styles.heroBackdropTop} />
+        <div className={styles.heroBackdropRight} />
       </div>
       <Fireflies />
-      <div className="container mx-auto text-center max-w-4xl relative" style={{ zIndex: 2 }}>
+      <div className={styles.heroContent}>
         <motion.div initial={{ opacity: 0, scale: 0.88, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="mb-6 fade-up">
-          <img src={leapLogo} alt="LEAP 2026 — Isang Nayon, Isang Layunin" className="leap-logo-hero" />
+          <img src={leapLogo} alt="LEAP 2026 — Isang Nayon, Isang Layunin" className={styles.heroLogo} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}>
-          <span className="leap-eyebrow mb-6 inline-block fade-up delay-1">Isang Nayon, Isang Layunin</span>
+          <span className={`${styles.heroEyebrow} fade-up delay-1`}>Isang Nayon, Isang Layunin</span>
           <p className="fade-up delay-2" style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 300, fontSize: 'clamp(1rem,2.2vw,1.2rem)', color: 'rgba(224,210,175,0.72)', maxWidth: '540px', margin: '0.75rem auto 2.5rem', lineHeight: 1.8 }}>
             Discover over 200 unique classes and events. Join your community in a week of alternative learning and growth.
           </p>
           {!user ? (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center fade-up delay-3">
-              <button onClick={handleSignIn} className="btn-leap-primary px-10 py-4 rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center gap-2">
+            <div className={styles.heroCTAButtons}>
+              <button onClick={handleSignIn} className={styles.heroPrimaryBtn}>
                 Sign In with DLSU Account <ChevronRight size={20} />
               </button>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center fade-up delay-3">
-              <a href="#classes-section" className="btn-leap-primary px-10 py-4 rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center gap-2">Register Now <ChevronRight size={20} /></a>
-              <button onClick={() => window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0)} className="btn-leap-secondary px-10 py-4 rounded-2xl font-bold text-lg">View Schedule</button>
+            <div className={styles.heroCTAButtons}>
+              <a href="#classes-section" className={styles.heroPrimaryBtn}>Register Now <ChevronRight size={20} /></a>
+              <button onClick={() => window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0)} className={styles.heroSecondaryBtn}>View Schedule</button>
             </div>
           )}
           <HeroStats />
@@ -988,15 +1012,37 @@ function LeapApp() {
     </header>
   );
 
+  if (!hasAppAccess) {
+    return (
+      <div className={styles.appContainer}>
+        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 bg-transparent py-4`}>
+          <div className={styles.navInner}>
+            <div className={styles.navLogo} onClick={() => window.scrollTo(0, 0)}>
+              <img src={leapLogo} alt="LEAP 2026" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
+            </div>
+            <div />
+            <div className={styles.navRight} style={{ display: 'flex' }}>
+              <button onClick={handleSignIn} className={styles.navRegisterBtn}>
+                <LogIn size={13} /> Register / Sign In
+              </button>
+            </div>
+          </div>
+        </nav>
+        {HeroSection}
+        <CustomCursor />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={styles.appContainer}>
       {/* NAV */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${navClass}`}>
-        <div className="leap-nav-inner">
-          <div className="leap-nav-logo cursor-pointer" onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }}>
-            <img src={leapLogo} alt="LEAP 2026" className="nav-logo-img" style={{ mixBlendMode: 'screen' }} />
+        <div className={styles.navInner}>
+          <div className={styles.navLogo} onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }}>
+            <img src={leapLogo} alt="LEAP 2026" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
           </div>
-          <div className="leap-nav-center hidden md:flex">
+          <div className={styles.navCenter}>
             <button onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'home' ? 'active' : ''}`}>Home</button>
             <button onClick={() => { setCurrentView('about'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'about' ? 'active' : ''}`}>Overview</button>
             <button onClick={() => { setCurrentView('major-events'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'major-events' ? 'active' : ''}`}>Featured</button>
@@ -1030,8 +1076,8 @@ function LeapApp() {
               </>
             )}
           </div>
-          <div className="flex md:hidden" style={{ justifySelf: 'end' }}>
-            <button className="p-2" style={{ color: currentView === 'home' && !scrolled ? '#f9ecb6' : '#334b46' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <div className={styles.navMobileToggle}>
+            <button className={styles.navMobileBtn} style={{ color: currentView === 'home' && !scrolled ? '#f9ecb6' : '#334b46' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
@@ -1041,18 +1087,18 @@ function LeapApp() {
       {/* MOBILE MENU */}
       <AnimatePresence>
         {isMenuOpen && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-40 leap-mobile-menu pt-24 px-6 md:hidden">
-            <div className="flex flex-col gap-6 text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#f9ecb6' }}>
-              <button onClick={() => { setCurrentView('home'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">Home</button>
-              <button onClick={() => { setCurrentView('about'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">Overview</button>
-              <button onClick={() => { setCurrentView('major-events'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">Featured</button>
-              <button onClick={() => { setCurrentView('home'); setIsMenuOpen(false); window.setTimeout(() => window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0), 100); }} className="text-left hover:text-leap-yellow transition-colors">Classes</button>
-              <button onClick={() => { setCurrentView('faq'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">FAQs</button>
-              {userProfile?.role === 'admin' && <button onClick={() => { setIsAdminView(true); setIsMenuOpen(false); }} className="text-left leap-admin-link text-2xl">Admin Dashboard</button>}
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className={styles.mobileMenu}>
+            <div className={styles.mobileMenuContent}>
+              <button onClick={() => { setCurrentView('home'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className={styles.mobileMenuItem}>Home</button>
+              <button onClick={() => { setCurrentView('about'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className={styles.mobileMenuItem}>Overview</button>
+              <button onClick={() => { setCurrentView('major-events'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className={styles.mobileMenuItem}>Featured</button>
+              <button onClick={() => { setCurrentView('home'); setIsMenuOpen(false); window.setTimeout(() => window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0), 100); }} className={styles.mobileMenuItem}>Classes</button>
+              <button onClick={() => { setCurrentView('faq'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className={styles.mobileMenuItem}>FAQs</button>
+              {userProfile?.role === 'admin' && <button onClick={() => { setIsAdminView(true); setIsMenuOpen(false); }} className={`${styles.mobileMenuItem} ${styles.adminLink}`}>Admin Dashboard</button>}
               {user ? (
-                <button onClick={handleSignOut} className="btn-leap-primary py-4 rounded-2xl shadow-xl mt-4 flex items-center justify-center gap-2 text-lg"><LogOut size={22} /> Sign Out</button>
+                <button onClick={handleSignOut} className={styles.mobileMenuSignOutBtn}><LogOut size={22} /> Sign Out</button>
               ) : (
-                <button onClick={handleSignIn} className="btn-leap-primary py-4 rounded-2xl shadow-xl mt-4 flex items-center justify-center gap-2 text-lg"><LogIn size={22} /> Sign In</button>
+                <button onClick={handleSignIn} className={styles.mobileMenuSignInBtn}><LogIn size={22} /> Sign In</button>
               )}
             </div>
           </motion.div>
@@ -1093,36 +1139,36 @@ function LeapApp() {
       {currentView === 'contact' && <Contact />}
 
       {/* FOOTER */}
-      <footer className="leap-footer text-leap-cream py-16 px-4">
-        <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <img src={leapLogo} alt="LEAP 2026" className="h-10 w-auto" style={{ mixBlendMode: 'screen', filter: 'drop-shadow(0 2px 8px rgba(222,154,73,0.5)) brightness(1.1)' }} />
+      <footer className={styles.footer}>
+        <div className={styles.footerContainer}>
+          <div className={styles.footerBrand}>
+            <div className={styles.footerLogoWrapper}>
+              <img src={leapLogo} alt="LEAP 2026" className={styles.footerLogo} />
             </div>
-            <p className="text-leap-cream/60 max-w-md mb-8 text-sm leading-relaxed">Lasallian Enrichment Alternative Program. Empowering students through diverse learning experiences and community building.</p>
-            <div className="flex gap-3">
-              <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-leap-maroon/60 transition-colors cursor-pointer"><Info size={16} /></div>
+            <p className={styles.footerBrandText}>Lasallian Enrichment Alternative Program. Empowering students through diverse learning experiences and community building.</p>
+            <div className={styles.footerSocialIcons}>
+              <div className={styles.footerSocialIcon}><Info size={16} /></div>
             </div>
           </div>
           <div>
-            <h4 className="font-bold text-xs uppercase tracking-widest text-leap-gold mb-6">Quick Links</h4>
-            <ul className="space-y-4 text-leap-cream/60 text-sm">
-              <li><button onClick={() => { setCurrentView('about'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">About LEAP</button></li>
-              <li><button onClick={() => { setCurrentView('home'); window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0); }} className="hover:text-white transition-colors">Class List</button></li>
-              <li><button onClick={() => { setCurrentView('major-events'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">Major Events</button></li>
-              <li><button onClick={() => { setCurrentView('faq'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">FAQs</button></li>
+            <h4 className={styles.footerColumnTitle}>Quick Links</h4>
+            <ul className={styles.footerColumnLinks}>
+              <li><button onClick={() => { setCurrentView('about'); window.scrollTo(0, 0); }} className={styles.footerLink}>About LEAP</button></li>
+              <li><button onClick={() => { setCurrentView('home'); window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0); }} className={styles.footerLink}>Class List</button></li>
+              <li><button onClick={() => { setCurrentView('major-events'); window.scrollTo(0, 0); }} className={styles.footerLink}>Major Events</button></li>
+              <li><button onClick={() => { setCurrentView('faq'); window.scrollTo(0, 0); }} className={styles.footerLink}>FAQs</button></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-xs uppercase tracking-widest text-leap-gold mb-6">Support</h4>
-            <ul className="space-y-4 text-leap-cream/60 text-sm">
-              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">Contact OPS</button></li>
-              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">Technical Issues</button></li>
-              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">Privacy Policy</button></li>
+            <h4 className={styles.footerColumnTitle}>Support</h4>
+            <ul className={styles.footerColumnLinks}>
+              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className={styles.footerLink}>Contact OPS</button></li>
+              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className={styles.footerLink}>Technical Issues</button></li>
+              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className={styles.footerLink}>Privacy Policy</button></li>
             </ul>
           </div>
         </div>
-        <div className="container mx-auto mt-16 pt-8 border-t border-white/10 text-center text-leap-cream/40 text-xs tracking-wide">
+        <div className={styles.footerBottom}>
           <p>© 2026 LEAP Operations Team · De La Salle University · Central Student Organization</p>
         </div>
       </footer>

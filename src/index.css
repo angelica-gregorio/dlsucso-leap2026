@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
 
 /* ════════════════════════════════════════════
    EXACT LEAP 2026 BRAND PALETTE
@@ -65,6 +64,7 @@ body::after {
    NAVIGATION — TRUE 3-COLUMN GRID
    [Logo left] [Links center] [Icons right]
 ════════════════════════════════════════════ */
+
 .leap-nav-inner {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
