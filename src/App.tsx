@@ -904,10 +904,22 @@ const LeapApp = () => {
         const response = await contentfulClient.getEntries({ content_type: 'leapClass2026' });
         const classList: LeapClass[] = response.items.map((item: any) => {
           let formattedDate = '', formattedTime = '';
-          if (item.fields.dateAndTime) {
-            const dateObj = new Date(item.fields.dateAndTime);
-            formattedDate = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-            formattedTime = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+          if (item.fields.startDate) {
+            const startObj = new Date(item.fields.startDate);
+            formattedDate = startObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            formattedTime = startObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            
+            if (item.fields.endDate) {
+              const endObj = new Date(item.fields.endDate);
+              const endDateStr = endObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+              
+              if (formattedDate === endDateStr) {
+                formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+              } else {
+                formattedDate += ` to ${endDateStr}`;
+                formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+              }
+            }
           }
           return {
             id: item.sys.id, title: item.fields.title || '', org: item.fields.organizationInCharge || '',
@@ -926,12 +938,12 @@ const LeapApp = () => {
 
     fetchClasses();
 
-    // Smart polling: fetch periodically but ONLY when the tab is visible
+    // Fetch periodically but ONLY when the tab is visible
     let intervalId: ReturnType<typeof setInterval> | null = null;
 
     const startPolling = () => {
       if (!intervalId) {
-        // Poll every 60 seconds (60000 ms). It's a sweet spot for freshness vs resources.
+        // Poll every 60 seconds
         intervalId = setInterval(fetchClasses, 60000);
       }
     };
