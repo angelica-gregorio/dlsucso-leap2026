@@ -26,8 +26,8 @@ interface HomeProps {
   classes: LeapClass[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  sortBy: string;
-  onSortChange: (sort: string) => void;
+  sortBy: 'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc';
+  onSortChange: (sort: 'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc') => void;
   filteredAndSortedClasses: LeapClass[];
   uniqueDays: string[];
   selectedDay: string | null;
@@ -36,13 +36,10 @@ interface HomeProps {
   onPageChange: (page: number) => void;
   viewingClass: LeapClass | null;
   onClassSelect: (leapClass: LeapClass | null) => void;
-  activeSubtheme: string | null;
-  onSubthemeSelect: (theme: string | null) => void;
   onSignIn: () => void;
   onHeroScroll: () => void;
   HeroSection: ReactNode;
-  MainEventsSection: ReactNode;
-  SubthemesStrip: ReactNode;
+  HeroExtras: ReactNode | null;
   renderClassCard: (item: LeapClass, index: number) => ReactNode;
 }
 
@@ -62,192 +59,326 @@ export default function Home({
   onClassSelect,
   onSignIn,
   HeroSection,
-  MainEventsSection,
-  SubthemesStrip,
+  HeroExtras,
   renderClassCard,
 }: HomeProps) {
   const ITEMS_PER_PAGE = 6;
 
-  return (
-    <main className="flex-grow">
-      {/* HERO */}
-      {HeroSection}
+  const selectedDayClasses = selectedDay
+    ? filteredAndSortedClasses.filter((item) => item.date === selectedDay)
+    : [];
+  const selectedDayTotalPages = Math.max(1, Math.ceil(selectedDayClasses.length / ITEMS_PER_PAGE));
+  const selectedDayPageItems = selectedDayClasses.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
 
-      {/* SEARCH BAR */}
-      <section id="classes" className="search-section sticky top-16 z-30 py-4 px-4">
-        <div className="container mx-auto max-w-5xl">
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="relative flex-grow">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-leap-olive" size={18} />
+  const dayGroups = uniqueDays.map((day) => ({
+    day,
+    classes: filteredAndSortedClasses.filter((item) => item.date === day),
+  }));
+
+  return (
+    <main className="flex-grow" style={{ background: '#f5edcc' }}>
+
+      {/* ── HERO SECTION ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #1a3a34 0%, #2b5a4e 40%, #3a7a65 70%, #f5edcc 100%)' }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse 80% 60% at 50% 15%, rgba(222,154,73,0.18) 0%, transparent 70%)',
+          pointerEvents: 'none'
+        }} />
+        {HeroSection}
+        {/* Bottom fade to cream */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: '2.5rem',
+          background: 'linear-gradient(to bottom, transparent, #f5edcc)',
+          pointerEvents: 'none',
+        }} />
+      </section>
+
+      {HeroExtras}
+
+      {/* ── CLASS CATALOG ─────────────────────────────────────────────── */}
+      <section id="classes-section" style={{ padding: '2rem 0 5rem', background: '#f5edcc' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem' }}>
+
+          {/* Search + Sort bar */}
+          <div style={{
+            background: 'rgba(255,255,255,0.6)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: 20,
+            border: '1px solid rgba(222,154,73,0.25)',
+            padding: '1.25rem 1.5rem',
+            marginBottom: '2rem',
+            boxShadow: '0 8px 32px rgba(51,75,70,0.08)',
+            display: 'flex',
+            gap: '0.75rem',
+            flexWrap: 'wrap' as const,
+            alignItems: 'center',
+          }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
+              <Search
+                size={16}
+                style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#6b8a7a' }}
+              />
               <input
                 type="text"
-                placeholder="Search events, workshops, or themes…"
-                className="leap-search w-full pl-12 pr-4 py-3.5"
+                placeholder="Search classes, orgs, or topics…"
+                className="leap-search"
+                style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: '1rem', paddingTop: '0.75rem', paddingBottom: '0.75rem' }}
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
               />
             </div>
             <select
               value={sortBy}
-              onChange={(e) => onSortChange(e.target.value)}
+              onChange={(e) => onSortChange(e.target.value as 'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc')}
               aria-label="Sort events"
-              className="leap-select px-5 py-3.5 appearance-none"
+              className="leap-select"
+              style={{ padding: '0.75rem 1.25rem' }}
             >
-              <option value="title-asc">Sort: Title (A–Z)</option>
-              <option value="title-desc">Sort: Title (Z–A)</option>
-              <option value="slots-desc">Sort: Most Slots</option>
-              <option value="slots-asc">Sort: Fewest Slots</option>
+              <option value="title-asc">Title (A–Z)</option>
+              <option value="title-desc">Title (Z–A)</option>
+              <option value="slots-desc">Most Slots</option>
+              <option value="slots-asc">Fewest Slots</option>
             </select>
           </div>
-        </div>
-      </section>
 
-      {MainEventsSection}
+          {/* Two-column layout: Sidebar + Main */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '200px 1fr',
+            gap: '1.5rem',
+            alignItems: 'start',
+          }}>
 
-      {SubthemesStrip}
+            {/* ── SIDEBAR ── */}
+            <aside style={{
+              background: 'rgba(255,255,255,0.55)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: 20,
+              border: '1px solid rgba(222,154,73,0.2)',
+              padding: '1.25rem 1rem',
+              boxShadow: '0 8px 32px rgba(51,75,70,0.07)',
+              position: 'sticky',
+              top: '5rem',
+            }}>
+              <p style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: '1.1rem',
+                fontWeight: 700,
+                color: '#334b46',
+                marginBottom: '0.25rem',
+              }}>LEAP</p>
+              <p style={{
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.12em',
+                color: '#6b8a7a',
+                marginBottom: '1rem',
+              }}>Days</p>
 
-      {/* CLASSES SECTION */}
-      <section id="classes-section">
-        {!user ? (
-          <div className="container mx-auto px-4 py-16">
-            <div className="leap-info-card p-12 rounded-3xl text-center max-w-xl mx-auto">
-              <div className="leap-detail-icon-wrap w-16 h-16 mx-auto mb-6" style={{ width: 64, height: 64 }}><Info size={32} /></div>
-              <h3 className="text-2xl font-bold text-leap-dark mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Sign in to see classes</h3>
-              <p className="text-leap-olive mb-8 text-lg">You must be signed in with your DLSU account to view and register for LEAP classes.</p>
-              <button onClick={onSignIn} className="btn-leap-primary px-10 py-4 rounded-2xl font-bold text-lg shadow-xl">Sign In Now</button>
-            </div>
-          </div>
-        ) : viewingClass ? (
-          <div className="container mx-auto px-4 py-12 max-w-4xl">
-            <button onClick={() => onClassSelect(null)} className="leap-see-more mb-8"><ArrowLeft size={16} /> Back to Classes</button>
-            <div className="glass-card rounded-3xl overflow-hidden">
-              <div className="h-80 w-full relative">
-                <img src={viewingClass.image} alt={viewingClass.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                <div className="absolute top-6 left-6 flex gap-2 items-center">
-                  {viewingClass.orgLogo ? (
-                    <img src={viewingClass.orgLogo} alt={viewingClass.org} style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover', border: '2px solid rgba(222,154,73,0.5)' }} referrerPolicy="no-referrer" />
-                  ) : null}
-                  <span className="leap-detail-badge">{viewingClass.subtheme}</span>
-                </div>
-              </div>
-              <div className="p-10">
-                <h1 className="text-4xl font-bold text-leap-dark mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>{viewingClass.title}</h1>
-                <p className="text-base text-leap-rust font-semibold uppercase tracking-wide mb-8">Organized by {viewingClass.org}</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-leap-dark">
-                      <div className="leap-detail-icon-wrap"><Calendar size={20} /></div>
-                      <div><p className="text-xs text-leap-olive font-bold uppercase tracking-widest mb-0.5">Date & Time</p><p className="font-semibold">{viewingClass.date} · {viewingClass.time}</p></div>
-                    </div>
-                    <div className="flex items-center gap-3 text-leap-dark">
-                      <div className="leap-detail-icon-wrap"><MapPin size={20} /></div>
-                      <div><p className="text-xs text-leap-olive font-bold uppercase tracking-widest mb-0.5">Location</p><p className="font-semibold">{viewingClass.venue} ({viewingClass.modality})</p></div>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-leap-dark">
-                      <div className="leap-detail-icon-wrap"><Users size={20} /></div>
-                      <div><p className="text-xs text-leap-olive font-bold uppercase tracking-widest mb-0.5">Available Slots</p><p className="font-semibold">{viewingClass.slots} slots</p></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="mb-10">
-                  <h3 className="text-2xl font-bold text-leap-dark mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>About this class</h3>
-                  <p className="text-leap-dark/80 leading-relaxed text-lg">{viewingClass.description || "No description provided for this class."}</p>
-                </div>
-                <a href={viewingClass.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer" className="btn-leap-primary w-full md:w-auto inline-flex px-10 py-5 rounded-2xl font-bold text-lg items-center justify-center gap-3">Register via Google Forms <ExternalLink size={22} /></a>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="leap-days-layout" style={{ minHeight: '60vh' }}>
-            <aside className="leap-days-sidebar">
-              <div className="leap-days-sidebar-title">LEAP<br />Days</div>
-              {uniqueDays.length === 0 ? (
-                <p style={{ padding: '1rem 1.5rem', fontFamily: "'DM Sans',sans-serif", fontSize: '0.82rem', color: 'rgba(124,107,75,0.6)' }}>No days found.</p>
-              ) : (
-                uniqueDays.map((date: string, dayIndex: number) => {
-                  const count = filteredAndSortedClasses.filter((c: LeapClass) => c.date === date).length;
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                {uniqueDays.map((day, dayIndex) => {
+                  const count = filteredAndSortedClasses.filter(c => c.date === day).length;
+                  const isActive = selectedDay === day;
                   return (
                     <button
-                      key={date}
-                      className={`day-sidebar-item w-full text-left ${selectedDay === date ? 'active' : ''}`}
-                      onClick={() => onDaySelect(date === selectedDay ? null : date)}
+                      key={day}
+                      onClick={() => { onDaySelect(isActive ? null : day); onPageChange(1); }}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        padding: '0.65rem 0.75rem',
+                        borderRadius: 12,
+                        border: 'none',
+                        background: isActive ? 'rgba(222,154,73,0.18)' : 'transparent',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s',
+                        textAlign: 'left',
+                        position: 'relative',
+                      }}
                     >
-                      <span className="day-sidebar-num">Day {String(dayIndex + 1).padStart(2, '0')}</span>
-                      <span className="day-sidebar-name">{date.split(',')[0]}</span>
-                      <span className="day-sidebar-count">{count}</span>
+                      {isActive && (
+                        <div style={{
+                          position: 'absolute', left: 0, top: '20%', bottom: '20%',
+                          width: 3, borderRadius: 99,
+                          background: '#de9a49',
+                        }} />
+                      )}
+                      <span style={{
+                        fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        color: isActive ? '#de9a49' : '#6b8a7a',
+                      }}>
+                        Day {String(dayIndex + 1).padStart(2, '0')}
+                      </span>
+                      <span style={{
+                        fontSize: '0.85rem', fontWeight: 700,
+                        color: isActive ? '#334b46' : '#4a6560',
+                        marginTop: '0.1rem',
+                      }}>
+                        {day.split(',')[0]}
+                      </span>
+                      <span style={{
+                        marginTop: '0.2rem',
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                        color: isActive ? '#de9a49' : '#6b8a7a',
+                      }}>
+                        {count} classes
+                      </span>
                     </button>
                   );
-                })
-              )}
+                })}
+              </div>
             </aside>
-            <main className="leap-classes-main">
-              {selectedDay === null ? (
-                <div>
-                  {uniqueDays.map((date: string, dayIndex: number) => {
-                    const dayClasses = filteredAndSortedClasses.filter((c: LeapClass) => c.date === date);
+
+            {/* ── MAIN CONTENT ── */}
+            <div>
+              {!user ? (
+                /* Sign-in prompt */
+                <div style={{
+                  background: 'rgba(255,255,255,0.65)',
+                  borderRadius: 24,
+                  border: '1px solid rgba(222,154,73,0.25)',
+                  padding: '4rem 2rem',
+                  textAlign: 'center',
+                  boxShadow: '0 16px 48px rgba(51,75,70,0.08)',
+                }}>
+                  <div className="leap-detail-icon-wrap" style={{ width: 64, height: 64, margin: '0 auto 1.5rem' }}>
+                    <Info size={28} />
+                  </div>
+                  <h3 style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: '1.6rem', fontWeight: 700, color: '#334b46', marginBottom: '0.5rem',
+                  }}>Sign in to see classes</h3>
+                  <p style={{ color: '#6b8a7a', fontSize: '1rem', marginBottom: '2rem' }}>
+                    You must be signed in with your DLSU account to view and register for LEAP classes.
+                  </p>
+                  <button onClick={onSignIn} className="btn-leap-primary" style={{ padding: '0.9rem 2.5rem', fontSize: '1rem', borderRadius: 14 }}>
+                    Sign In Now
+                  </button>
+                </div>
+
+              ) : selectedDay === null ? (
+                /* All Days View */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+                  {dayGroups.map(({ day, classes: dayClasses }, dayIndex) => {
                     const previewClasses = dayClasses.slice(0, 3);
                     return (
-                      <div key={date} className="mb-14">
-                        <div className="flex justify-between items-end mb-6">
+                      <div key={day} style={{
+                        background: 'rgba(255,255,255,0.52)',
+                        backdropFilter: 'blur(8px)',
+                        borderRadius: 22,
+                        border: '1px solid rgba(222,154,73,0.18)',
+                        padding: '1.5rem 1.5rem',
+                        boxShadow: '0 12px 36px rgba(51,75,70,0.06)',
+                      }}>
+                        {/* Day header */}
+                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
                           <div>
-                            <p className="day-eyebrow">Day {dayIndex + 1}</p>
-                            <h2 className="leap-day-label">{date}</h2>
-                            <p className="leap-day-count mt-1">{dayClasses.length} classes available</p>
+                            <p style={{
+                              fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+                              letterSpacing: '0.18em', color: '#de9a49', marginBottom: '0.25rem',
+                            }}>Day {String(dayIndex + 1).padStart(2, '0')}</p>
+                            <h2 style={{
+                              fontFamily: "'Playfair Display', serif",
+                              fontSize: '1.75rem', fontWeight: 700, color: '#334b46', lineHeight: 1.15,
+                            }}>{day}</h2>
+                            <p style={{ fontSize: '0.8rem', color: '#6b8a7a', marginTop: '0.2rem', fontWeight: 500 }}>
+                              {dayClasses.length} classes available
+                            </p>
                           </div>
                           {dayClasses.length > 3 && (
-                            <button onClick={() => onDaySelect(date)} className="leap-see-more">
+                            <button
+                              onClick={() => { onDaySelect(day); onPageChange(1); }}
+                              className="leap-see-more"
+                            >
                               See All <ChevronRight size={16} />
                             </button>
                           )}
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {previewClasses.map((item: LeapClass, index: number) => renderClassCard(item, index))}
+
+                        {/* Cards grid */}
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: '1rem',
+                        }}>
+                          {previewClasses.map((item, index) => renderClassCard(item, index))}
                         </div>
-                        {dayIndex < uniqueDays.length - 1 && (
-                          <div className="leap-divider"><div className="leap-divider-icon" /></div>
+
+                        {/* Subtle divider between days */}
+                        {dayIndex < dayGroups.length - 1 && (
+                          <div style={{
+                            marginTop: '1.5rem',
+                            height: 1,
+                            background: 'linear-gradient(90deg, transparent, rgba(222,154,73,0.3), transparent)',
+                          }} />
                         )}
                       </div>
                     );
                   })}
+
                   {filteredAndSortedClasses.length === 0 && (
-                    <div className="text-center py-16 text-leap-olive">
-                      <p style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>No classes found</p>
+                    <div style={{ padding: '4rem 0', textAlign: 'center', color: '#6b8a7a' }}>
+                      <p style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>No classes found</p>
                       <p style={{ fontSize: '0.9rem' }}>Try adjusting your search or filters.</p>
                     </div>
                   )}
                 </div>
+
               ) : (
+                /* Selected Day Paginated View */
                 <div>
-                  <div className="flex items-center gap-4 mb-8">
-                    <button onClick={() => onDaySelect(null)} className="p-2 hover:bg-leap-tan/30 rounded-full transition-colors"><ArrowLeft size={24} /></button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <button
+                      onClick={() => { onDaySelect(null); onPageChange(1); }}
+                      style={{
+                        background: 'rgba(255,255,255,0.6)',
+                        border: '1px solid rgba(222,154,73,0.25)',
+                        borderRadius: 10,
+                        padding: '0.5rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: '#334b46',
+                      }}
+                    >
+                      <ArrowLeft size={20} />
+                    </button>
                     <div>
-                      <p className="day-eyebrow">All Classes</p>
-                      <h2 className="leap-day-label">{selectedDay}</h2>
+                      <p style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#de9a49' }}>Filtered Day</p>
+                      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.6rem', fontWeight: 700, color: '#334b46' }}>{selectedDay}</h2>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                    {filteredAndSortedClasses
-                      .filter((c: LeapClass) => c.date === selectedDay)
-                      .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-                      .map((item: LeapClass, index: number) => renderClassCard(item, index))}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+                    {selectedDayPageItems.map((item, index) => renderClassCard(item, index))}
                   </div>
-                  {Math.ceil(filteredAndSortedClasses.filter((c: LeapClass) => c.date === selectedDay).length / ITEMS_PER_PAGE) > 1 && (
-                    <div className="flex justify-center items-center gap-4">
+
+                  {selectedDayTotalPages > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
                       <button
                         disabled={currentPage === 1}
                         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                        className="leap-page-btn px-6 py-3 font-bold flex items-center gap-2"
+                        className="leap-page-btn"
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0.6rem 1.2rem', fontWeight: 700 }}
                       >
                         <ChevronLeft size={16} /> Prev
                       </button>
-                      <span className="font-bold text-leap-dark text-sm">Page {currentPage} of {Math.ceil(filteredAndSortedClasses.filter((c: LeapClass) => c.date === selectedDay).length / ITEMS_PER_PAGE)}</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334b46' }}>
+                        Page {currentPage} of {selectedDayTotalPages}
+                      </span>
                       <button
-                        disabled={currentPage === Math.ceil(filteredAndSortedClasses.filter((c: LeapClass) => c.date === selectedDay).length / ITEMS_PER_PAGE)}
-                        onClick={() => onPageChange(currentPage + 1)}
-                        className="leap-page-btn px-6 py-3 font-bold flex items-center gap-2"
+                        disabled={currentPage === selectedDayTotalPages}
+                        onClick={() => onPageChange(Math.min(selectedDayTotalPages, currentPage + 1))}
+                        className="leap-page-btn"
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0.6rem 1.2rem', fontWeight: 700 }}
                       >
                         Next <ChevronRight size={16} />
                       </button>
@@ -255,10 +386,118 @@ export default function Home({
                   )}
                 </div>
               )}
-            </main>
+            </div>
           </div>
-        )}
+        </div>
       </section>
+
+      {user && viewingClass && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1100,
+            background: 'rgba(8, 10, 8, 0.72)',
+            backdropFilter: 'blur(6px)',
+            padding: 'clamp(0.75rem, 2.5vw, 1.5rem)',
+            overflowY: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => onClassSelect(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 'min(1040px, 94vw)',
+              maxHeight: 'calc(100vh - 2rem)',
+              background: '#fffaf0',
+              borderRadius: 18,
+              overflow: 'hidden',
+              border: '1px solid rgba(222,154,73,0.28)',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
+              position: 'relative',
+            }}
+          >
+            <button
+              onClick={() => onClassSelect(null)}
+              className="leap-see-more"
+              style={{
+                position: 'absolute',
+                top: 18,
+                right: 22,
+                zIndex: 2,
+                color: '#f9ecb6',
+                background: 'rgba(18, 12, 7, 0.84)',
+                border: '1px solid rgba(250, 225, 133, 0.3)',
+                borderRadius: 999,
+                padding: '0.35rem 0.7rem',
+              }}
+            >
+              Close <ArrowLeft size={16} style={{ transform: 'rotate(135deg)' }} />
+            </button>
+
+            <div className="grid grid-cols-1 md:grid-cols-[340px_1fr]" style={{ maxHeight: 'calc(100vh - 2rem)' }}>
+              <div style={{ position: 'relative', minHeight: 250, maxHeight: 'calc(100vh - 2rem)' }}>
+                <img src={viewingClass.image} alt={viewingClass.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0.08) 45%, transparent)' }} />
+                <div style={{ position: 'absolute', top: 20, left: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {viewingClass.orgLogo && (
+                    <img
+                      src={viewingClass.orgLogo}
+                      alt={viewingClass.org}
+                      style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover', border: '2px solid rgba(222,154,73,0.6)' }}
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
+                  <span className="leap-detail-badge">{viewingClass.subtheme}</span>
+                </div>
+              </div>
+
+              <div style={{ padding: 'clamp(1.1rem, 2.4vw, 2rem)', overflowY: 'auto', maxHeight: 'calc(100vh - 2rem)' }}>
+                <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(1.7rem, 3.4vw, 2.35rem)', fontWeight: 700, color: '#334b46', marginBottom: '0.5rem' }}>
+                  {viewingClass.title}
+                </h1>
+                <p style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#b05a32', marginBottom: '2rem' }}>
+                  Organized by {viewingClass.org}
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                  {[
+                    { icon: <Calendar size={20} />, label: 'Date & Time', value: `${viewingClass.date} · ${viewingClass.time}` },
+                    { icon: <MapPin size={20} />, label: 'Location', value: `${viewingClass.venue} (${viewingClass.modality})` },
+                    { icon: <Users size={20} />, label: 'Slots Available', value: `${viewingClass.slots} participants` },
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div className="leap-detail-icon-wrap">{item.icon}</div>
+                      <div>
+                        <p style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6b8a7a', marginBottom: 2 }}>{item.label}</p>
+                        <p style={{ fontWeight: 600, color: '#334b46' }}>{item.value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(222,154,73,0.2)', paddingTop: '1.5rem', marginBottom: '1.75rem' }}>
+                  <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 700, color: '#334b46', marginBottom: '0.75rem' }}>About this class</h3>
+                  <p style={{ color: 'rgba(51,75,70,0.82)', lineHeight: 1.7, fontSize: '1rem' }}>{viewingClass.description || 'No description provided.'}</p>
+                </div>
+
+                <a
+                  href={viewingClass.googleFormUrl || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-leap-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '1rem 2.2rem', borderRadius: 14, fontSize: '0.95rem', fontWeight: 700, textDecoration: 'none' }}
+                >
+                  Register via Google Forms <ExternalLink size={18} />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -135,13 +135,6 @@
   background: rgba(222, 154, 73, 0.22);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   NAYON SCENE HELPER CLASSES
-═══════════════════════════════════════════════════════════ */
-.nayonSvg {
-  @apply absolute bottom-0 left-0 w-full h-auto z-2 pointer-events-none;
-}
-
 .tooltipBox {
   position: fixed;
   bottom: auto;
@@ -178,6 +171,230 @@
 /* ═══════════════════════════════════════════════════════════
    SUBTHEMES SECTION
 ═══════════════════════════════════════════════════════════ */
+
+.subthemesSection {
+  composes: subthemes-section from global;
+}
+
+.subthemesInner {
+  composes: subthemes-inner from global;
+}
+
+.subthemesLabel {
+  composes: subthemes-label from global;
+}
+
+.subthemesRow {
+  composes: subthemes-row from global;
+  gap: 0.8rem;
+}
+
+.subthemesCompactShell {
+  margin-top: 1rem;
+}
+
+.subthemesCompactInner {
+  width: min(1100px, 96vw);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.subthemesCompactLabel {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(249, 236, 182, 0.74);
+  margin-bottom: 0.45rem;
+}
+
+.subthemesRowCompact {
+  gap: 0.7rem;
+}
+
+.subthemeAssetButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.45rem;
+  transition: transform 0.2s ease, filter 0.2s ease, background 0.2s ease;
+}
+
+.subthemeAssetButton:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.subthemeAssetIcon {
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(249, 236, 182, 0.82);
+  background:
+    radial-gradient(circle at 30% 22%, rgba(250, 225, 133, 0.25) 0%, rgba(250, 225, 133, 0.04) 35%, transparent 62%),
+    linear-gradient(165deg, rgba(19, 26, 18, 0.84) 0%, rgba(9, 13, 9, 0.72) 100%);
+  border: 1px solid rgba(222, 154, 73, 0.26);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 5px 12px rgba(0, 0, 0, 0.26);
+  transition: border-color 0.2s ease, box-shadow 0.25s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.subthemeAssetLabel {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(249, 236, 182, 0.78);
+  max-width: 96px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.subthemeAssetButton:hover .subthemeAssetIcon {
+  color: #fae185;
+  border-color: rgba(250, 225, 133, 0.48);
+}
+
+.subthemeAssetButton:hover .subthemeAssetLabel {
+  color: rgba(250, 225, 133, 0.95);
+}
+
+.subthemeAssetActive .subthemeAssetIcon {
+  color: #fae185;
+  border-color: rgba(250, 225, 133, 0.72);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 0 0 3px rgba(250, 225, 133, 0.22),
+    0 0 30px rgba(250, 225, 133, 0.7),
+    0 10px 26px rgba(0, 0, 0, 0.34);
+  transform: translateY(-1px) scale(1.1);
+}
+
+.subthemeAssetActive .subthemeAssetLabel {
+  color: #fae185;
+  text-shadow: 0 0 10px rgba(250, 225, 133, 0.5);
+}
+
+@media (max-width: 640px) {
+  .subthemeAssetIcon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .subthemeAssetLabel {
+    font-size: 0.47rem;
+    max-width: 78px;
+  }
+}
+
+.subthemePill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.52rem;
+  width: 124px;
+  min-width: 124px;
+  max-width: 124px;
+  min-height: 102px;
+  padding: 0.6rem 0.5rem;
+  border-radius: 12px;
+  background: rgba(254, 250, 232, 0.9);
+  border: 1.5px solid rgba(224, 183, 136, 0.34);
+  box-shadow: 0 3px 12px rgba(51, 75, 70, 0.08);
+  color: #334b46;
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1), background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.subthemePillCompact {
+  width: 108px;
+  min-width: 108px;
+  max-width: 108px;
+  min-height: 86px;
+  padding: 0.42rem 0.35rem;
+  border-radius: 11px;
+  gap: 0.36rem;
+}
+
+.subthemePillCompact .subthemePillIcon {
+  transform: scale(0.9);
+}
+
+.subthemePillCompact .subthemePillLabel {
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  line-height: 1.18;
+}
+
+.subthemePill:hover,
+.subthemePillActive {
+  background: #334b46;
+  border-color: #334b46;
+  color: #fae185;
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 10px 28px rgba(51, 75, 70, 0.24);
+}
+
+.subthemePillIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7c6b4b;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.subthemePill:hover .subthemePillIcon,
+.subthemePillActive .subthemePillIcon {
+  color: #fae185;
+  transform: translateY(-1px);
+}
+
+.subthemePillLabel {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  line-height: 1.24;
+  text-align: center;
+  color: rgba(51, 75, 70, 0.78);
+  transition: color 0.2s;
+}
+
+.subthemePill:hover .subthemePillLabel,
+.subthemePillActive .subthemePillLabel {
+  color: rgba(249, 236, 182, 0.94);
+}
+
+@media (max-width: 768px) {
+  .subthemePill {
+    width: 108px;
+    min-width: 108px;
+    max-width: 108px;
+    min-height: 96px;
+    padding: 0.5rem 0.4rem;
+  }
+
+  .subthemePillLabel {
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════
    MAIN EVENTS SECTION
@@ -352,6 +569,7 @@
   display: flex;
   flex-direction: column;
   cursor: pointer;
+  min-height: 280px;
 }
 
 .classCardWrapper:hover {
@@ -387,7 +605,9 @@
 .cardImageWrapper {
   position: relative;
   overflow: hidden;
-  height: 180px;
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
 }
 
 .cardImage {
@@ -399,12 +619,12 @@
 .cardImageGradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.3), transparent 60%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 4%, rgba(0, 0, 0, 0.42) 42%, rgba(0, 0, 0, 0.15) 68%, transparent 100%);
 }
 
 .cardSlotsLabel {
   position: absolute;
-  bottom: 12px;
+  top: 12px;
   right: 12px;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
@@ -417,8 +637,28 @@
   font-family: 'DM Sans', sans-serif;
 }
 
+.cardOverlayContent {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cardOverlayTopRow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.1rem;
+}
+
 .cardContent {
-  @apply p-5 flex flex-col flex-grow;
+  @apply p-5 flex flex-col;
+  width: 100%;
+  min-width: 0;
 }
 
 .cardOrganization {
@@ -427,14 +667,16 @@
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #de9a49;
-  margin-bottom: 0.35rem;
+  color: #fae185;
+  margin-bottom: 0.1rem;
 }
 
 .cardTitle {
-  @apply text-lg font-bold text-leap-dark leading-tight mb-3;
+  @apply text-lg font-bold leading-tight;
+  color: #fff6d8;
   font-family: 'Playfair Display', serif;
   cursor: pointer;
+  margin-bottom: 0.35rem;
 }
 
 .cardMetadata {
@@ -442,12 +684,20 @@
   font-size: 0.78rem;
 }
 
+.cardMetadataOverlay {
+  @apply space-y-1;
+  font-size: 0.72rem;
+  color: rgba(249, 236, 182, 0.92);
+  margin-bottom: 0.4rem;
+}
+
 .metadataItem {
   @apply flex items-center gap-2;
 }
 
 .metadataIcon {
-  @apply text-leap-gold flex-shrink-0;
+  color: #fae185;
+  flex-shrink: 0;
 }
 
 .cardActions {
@@ -506,6 +756,68 @@
 .learnMoreBtn:hover {
   color: #803e2f;
   gap: 0.55rem;
+}
+
+.cardActionsOverlay {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.registerBtnOverlay {
+  background: linear-gradient(135deg, #fae185 0%, #de9a49 60%, #c07830 100%);
+  color: #1a1008;
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  text-decoration: none;
+  transition: filter 0.2s ease;
+}
+
+.registerBtnOverlay:hover {
+  filter: brightness(1.08);
+}
+
+.learnMoreBtnOverlay {
+  background: rgba(15, 10, 4, 0.55);
+  border: 1px solid rgba(250, 225, 133, 0.45);
+  color: #fae185;
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.learnMoreBtnOverlay:hover {
+  background: rgba(15, 10, 4, 0.78);
+}
+
+@media (max-width: 700px) {
+  .cardImageWrapper {
+    min-height: 250px;
+  }
+
+  .cardOverlayContent {
+    padding: 0.8rem;
+  }
+
+  .cardActionsOverlay {
+    flex-wrap: wrap;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -873,9 +1185,9 @@
   composes: hero-bg from global;
   position: relative;
   overflow: hidden;
-  min-height: 100vh;
-  padding-top: 7rem;
-  padding-bottom: clamp(140px, 34vw, 490px);
+  min-height: clamp(420px, 64vh, 700px);
+  padding-top: 6.5rem;
+  padding-bottom: clamp(16px, 3vw, 36px);
 }
 
 .heroBackdropTop {
@@ -922,7 +1234,7 @@
 }
 
 .heroLogo {
-  width: min(420px, 82vw);
+  width: min(560px, 88vw);
   display: block;
   margin: 0 auto;
   mix-blend-mode: screen;
@@ -932,7 +1244,7 @@
 }
 
 .heroEyebrow {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Tropikal', serif;
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.26em;

@@ -7,8 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft,
   Menu, X, Info, LogOut, LogIn, AlertCircle,
-  Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Leaf, Star, Mail, Clock,
-  Globe, Zap, Layers, Bookmark, User  
+  Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Mail, Clock,
+  Bookmark, User, BookOpen, Wrench, Handshake, HeartPulse
 } from 'lucide-react';
 
 import { contentfulClient } from './services/contentful';
@@ -22,6 +22,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import MainEvents from './pages/MainEvents';
 import FAQs from './pages/FAQs';
+import Classes from './pages/Classes';
 
 import leapLogo from './assets/leap.webp';
 import styles from './App.module.css';
@@ -54,22 +55,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     }
     return this.props.children;
   }
-}
-
-/* ══════════════════════════════════════════════════════
-   PARALLAX MOUSE HOOK
-══════════════════════════════════════════════════════ */
-function useParallaxMouse() {
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2;
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
-      document.documentElement.style.setProperty('--px', x.toString());
-      document.documentElement.style.setProperty('--py', y.toString());
-    };
-    window.addEventListener('mousemove', onMove, { passive: true });
-    return () => window.removeEventListener('mousemove', onMove);
-  }, []);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -124,6 +109,22 @@ const CustomCursor = () => {
 };
 
 /* ══════════════════════════════════════════════════════
+   PARALLAX MOUSE HOOK
+══════════════════════════════════════════════════════ */
+function useParallaxMouse() {
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      document.documentElement.style.setProperty('--px', x.toString());
+      document.documentElement.style.setProperty('--py', y.toString());
+    };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    return () => window.removeEventListener('mousemove', onMove);
+  }, []);
+}
+
+/* ══════════════════════════════════════════════════════
    FIREFLIES
 ══════════════════════════════════════════════════════ */
 const FLIES = Array.from({ length: 24 }, (_, i) => ({
@@ -158,52 +159,13 @@ const Fireflies = () => (
   </div>
 );
 
-/* ══════════════════════════════════════════════════════
-   ANIMATED COUNTER + HERO STATS STRIP
-══════════════════════════════════════════════════════ */
-const AnimatedCounter = ({ end, label, suffix = '' }: { end: number; label: string; suffix?: string }) => {
-  const [n, setN] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
-        let v = 0; const step = end / 60;
-        const t = setInterval(() => { v += step; if (v >= end) { setN(end); clearInterval(t); } else setN(Math.floor(v)); }, 16);
-      }
-    }, { threshold: 0.5 });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [end]);
-  return (
-    <div ref={ref} style={{ textAlign: 'center', padding: '0 24px' }}>
-      <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 'clamp(1.6rem,2.8vw,2.4rem)', fontWeight: 800, color: '#fae185', lineHeight: 1 }}>{n}{suffix}</div>
-      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(222,154,73,0.7)', marginTop: 5 }}>{label}</div>
-    </div>
-  );
-};
-const HeroStats = () => (
-  <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.6 }}
-    style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '18px 0', borderTop: '1px solid rgba(222,154,73,0.18)', borderBottom: '1px solid rgba(222,154,73,0.18)', background: 'rgba(0,0,0,0.14)', borderRadius: 10, maxWidth: 560, margin: '2.5rem auto 0' }}>
-    <AnimatedCounter end={200} suffix="+" label="Classes" />
-    <div style={{ width: 1, height: 36, background: 'rgba(222,154,73,0.22)' }} />
-    <AnimatedCounter end={7} label="Days" />
-    <div style={{ width: 1, height: 36, background: 'rgba(222,154,73,0.22)' }} />
-    <AnimatedCounter end={5000} suffix="+" label="Students" />
-    <div style={{ width: 1, height: 36, background: 'rgba(222,154,73,0.22)' }} />
-    <AnimatedCounter end={50} suffix="+" label="Orgs" />
-  </motion.div>
-);
-
-/* ══════════════════════════════════════════════════════
-   NAYON SCENE - PART 1 (SVG Definitions and helpers)
-══════════════════════════════════════════════════════ */
 const TOOLTIPS: Record<string, { label: string; desc: string }> = {
-  hut1: { label: 'Bahay Kubo', desc: 'Traditional Filipino stilt house' },
-  hut2: { label: 'Bahay Kubo', desc: 'Heart of the Filipino nayon' },
-  palay: { label: 'Palay', desc: 'The golden harvest — rice paddies' },
-  salakot: { label: 'Salakot', desc: "Farmer's iconic woven hat" },
-  bayong: { label: 'Ba yong', desc: 'Handwoven Filipino basket bag' },
-  pandesal: { label: 'Pandesal', desc: 'The beloved Filipino bread roll' },
+  hut1: { label: 'Bahay-Kubo', desc: 'A humble home rooted in community and tradition.' },
+  hut2: { label: 'Pavilion', desc: 'A welcoming space for gathering and learning.' },
+  palay: { label: 'Palay', desc: 'A symbol of harvest, care, and shared growth.' },
+  salakot: { label: 'Salakot', desc: 'A classic Filipino hat for sun and field work.' },
+  bayong: { label: 'Bayong', desc: 'A woven bag for everyday market life.' },
+  pandesal: { label: 'Pandesal', desc: 'A warm staple that brings people together.' },
 };
 
 const NayonScene = () => {
@@ -214,10 +176,14 @@ const NayonScene = () => {
     <>
       <AnimatePresence>
         {hovered && (
-          <motion.div key={hovered}
-            initial={{ opacity: 0, y: 8, scale: 0.92 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 4, scale: 0.96 }}
+          <motion.div
+            key={hovered}
+            initial={{ opacity: 0, y: 8, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.96 }}
             transition={{ duration: 0.18, ease: [0.34, 1.4, 0.64, 1] }}
-            style={{ position: 'fixed', bottom: 'auto', top: '80px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(8,5,2,0.94)', border: '1px solid rgba(222,154,73,0.52)', borderRadius: 8, padding: '8px 18px', pointerEvents: 'none', zIndex: 20, backdropFilter: 'blur(14px)', boxShadow: '0 8px 32px rgba(0,0,0,0.55)', whiteSpace: 'nowrap' }}>
+            style={{ position: 'fixed', bottom: 'auto', top: '80px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(8,5,2,0.94)', border: '1px solid rgba(222,154,73,0.52)', borderRadius: 8, padding: '8px 18px', pointerEvents: 'none', zIndex: 20, backdropFilter: 'blur(14px)', boxShadow: '0 8px 32px rgba(0,0,0,0.55)', whiteSpace: 'nowrap' }}
+          >
             <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 14, color: '#fae185', margin: 0, fontWeight: 700 }}>{TOOLTIPS[hovered]?.label}</p>
             <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: 'rgba(249,236,182,0.52)', margin: 0, marginTop: 2 }}>{TOOLTIPS[hovered]?.desc}</p>
           </motion.div>
@@ -292,22 +258,22 @@ const NayonScene = () => {
             <stop offset="0%" stopColor="#4ab09a" stopOpacity="0.1" /><stop offset="50%" stopColor="#7dd4c4" stopOpacity="0.18" /><stop offset="100%" stopColor="#4ab09a" stopOpacity="0.07" />
           </linearGradient>
           <filter id="glowF" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            <feGaussianBlur stdDeviation="6" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
           <filter id="softGlowF" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
         </defs>
 
-        {[[120, 30], [280, 18], [380, 40], [540, 14], [680, 34], [820, 12], [960, 26], [1100, 38], [1240, 16], [1360, 30], [160, 52], [450, 46], [750, 42], [1050, 50], [1300, 54]].map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r="1.2" fill="#fae185" opacity="0.2" className={`star-twinkle star-d${i % 5}`} />
+        {[[120,30],[280,18],[380,40],[540,14],[680,34],[820,12],[960,26],[1100,38],[1240,16],[1360,30],[160,52],[450,46],[750,42],[1050,50],[1300,54]].map(([x,y],i) => (
+          <circle key={i} cx={x} cy={y} r="1.2" fill="#fae185" opacity="0.2" className={`star-twinkle star-d${i%5}`}/>
         ))}
 
-        {[[320, 60, 0.75, 0], [380, 48, 0.6, 0.3], [350, 54, 0.65, 0.15], [1060, 66, 0.75, 0.5], [1110, 54, 0.6, 0.7]].map(([x, y, sc, dl], i) => (
+        {[[320,60,0.75,0],[380,48,0.6,0.3],[350,54,0.65,0.15],[1060,66,0.75,0.5],[1110,54,0.6,0.7]].map(([x,y,sc,dl],i) => (
           <g key={i} className={`bird bird-d${i}`} style={{ transform: `translate(calc(${x}px + var(--px, 0) * -4px), calc(${y}px + var(--py, 0) * -2px)) scale(${sc})`, animationDelay: `${dl}s` }}>
-            <path d="M0 0 Q6 -5 12 0 Q18 -5 24 0" fill="none" stroke="rgba(222,154,73,0.4)" strokeWidth="2" strokeLinecap="round" />
+            <path d="M0 0 Q6 -5 12 0 Q18 -5 24 0" fill="none" stroke="rgba(222,154,73,0.4)" strokeWidth="2" strokeLinecap="round"/>
           </g>
         ))}
 
@@ -316,7 +282,7 @@ const NayonScene = () => {
           <path d="M900 18 L710 290 L1090 290 Z" fill="url(#volcanoG)" />
           <path d="M900 18 L1090 290 L1020 290 Z" fill="rgba(0,0,0,0.15)" />
           <path d="M900 18 L882 58 L894 54 L900 30 L906 54 L918 58 Z" fill="rgba(240,235,215,0.2)" />
-          <ellipse cx="900" cy="22" rx="14" ry="9" fill="rgba(222,154,73,0.22)" className="volcano-pulse" />
+          <ellipse cx="900" cy="22" rx="14" ry="9" fill="rgba(222,154,73,0.22)" className="volcano-pulse"/>
         </g>
 
         <g style={{ transform: 'translate(calc(var(--px, 0) * -6px), calc(var(--py, 0) * -4px))' }}>
@@ -340,7 +306,7 @@ const NayonScene = () => {
 
         <path d="M0 388 Q360 374 720 382 Q1080 390 1440 380 L1440 480 L0 480 Z" fill="url(#groundG)" />
         <rect x="0" y="408" width="1440" height="6" rx="3" fill="#1a4a22" opacity="0.5" />
-        {[40, 100, 160, 220, 310, 400, 500, 580, 660, 750, 840, 940, 1040, 1140, 1240, 1320, 1380].map((x, i) => (
+        {[40,100,160,220,310,400,500,580,660,750,840,940,1040,1140,1240,1320,1380].map((x, i) => (
           <g key={i} transform={`translate(${x}, 408)`}>
             <path d={`M0 0 Q-3 -8 -1 -14 Q1 -8 0 0`} fill="#2a6a30" opacity="0.6" />
             <path d={`M0 0 Q3 -6 5 -11 Q4 -6 0 0`} fill="#2a6a30" opacity="0.5" />
@@ -348,31 +314,31 @@ const NayonScene = () => {
         ))}
 
         <g style={{ transform: 'translate(calc(36px + var(--px, 0) * 7px), calc(226px + var(--py, 0) * 4px))' }}>
-          <path d="M0 190 Q3 152 -2 115 Q-5 86 0 56 Q4 26 2 0" stroke="#7a5a30" strokeWidth="9" fill="none" strokeLinecap="round" />
-          <path d="M0 190 Q3 152 -2 115 Q-5 86 0 56 Q4 26 2 0" stroke="#a07840" strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.3" />
-          {[[-140, 88], [-110, 104], [-80, 98], [-50, 92], [-20, 85], [10, 78], [40, 72]].map(([angle, len], i) => {
-            const r = ((angle as number) * Math.PI) / 180;
-            return <path key={i} d={`M2 0 Q${2 + Math.cos(r) * (len as number) / 2} ${Math.sin(r) * (len as number) / 2} ${2 + Math.cos(r) * (len as number)} ${Math.sin(r) * (len as number)}`} stroke="#1a6030" strokeWidth="3.5" fill="none" strokeLinecap="round" className={`palm-sway palm-d${i % 4}`} />;
+          <path d="M0 190 Q3 152 -2 115 Q-5 86 0 56 Q4 26 2 0" stroke="#7a5a30" strokeWidth="9" fill="none" strokeLinecap="round"/>
+          <path d="M0 190 Q3 152 -2 115 Q-5 86 0 56 Q4 26 2 0" stroke="#a07840" strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.3"/>
+          {[[-140,88],[-110,104],[-80,98],[-50,92],[-20,85],[10,78],[40,72]].map(([angle,len],i) => {
+            const r = ((angle as number)*Math.PI)/180;
+            return <path key={i} d={`M2 0 Q${2+Math.cos(r)*(len as number)/2} ${Math.sin(r)*(len as number)/2} ${2+Math.cos(r)*(len as number)} ${Math.sin(r)*(len as number)}`} stroke="#1a6030" strokeWidth="3.5" fill="none" strokeLinecap="round" className={`palm-sway palm-d${i%4}`}/>;
           })}
-          <ellipse cx="8" cy="-4" rx="7" ry="8" fill="#6a4020" />
-          <ellipse cx="-5" cy="2" rx="6" ry="7" fill="#5a3a18" />
+          <ellipse cx="8" cy="-4" rx="7" ry="8" fill="#6a4020"/>
+          <ellipse cx="-5" cy="2" rx="6" ry="7" fill="#5a3a18"/>
         </g>
 
         <g style={{ transform: 'translate(calc(1398px + var(--px, 0) * 9px), calc(238px + var(--py, 0) * 4px))' }}>
-          <path d="M0 178 Q-3 143 2 106 Q5 80 0 52 Q-4 24 -2 0" stroke="#7a5a30" strokeWidth="8" fill="none" strokeLinecap="round" />
-          <path d="M0 178 Q-3 143 2 106 Q5 80 0 52 Q-4 24 -2 0" stroke="#a07840" strokeWidth="4" fill="none" strokeLinecap="round" opacity="0.28" />
-          {[-150, -120, -90, -60, -30, 0, 30].map((angle, i) => {
-            const r = (angle * Math.PI) / 180; const len = 76 + i * 5;
-            return <path key={i} d={`M-2 0 Q${-2 + Math.cos(r) * len / 2} ${Math.sin(r) * len / 2} ${-2 + Math.cos(r) * len} ${Math.sin(r) * len}`} stroke="#1a6030" strokeWidth="3" fill="none" strokeLinecap="round" className={`palm-sway palm-d${i % 4}`} />;
+          <path d="M0 178 Q-3 143 2 106 Q5 80 0 52 Q-4 24 -2 0" stroke="#7a5a30" strokeWidth="8" fill="none" strokeLinecap="round"/>
+          <path d="M0 178 Q-3 143 2 106 Q5 80 0 52 Q-4 24 -2 0" stroke="#a07840" strokeWidth="4" fill="none" strokeLinecap="round" opacity="0.28"/>
+          {[-150,-120,-90,-60,-30,0,30].map((angle,i) => {
+            const r = (angle*Math.PI)/180; const len = 76+i*5;
+            return <path key={i} d={`M-2 0 Q${-2+Math.cos(r)*len/2} ${Math.sin(r)*len/2} ${-2+Math.cos(r)*len} ${Math.sin(r)*len}`} stroke="#1a6030" strokeWidth="3" fill="none" strokeLinecap="round" className={`palm-sway palm-d${i%4}`}/>;
           })}
-          <ellipse cx="-6" cy="-2" rx="6" ry="7" fill="#6a4020" />
-          <ellipse cx="4" cy="4" rx="5" ry="6" fill="#5a3a18" />
+          <ellipse cx="-6" cy="-2" rx="6" ry="7" fill="#6a4020"/>
+          <ellipse cx="4" cy="4" rx="5" ry="6" fill="#5a3a18"/>
         </g>
 
-        <g style={{ transform: 'translate(calc(108px + var(--px, 0) * 5px), calc(230px + var(--py, 0) * 3px))', cursor: 'pointer', pointerEvents: 'all' }}
+        <g style={{ transform: 'translate(calc(108px + var(--px, 0) * 5px), calc(230px + var(--py, 0) * 3px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('hut1')} onMouseLeave={() => setHovered(null)}
-          filter={hovered === 'hut1' ? 'url(#glowF)' : undefined}>
-          <ellipse cx="94" cy="190" rx="80" ry="13" fill="url(#hutGlowG)" />
+          filter={hovered==='hut1' ? 'url(#glowF)' : undefined}>
+          <ellipse cx="94" cy="190" rx="80" ry="13" fill="url(#hutGlowG)"/>
           <rect x="18" y="118" width="7" height="68" rx="3" fill="#7a5030" />
           <rect x="68" y="118" width="7" height="68" rx="3" fill="#7a5030" />
           <rect x="118" y="118" width="7" height="68" rx="3" fill="#7a5030" />
@@ -386,11 +352,11 @@ const NayonScene = () => {
           <rect x="76" y="76" width="36" height="40" rx="2" fill="#5a3520" />
           <rect x="78" y="78" width="15" height="36" rx="1" fill="#6a4028" />
           <rect x="95" y="78" width="15" height="36" rx="1" fill="#6a4028" />
-          <circle cx="93" cy="97" r="2.5" fill="#de9a49" opacity="0.8" />
+          <circle cx="93" cy="97" r="2.5" fill="#de9a49" opacity="0.8"/>
           <rect x="22" y="68" width="36" height="26" rx="2" fill="url(#windowGlowG)" opacity="0.72" />
           <line x1="40" y1="68" x2="40" y2="94" stroke="#8a6038" strokeWidth="2" />
           <line x1="22" y1="81" x2="58" y2="81" stroke="#8a6038" strokeWidth="2" />
-          <ellipse cx="40" cy="81" rx="20" ry="14" fill="#ffcc44" opacity="0.06" className="window-flicker" />
+          <ellipse cx="40" cy="81" rx="20" ry="14" fill="#ffcc44" opacity="0.06" className="window-flicker"/>
           <rect x="126" y="68" width="36" height="26" rx="2" fill="url(#windowGlowG)" opacity="0.62" />
           <line x1="144" y1="68" x2="144" y2="94" stroke="#8a6038" strokeWidth="2" />
           <line x1="126" y1="81" x2="162" y2="81" stroke="#8a6038" strokeWidth="2" />
@@ -404,8 +370,8 @@ const NayonScene = () => {
           <line x1="94" y1="4" x2="168" y2="54" stroke="rgba(100,70,30,0.3)" strokeWidth="1.5" />
           <ellipse cx="94" cy="4" rx="6" ry="5" fill="#b08040" />
           <rect x="-10" y="52" width="208" height="6" rx="2" fill="rgba(0,0,0,0.15)" />
-          <rect x="-10" y="50" width="208" height="4" rx="2" fill="#c89850" opacity="0.48" />
-          <path d="M148 50 Q152 40 148 30 Q145 22 150 14" fill="none" stroke="rgba(200,190,170,0.12)" strokeWidth="4.5" strokeLinecap="round" className="smoke-rise" />
+          <rect x="-10" y="50" width="208" height="4" rx="2" fill="#c89850" opacity="0.48"/>
+          <path d="M148 50 Q152 40 148 30 Q145 22 150 14" fill="none" stroke="rgba(200,190,170,0.12)" strokeWidth="4.5" strokeLinecap="round" className="smoke-rise"/>
           <rect x="88" y="138" width="5" height="46" rx="2" fill="#7a5030" transform="rotate(-8,90,160)" />
           <rect x="100" y="140" width="5" height="46" rx="2" fill="#7a5030" transform="rotate(-8,102,163)" />
           <line x1="88" y1="152" x2="104" y2="148" stroke="#7a5030" strokeWidth="3" strokeLinecap="round" />
@@ -413,10 +379,10 @@ const NayonScene = () => {
           <line x1="88" y1="174" x2="103" y2="170" stroke="#7a5030" strokeWidth="3" strokeLinecap="round" />
         </g>
 
-        <g style={{ transform: 'translate(calc(980px + var(--px, 0) * 3px), calc(255px + var(--py, 0) * 2px))', cursor: 'pointer', pointerEvents: 'all' }}
+        <g style={{ transform: 'translate(calc(980px + var(--px, 0) * 3px), calc(255px + var(--py, 0) * 2px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('hut2')} onMouseLeave={() => setHovered(null)}
-          filter={hovered === 'hut2' ? 'url(#softGlowF)' : undefined}>
-          <ellipse cx="80" cy="162" rx="66" ry="11" fill="url(#hutGlowG)" />
+          filter={hovered==='hut2' ? 'url(#softGlowF)' : undefined}>
+          <ellipse cx="80" cy="162" rx="66" ry="11" fill="url(#hutGlowG)"/>
           <rect x="16" y="104" width="6" height="58" rx="2.5" fill="#7a5030" />
           <rect x="58" y="104" width="6" height="58" rx="2.5" fill="#7a5030" />
           <rect x="100" y="104" width="6" height="58" rx="2.5" fill="#7a5030" />
@@ -427,11 +393,11 @@ const NayonScene = () => {
           <rect x="62" y="66" width="30" height="36" rx="2" fill="#5a3520" />
           <rect x="64" y="68" width="12" height="32" rx="1" fill="#6a4028" />
           <rect x="78" y="68" width="12" height="32" rx="1" fill="#6a4028" />
-          <circle cx="77" cy="85" r="2" fill="#de9a49" opacity="0.72" />
+          <circle cx="77" cy="85" r="2" fill="#de9a49" opacity="0.72"/>
           <rect x="18" y="60" width="30" height="22" rx="2" fill="url(#windowGlowG)" opacity="0.68" />
           <line x1="33" y1="60" x2="33" y2="82" stroke="#8a6038" strokeWidth="1.5" />
           <line x1="18" y1="71" x2="48" y2="71" stroke="#8a6038" strokeWidth="1.5" />
-          <ellipse cx="33" cy="71" rx="16" ry="11" fill="#ffcc44" opacity="0.06" className="window-flicker window-flicker-d1" />
+          <ellipse cx="33" cy="71" rx="16" ry="11" fill="#ffcc44" opacity="0.06" className="window-flicker window-flicker-d1"/>
           <path d="M-8 50 L82 4 L168 50 Z" fill="url(#roofG2)" />
           <path d="M82 4 L168 50 L138 50 Z" fill="rgba(0,0,0,0.16)" />
           <line x1="82" y1="4" x2="18" y2="50" stroke="rgba(100,70,30,0.28)" strokeWidth="1.5" />
@@ -442,34 +408,65 @@ const NayonScene = () => {
           <line x1="82" y1="4" x2="148" y2="50" stroke="rgba(100,70,30,0.28)" strokeWidth="1.5" />
           <ellipse cx="82" cy="4" rx="5" ry="5" fill="#b08040" />
           <rect x="8" y="48" width="170" height="5" rx="2" fill="rgba(0,0,0,0.12)" />
-          <rect x="8" y="46" width="170" height="4" rx="2" fill="#c89850" opacity="0.4" />
+          <rect x="8" y="46" width="170" height="4" rx="2" fill="#c89850" opacity="0.4"/>
         </g>
 
-        <g style={{ transform: 'translate(calc(610px + var(--px, 0) * 2px), calc(270px + var(--py, 0) * 1.5px))', cursor: 'pointer', pointerEvents: 'all' }}
+        <g style={{ transform: 'translate(calc(610px + var(--px, 0) * 2px), calc(270px + var(--py, 0) * 1.5px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('palay')} onMouseLeave={() => setHovered(null)}
-          filter={hovered === 'palay' ? 'url(#softGlowF)' : undefined}>
-          <ellipse cx="90" cy="152" rx="92" ry="8" fill="rgba(12,35,12,0.24)" />
-          <g className="palay-stalk sway-a" style={{ animationDelay: '0s', transformOrigin: '30px 150px' }}>
-            <path d="M30 150 Q28 110 22 70 Q20 50 18 30" stroke="#4a7a20" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-            <path d="M18 30 Q12 20 8 12 Q6 8 5 4" stroke="#5a8a25" strokeWidth="2" fill="none" strokeLinecap="round" />
-            {[4, 8, 12, 16, 20, 24].map((y, i) => (<ellipse key={i} cx={5 + (i % 2 === 0 ? -3 : 3)} cy={y} rx="4.5" ry="7" fill="url(#palayG)" transform={`rotate(${-20 + (i % 2) * 40},${5 + (i % 2 === 0 ? -3 : 3)},${y})`} />))}
+          filter={hovered==='palay' ? 'url(#softGlowF)' : undefined}>
+          <ellipse cx="90" cy="152" rx="92" ry="8" fill="rgba(12,35,12,0.24)"/>
+          <g className="palay-stalk sway-a" style={{ animationDelay:'0s', transformOrigin:'30px 150px' }}>
+            <path d="M30 150 Q28 110 22 70 Q20 50 18 30" stroke="#4a7a20" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+            <path d="M18 30 Q12 20 8 12 Q6 8 5 4" stroke="#5a8a25" strokeWidth="2" fill="none" strokeLinecap="round"/>
+            {[4,8,12,16,20,24].map((y,i) => (<ellipse key={i} cx={5+(i%2===0?-3:3)} cy={y} rx="4.5" ry="7" fill="url(#palayG)" transform={`rotate(${-20+(i%2)*40},${5+(i%2===0?-3:3)},${y})`}/>))}
             <path d="M22 70 Q5 60 -8 55" stroke="#5a9020" strokeWidth="2" fill="none" />
             <path d="M26 90 Q40 78 52 75" stroke="#5a9020" strokeWidth="2" fill="none" />
           </g>
+          <g className="palay-stalk sway-b" style={{ animationDelay:'0.4s', transformOrigin:'60px 150px' }}>
+            <path d="M60 150 Q58 112 55 72 Q53 52 50 32" stroke="#4a7a20" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+            <path d="M50 32 Q44 22 40 14 Q38 10 36 5" stroke="#5a8a25" strokeWidth="2" fill="none" strokeLinecap="round"/>
+            {[5,9,13,17,21,25].map((y,i) => (<ellipse key={i} cx={36+(i%2===0?-3:3)} cy={y} rx="4.5" ry="7" fill="url(#palayG)" transform={`rotate(${-18+(i%2)*36},${36+(i%2===0?-3:3)},${y})`}/>))}
+            <path d="M53 75 Q38 65 25 62" stroke="#5a9020" strokeWidth="2" fill="none" />
+            <path d="M55 95 Q70 85 80 82" stroke="#5a9020" strokeWidth="2" fill="none" />
+          </g>
+          <g className="palay-stalk sway-a" style={{ animationDelay:'0.2s', transformOrigin:'95px 150px' }}>
+            <path d="M95 150 Q93 108 90 65 Q88 45 86 22" stroke="#4a7a20" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+            <path d="M86 22 Q80 12 76 4 Q74 0 72 -4" stroke="#5a8a25" strokeWidth="2" fill="none" strokeLinecap="round"/>
+            {[-4,0,4,8,12,16,20].map((y,i) => (<ellipse key={i} cx={72+(i%2===0?-4:4)} cy={y} rx="5" ry="7.5" fill="url(#palayG)" transform={`rotate(${-22+(i%2)*44},${72+(i%2===0?-4:4)},${y})`}/>))}
+            <path d="M88 68 Q72 58 58 54" stroke="#5a9020" strokeWidth="2" fill="none" />
+            <path d="M90 90 Q106 80 118 76" stroke="#5a9020" strokeWidth="2" fill="none" />
+          </g>
+          <g className="palay-stalk sway-b" style={{ animationDelay:'0.6s', transformOrigin:'128px 150px' }}>
+            <path d="M128 150 Q126 113 123 73 Q121 53 118 33" stroke="#4a7a20" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+            <path d="M118 33 Q112 23 108 15 Q106 11 104 6" stroke="#5a8a25" strokeWidth="2" fill="none" strokeLinecap="round"/>
+            {[6,10,14,18,22,26].map((y,i) => (<ellipse key={i} cx={104+(i%2===0?-3:3)} cy={y} rx="4.5" ry="7" fill="url(#palayG)" transform={`rotate(${-20+(i%2)*40},${104+(i%2===0?-3:3)},${y})`}/>))}
+            <path d="M121 76 Q107 65 92 62" stroke="#5a9020" strokeWidth="2" fill="none" />
+            <path d="M124 98 Q138 88 150 84" stroke="#5a9020" strokeWidth="2" fill="none" />
+          </g>
+          <g className="palay-stalk sway-a" style={{ animationDelay:'0.8s', transformOrigin:'158px 150px' }}>
+            <path d="M158 150 Q156 115 154 78 Q152 58 150 38" stroke="#4a7a20" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+            <path d="M150 38 Q144 28 140 20 Q138 16 136 11" stroke="#5a8a25" strokeWidth="2" fill="none" strokeLinecap="round"/>
+            {[11,15,19,23,27,31].map((y,i) => (<ellipse key={i} cx={136+(i%2===0?-3:3)} cy={y} rx="4" ry="6.5" fill="url(#palayG)" transform={`rotate(${-18+(i%2)*36},${136+(i%2===0?-3:3)},${y})`}/>))}
+            <path d="M152 80 Q138 70 124 67" stroke="#5a9020" strokeWidth="2" fill="none" />
+            <path d="M154 100 Q168 90 178 87" stroke="#5a9020" strokeWidth="2" fill="none" />
+          </g>
+          {[10,30,50,70,90,110,130,150,170].map((x,i) => (
+            <path key={i} d={`M${x} 150 Q${x-4} 138 ${x-2} 128`} stroke="#3a7020" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.7" />
+          ))}
         </g>
 
-        <g style={{ transform: 'translate(calc(1218px + var(--px, 0) * 4px), calc(315px + var(--py, 0) * 2px))', cursor: 'pointer', pointerEvents: 'all' }}
+        <g style={{ transform: 'translate(calc(1218px + var(--px, 0) * 4px), calc(315px + var(--py, 0) * 2px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('salakot')} onMouseLeave={() => setHovered(null)}
-          filter={hovered === 'salakot' ? 'url(#glowF)' : undefined}>
-          <ellipse cx="0" cy="155" rx="70" ry="10" fill="rgba(0,0,0,0.25)" />
-          <path d="M0 0 L-85 85 Q-90 95 -80 100 Q0 108 80 100 Q90 95 85 85 Z" fill="url(#salakotG)" />
-          <path d="M0 0 L85 85 Q90 95 80 100 Q40 105 0 105 Z" fill="rgba(0,0,0,0.15)" />
+          filter={hovered==='salakot' ? 'url(#glowF)' : undefined}>
+          <ellipse cx="0" cy="155" rx="70" ry="10" fill="rgba(0,0,0,0.25)"/>
+          <path d="M0 0 L-85 85 Q-90 95 -80 100 Q0 108 80 100 Q90 95 85 85 Z" fill="url(#salakotG)"/>
+          <path d="M0 0 L85 85 Q90 95 80 100 Q40 105 0 105 Z" fill="rgba(0,0,0,0.15)"/>
           {[25, 45, 65, 85].map((y, i) => {
             const w = 22 + (i * 16);
-            return <path key={i} d={`M${-w} ${y} Q0 ${y - 4} ${w} ${y}`} fill="none" stroke="rgba(100,60,10,0.25)" strokeWidth="1.5" />;
+            return <path key={i} d={`M${-w} ${y} Q0 ${y-4} ${w} ${y}`} fill="none" stroke="rgba(100,60,10,0.25)" strokeWidth="1.5" />;
           })}
           {[-70, -45, -20, 0, 20, 45, 70].map((ang, i) => (
-            <line key={i} x1="0" y1="0" x2={Math.sin(ang * Math.PI / 180) * 90} y2={95} stroke="rgba(100,60,10,0.2)" strokeWidth="1.2" />
+             <line key={i} x1="0" y1="0" x2={Math.sin(ang * Math.PI/180)*90} y2={95} stroke="rgba(100,60,10,0.2)" strokeWidth="1.2" />
           ))}
           <circle cx="0" cy="0" r="6" fill="#b07020" />
           <circle cx="0" cy="0" r="3" fill="#de9a49" />
@@ -480,35 +477,51 @@ const NayonScene = () => {
           <ellipse cx="0" cy="155" rx="30" ry="4" fill="#7a4c10" opacity="0.6" />
         </g>
 
-        <g style={{ transform: 'translate(calc(1340px + var(--px, 0) * 5px), calc(348px + var(--py, 0) * 3px))', cursor: 'pointer', pointerEvents: 'all' }}
+        <g style={{ transform: 'translate(calc(1340px + var(--px, 0) * 5px), calc(348px + var(--py, 0) * 3px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('bayong')} onMouseLeave={() => setHovered(null)}
-          filter={hovered === 'bayong' ? 'url(#softGlowF)' : undefined}>
-          <ellipse cx="40" cy="96" rx="44" ry="7" fill="rgba(12,35,12,0.22)" />
+          filter={hovered==='bayong' ? 'url(#softGlowF)' : undefined}>
+          <ellipse cx="40" cy="96" rx="44" ry="7" fill="rgba(12,35,12,0.22)"/>
           <path d="M10 8 Q4 4 2 0 Q0 -4 4 -8 Q10 -10 16 -8 Q22 -4 20 0 Q18 4 12 8 Z" fill="#de9a49" />
           <path d="M14 8 Q18 4 22 0 Q24 -4 28 -8 Q32 -10 36 -8 Q42 -4 40 0 Q38 4 32 8 Z" fill="#de9a49" />
           <path d="M2 8 L4 90 L76 90 L78 8 Z" fill="url(#bayongG)" />
+          {[18,32,46,60,74].map((y, row) =>
+            [8,22,36,50,64].map((x, col) => (
+              <path key={`${row}-${col}`}
+                d={`M${x+8} ${y} L${x+16} ${y+7} L${x+8} ${y+14} L${x} ${y+7} Z`}
+                fill={((row+col)%2===0) ? 'rgba(220,140,20,0.6)' : 'rgba(180,90,10,0.4)'}
+                stroke="rgba(120,60,0,0.25)" strokeWidth="0.5"
+              />
+            ))
+          )}
+          <ellipse cx="40" cy="90" rx="38" ry="6" fill="#b06820" />
+          <path d="M16 8 Q18 -12 26 -20 Q34 -28 40 -28 Q46 -28 54 -20 Q62 -12 64 8" fill="none" stroke="#c07020" strokeWidth="5" strokeLinecap="round" />
+          <path d="M16 8 Q18 -12 26 -20 Q34 -28 40 -28 Q46 -28 54 -20 Q62 -12 64 8" fill="none" stroke="#de9a49" strokeWidth="3" strokeLinecap="round" opacity="0.6" />
+          <path d="M22 -4 Q32 -24 48 -4" fill="none" stroke="rgba(255,200,80,0.4)" strokeWidth="2" strokeLinecap="round" />
         </g>
 
-        <g style={{ transform: 'translate(calc(408px + var(--px, 0) * 3px), calc(352px + var(--py, 0) * 2px))', cursor: 'pointer', pointerEvents: 'all' }}
+        <g style={{ transform: 'translate(calc(408px + var(--px, 0) * 3px), calc(352px + var(--py, 0) * 2px))', cursor:'pointer', pointerEvents:'all' }}
           onMouseEnter={() => setHovered('pandesal')} onMouseLeave={() => setHovered(null)}
-          filter={hovered === 'pandesal' ? 'url(#glowF)' : undefined}>
-          <ellipse cx="55" cy="108" rx="68" ry="9" fill="rgba(12,35,12,0.24)" />
+          filter={hovered==='pandesal' ? 'url(#glowF)' : undefined}>
+          <ellipse cx="55" cy="108" rx="68" ry="9" fill="rgba(12,35,12,0.24)"/>
           <ellipse cx="72" cy="52" rx="62" ry="46" fill="#d4881c" opacity="0.85" />
           <ellipse cx="72" cy="52" rx="62" ry="46" fill="url(#pandesalG)" opacity="0.9" />
-          {[[55, 30], [68, 25], [80, 28], [88, 36], [85, 46], [78, 52], [65, 48], [58, 42], [72, 40], [90, 28]].map(([dx, dy], i) => (
+          {[[55,30],[68,25],[80,28],[88,36],[85,46],[78,52],[65,48],[58,42],[72,40],[90,28]].map(([dx,dy],i) => (
             <ellipse key={i} cx={dx} cy={dy} rx="2.5" ry="2" fill="rgba(255,220,120,0.7)" />
           ))}
           <ellipse cx="46" cy="62" rx="64" ry="48" fill="#c07810" opacity="0.9" />
           <ellipse cx="46" cy="62" rx="64" ry="48" fill="url(#pandesalG)" />
           <ellipse cx="28" cy="44" rx="22" ry="14" fill="rgba(255,220,100,0.25)" transform="rotate(-20,28,44)" />
+          {[[24,42],[36,36],[50,32],[62,38],[70,48],[64,58],[50,62],[36,58],[26,52],[42,48],[58,44]].map(([dx,dy],i) => (
+            <ellipse key={i} cx={dx} cy={dy} rx="2.8" ry="2.2" fill="rgba(255,220,120,0.65)" />
+          ))}
           <ellipse cx="55" cy="106" rx="66" ry="8" fill="rgba(20,60,20,0.3)" />
         </g>
 
         <rect x="0" y="415" width="1440" height="65" fill="url(#fadeG)" />
-        {Array.from({ length: 32 }).map((_, i) => (
-          <g key={i} transform={`translate(${i * 46 + 8}, 418)`} className={`palay-border palay-border-d${i % 5}`}>
-            <line x1="6" y1="42" x2={4 + (i % 2 === 0 ? -2 : 2)} y2="14" stroke="#7c6b4b" strokeWidth="1.5" strokeLinecap="round" opacity="0.22" />
-            <ellipse cx={4 + (i % 2 === 0 ? -2 : 2)} cy="9" rx="3" ry="6" fill="#de9a49" opacity="0.12" transform={`rotate(${-12 + (i % 3) * 10},${4 + (i % 2 === 0 ? -2 : 2)},9)`} />
+        {Array.from({length: 32}).map((_,i) => (
+          <g key={i} transform={`translate(${i*46+8}, 418)`} className={`palay-border palay-border-d${i%5}`}>
+            <line x1="6" y1="42" x2={4+(i%2===0?-2:2)} y2="14" stroke="#7c6b4b" strokeWidth="1.5" strokeLinecap="round" opacity="0.22" />
+            <ellipse cx={4+(i%2===0?-2:2)} cy="9" rx="3" ry="6" fill="#de9a49" opacity="0.12" transform={`rotate(${-12+(i%3)*10},${4+(i%2===0?-2:2)},9)`} />
           </g>
         ))}
       </svg>
@@ -520,37 +533,67 @@ const NayonScene = () => {
    SUBTHEMES STRIP
 ══════════════════════════════════════════════════════ */
 const SUBTHEMES = [
-  { icon: <Star size={20} />, label: 'Palayan ng Karunungan' },
-  { icon: <Palette size={20} />, label: 'Pamilihan ng Kakayahan' },
-  { icon: <Leaf size={20} />, label: 'Plaza ng Malikhaing Diwa' },
-  { icon: <Globe size={20} />, label: 'Dambana ng Pagkakaisa' },
-  { icon: <Zap size={20} />, label: 'Palaisdaan ng Kalusugan' },
-  { icon: <Layers size={20} />, label: 'Bahay ng Bayanihan' },
+  { icon: <BookOpen size={20} />, label: 'Palayan ng Karunungan' },
+  { icon: <Wrench size={20} />, label: 'Pamilihan ng Kakayahan' },
+  { icon: <Palette size={20} />, label: 'Plaza ng Malikhaing Diwa' },
+  { icon: <Handshake size={20} />, label: 'Dambana ng Pagkakaisa' },
+  { icon: <HeartPulse size={20} />, label: 'Palaisdaan ng Kalusugan' },
+  { icon: <Users size={20} />, label: 'Bahay ng Bayanihan' },
 ];
 
-const SubthemesStrip = ({ activeTheme, onSelect }: { activeTheme: string | null; onSelect: (t: string | null) => void }) => (
-  <div className={styles.subthemesSection}>
-    <div className={styles.subthemesInner}>
-      <span className={styles.subthemesLabel}>Subthemes</span>
-      <div className={styles.subthemesRow}>
-        <button
-          className={`${styles.subthemePill} ${activeTheme === null ? 'active' : ''}`}
-          onClick={() => onSelect(null)}
-        >
-          <span className={styles.subthemePillIcon}><Sparkles size={20} /></span>
-          <span className={styles.subthemePillLabel}>All</span>
-        </button>
-        {SUBTHEMES.map((s, i) => (
+const SubthemesStrip = ({
+  activeTheme,
+  onSelect,
+  compact = false,
+}: {
+  activeTheme: string | null;
+  onSelect: (t: string | null) => void;
+  compact?: boolean;
+}) => (
+  <div className={compact ? styles.subthemesCompactShell : styles.subthemesSection}>
+    <div className={compact ? styles.subthemesCompactInner : styles.subthemesInner}>
+      <span className={compact ? styles.subthemesCompactLabel : styles.subthemesLabel}>Subthemes</span>
+      {compact ? (
+        <div className={`${styles.subthemesRow} ${styles.subthemesRowCompact}`}>
           <button
-            key={i}
-            className={`${styles.subthemePill} ${activeTheme === s.label ? 'active' : ''}`}
-            onClick={() => onSelect(activeTheme === s.label ? null : s.label)}
+            className={`${styles.subthemeAssetButton} ${activeTheme === null ? styles.subthemeAssetActive : ''}`}
+            onClick={() => onSelect(null)}
           >
-            <span className={styles.subthemePillIcon}>{s.icon}</span>
-            <span className={styles.subthemePillLabel}>{s.label}</span>
+            <span className={styles.subthemeAssetIcon}><Sparkles size={20} /></span>
+            <span className={styles.subthemeAssetLabel}>All Themes</span>
           </button>
-        ))}
-      </div>
+          {SUBTHEMES.map((s, i) => (
+            <button
+              key={i}
+              className={`${styles.subthemeAssetButton} ${activeTheme === s.label ? styles.subthemeAssetActive : ''}`}
+              onClick={() => onSelect(activeTheme === s.label ? null : s.label)}
+            >
+              <span className={styles.subthemeAssetIcon}>{s.icon}</span>
+              <span className={styles.subthemeAssetLabel}>{s.label}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className={styles.subthemesRow}>
+          <button
+            className={`${styles.subthemePill} ${activeTheme === null ? styles.subthemePillActive : ''}`}
+            onClick={() => onSelect(null)}
+          >
+            <span className={styles.subthemePillIcon}><Sparkles size={20} /></span>
+            <span className={styles.subthemePillLabel}>All</span>
+          </button>
+          {SUBTHEMES.map((s, i) => (
+            <button
+              key={i}
+              className={`${styles.subthemePill} ${activeTheme === s.label ? styles.subthemePillActive : ''}`}
+              onClick={() => onSelect(activeTheme === s.label ? null : s.label)}
+            >
+              <span className={styles.subthemePillIcon}>{s.icon}</span>
+              <span className={styles.subthemePillLabel}>{s.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   </div>
 );
@@ -561,206 +604,195 @@ const SubthemesStrip = ({ activeTheme, onSelect }: { activeTheme: string | null;
 const MainEventsSection = () => {
   const events = [
     {
-      tag: 'Opening Ceremony',
-      date: 'June 20, 2026', time: '8:00 AM', venue: 'Henry Sy Sr. Hall',
-      title: 'LEAP 2026 Kickoff Rally',
-      desc: 'Live performances, special guests, and the ceremonial launch of a week that will change how you see learning.',
-      img: 'https://picsum.photos/seed/kickoff2026/600/400', accent: '#de9a49',
+      label: 'Opening Ceremony',
+      image: 'https://placehold.co/812x510',
     },
     {
-      tag: 'Midweek Special',
-      date: 'June 23, 2026', time: '3:00 PM', venue: 'Agno Food Court Plaza',
-      title: 'Nayon Night Market',
-      desc: 'An open-air celebration of Filipino creativity — food, crafts, live music, and student showcases filling the campus.',
-      img: 'https://picsum.photos/seed/nightmarket/600/400', accent: '#4ab09a',
+      label: 'Midweek Special',
+      image: 'https://placehold.co/652x430',
     },
     {
-      tag: 'Closing Night',
-      date: 'June 26, 2026', time: '6:00 PM', venue: 'Teresa Yuchengco Auditorium',
-      title: 'Culminating Night',
-      desc: 'Student output showcases, awards night, and a closing concert that sends LEAP 2026 off with a bang.',
-      img: 'https://picsum.photos/seed/culminating2026/600/400', accent: '#b05a32',
+      label: 'Closing Night',
+      image: 'https://placehold.co/492x350',
+    },
+    {
+      label: 'Featured Talk',
+      image: 'https://placehold.co/492x350',
+    },
+    {
+      label: 'Community Event',
+      image: 'https://placehold.co/652x430',
     },
   ];
 
+  const [activeIndex, setActiveIndex] = useState(2);
+
+  const goPrev = () => setActiveIndex((current) => (current - 1 + events.length) % events.length);
+  const goNext = () => setActiveIndex((current) => (current + 1) % events.length);
+
+  useEffect(() => {
+    const rotateInterval = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % events.length);
+    }, 4200);
+
+    return () => window.clearInterval(rotateInterval);
+  }, [events.length]);
+
+  const totalEvents = events.length;
+  const visibleIndexes = [
+    (activeIndex - 1 + totalEvents) % totalEvents,
+    activeIndex,
+    (activeIndex + 1) % totalEvents,
+  ];
+
   return (
-    <section className={styles.mainEventsSection}>
-      <div className={styles.mainEventsInner}>
-        <div className={styles.mainEventsHeader}>
-          <div>
-            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.28em', textTransform: 'uppercase', color: '#de9a49', display: 'block', marginBottom: '0.4rem' }}>
-              LEAP 2026 · Landmark Moments
-            </span>
-            <h2 className={styles.mainEventsTitle}>Main Events</h2>
+    <section className="relative overflow-hidden rounded-[28px] px-0 py-2">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_70%_at_50%_50%,rgba(222,154,73,0.18)_0%,rgba(222,154,73,0)_100%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-[#0e1a0c]/85" />
+
+      <div className="relative mx-auto w-full max-w-[1500px] px-2 sm:px-4">
+        <div className="relative mx-auto w-full max-w-[1600px] overflow-visible py-1 sm:py-3">
+          <div className="flex items-center justify-center -space-x-10 sm:-space-x-16 lg:-space-x-24">
+            {visibleIndexes.map((eventIndex, slot) => {
+              const event = events[eventIndex];
+              const isCenter = slot === 1;
+
+              return (
+                <motion.button
+                  key={`${event.label}-${eventIndex}-${activeIndex}`}
+                  type="button"
+                  onClick={() => setActiveIndex(eventIndex)}
+                  initial={false}
+                  animate={{
+                    scale: isCenter ? 1 : 0.88,
+                    y: isCenter ? 0 : 18,
+                    opacity: isCenter ? 1 : 0.85,
+                    zIndex: isCenter ? 3 : 2,
+                    boxShadow: isCenter
+                      ? '0 24px 62px rgba(0,0,0,0.34), inset 0 2px 12px rgba(249,236,182,0.35), inset 0 -1px 0 rgba(255,255,255,0.3)'
+                      : '0 12px 28px rgba(0,0,0,0.24)',
+                  }}
+                  transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                  style={{
+                    width: isCenter ? 'clamp(360px, 46vw, 860px)' : 'clamp(250px, 31vw, 620px)',
+                    height: isCenter ? 'clamp(280px, 38vw, 470px)' : 'clamp(220px, 30vw, 390px)',
+                    borderRadius: 34,
+                    overflow: 'hidden',
+                    border: isCenter ? '1px solid rgba(249,236,182,0.45)' : '1px solid rgba(249,236,182,0.2)',
+                    background: '#fff',
+                    position: 'relative',
+                  }}
+                  className="group relative"
+                >
+                  <img
+                    src={event.image}
+                    alt={event.label}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: isCenter
+                        ? 'linear-gradient(to top, rgba(0,0,0,0.22), rgba(0,0,0,0.06) 40%, rgba(0,0,0,0))'
+                        : 'linear-gradient(to top, rgba(0,0,0,0.3), rgba(0,0,0,0.1) 45%, rgba(0,0,0,0))',
+                    }}
+                  />
+                </motion.button>
+              );
+            })}
           </div>
-          <div className={styles.mainEventsNav}>
-            <button className={styles.carouselNavBtn} aria-label="Previous slide"><ChevronLeft size={15} /></button>
-            <button className={styles.carouselNavBtn} aria-label="Next slide"><ChevronRight size={15} /></button>
+          <div className="mt-4 flex items-center justify-center gap-4 sm:mt-5">
+            <button
+              type="button"
+              aria-label="Previous event"
+              onClick={goPrev}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(249,236,182,0.28)] bg-[rgba(12,9,4,0.72)] text-[#f9ecb6] shadow-[0_10px_24px_rgba(0,0,0,0.2)] transition hover:bg-[rgba(222,154,73,0.18)] hover:text-[#fae185]"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="flex items-center gap-2">
+              {events.map((event, index) => {
+                const isActive = index === activeIndex;
+                return (
+                  <button
+                    key={event.label}
+                    type="button"
+                    aria-label={`Show ${event.label}`}
+                    onClick={() => setActiveIndex(index)}
+                    className={`transition-all duration-300 ${isActive ? 'h-2.5 w-9 rounded-full bg-[#fae185] shadow-[0_0_18px_rgba(250,225,133,0.65)]' : 'h-2.5 w-2.5 rounded-full bg-[rgba(249,236,182,0.35)] hover:bg-[rgba(250,225,133,0.7)]'}`}
+                  />
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              aria-label="Next event"
+              onClick={goNext}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(249,236,182,0.28)] bg-[rgba(12,9,4,0.72)] text-[#f9ecb6] shadow-[0_10px_24px_rgba(0,0,0,0.2)] transition hover:bg-[rgba(222,154,73,0.18)] hover:text-[#fae185]"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
-        </div>
-        <div className={styles.mainEventsGrid}>
-          {events.map((ev, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }} className={styles.mainEventCard}>
-              <div className={styles.mainEventImgWrap}>
-                <img src={ev.img} alt={ev.title} className={styles.mainEventImg} referrerPolicy="no-referrer" />
-                <div className={styles.mainEventImgOverlay} />
-                <span className={styles.mainEventTag}>{ev.tag}</span>
-              </div>
-              <div className={styles.mainEventBody}>
-                <div className={styles.mainEventMeta}>
-                  <span className={styles.mainEventMetaItem}><Calendar size={11} />{ev.date}</span>
-                  <span className={styles.mainEventMetaItem}><Clock size={11} />{ev.time}</span>
-                  <span className={styles.mainEventMetaItem}><MapPin size={11} />{ev.venue}</span>
-                </div>
-                <h3 className={styles.mainEventTitle}>{ev.title}</h3>
-                <p className={styles.mainEventDesc}>{ev.desc}</p>
-                <div className={styles.mainEventCta}>
-                  <div style={{ height: 2, width: 28, background: ev.accent, borderRadius: 2 }} />
-                  <span className={styles.mainEventLink}>View Details <ExternalLink size={11} /></span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
         </div>
       </div>
     </section>
   );
 };
 
-/* ══════════════════════════════════════════════════════
-   CONTACT PAGE
-══════════════════════════════════════════════════════ */
-const Contact = () => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className={styles.contactMain}
-    >
-      <div className={styles.pageHero}>
-        <div className={styles.pageHeroGlow} />
-        <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#de9a49', marginBottom: '1rem' }}>
-          LEAP 2026 · Get in Touch
-        </motion.p>
-        <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
-          className={styles.pageHeroTitle}>
-          Contact Us
-        </motion.h1>
-        <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }}
-          className={styles.pageHeroSubtitle}>
-          We're here to help you make the most of LEAP 2026
-        </motion.p>
-        <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.4, duration: 0.6 }}
-          className={styles.pageHeroUnderline} />
-      </div>
-      <main className={styles.contactMainWrapper}>
-        <div className={styles.contactGrid}>
-          <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className={styles.contactInfo}>
-            {[
-              { icon: MapPin, label: 'Visit Us', val: 'SPS Building, Room 302\nDe La Salle University, Manila' },
-              { icon: Mail, label: 'Email Us', val: 'leap@dlsu.edu.ph' },
-              { icon: Clock, label: 'Office Hours', val: 'Monday – Friday\n9:00 AM – 5:00 PM' },
-              { icon: Users, label: 'LEAP Operations Team', val: 'Central Student Organization\nDe La Salle University' },
-            ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className={styles.contactItem}>
-                <div className={styles.contactIconWrap}><item.icon size={20} /></div>
-                <div>
-                  <p className={styles.contactItemLabel}>{item.label}</p>
-                  <p className={styles.contactItemValue}>{item.val}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-          <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className={styles.contactCard}>
-            <h3 className={styles.contactCardTitle}>Send a Message</h3>
-            <p className={styles.contactCardSubtitle}>For general inquiries, partnership opportunities, or technical issues during registration.</p>
-            <div className={styles.contactField}>
-              <label className={styles.contactLabel}>Your Name</label>
-              <input className={styles.contactInput} placeholder="Juan dela Cruz" type="text" />
-            </div>
-            <div className={styles.contactField}>
-              <label className={styles.contactLabel}>DLSU Email</label>
-              <input className={styles.contactInput} placeholder="juandelacruz@dlsu.edu.ph" type="email" />
-            </div>
-            <div className={styles.contactField}>
-              <label className={styles.contactLabel}>Message</label>
-              <textarea className={styles.contactTextarea} placeholder="How can we help you?" />
-            </div>
-            <button className={styles.contactSubmitBtn}>
-              <Mail size={16} /> Send Message
-            </button>
-          </motion.div>
-        </div>
-      </main>
-    </motion.div>
-  );
-};
+const LeapApp = () => {
+  interface LeapClass {
+    id: string;
+    title: string;
+    org: string;
+    modality: string;
+    date: string;
+    time: string;
+    venue: string;
+    slots: number;
+    subtheme: string;
+    image: string;
+    orgLogo: string | null;
+    googleFormUrl: string;
+    description: string;
+  }
 
-/* ══════════════════════════════════════════════════════
-   MAIN APP - STATE AND LOGIC
-══════════════════════════════════════════════════════ */
-interface LeapClass {
-  id: string;
-  title: string;
-  org: string;
-  modality: string;
-  date: string;
-  time: string;
-  venue: string;
-  slots: number;
-  subtheme: string;
-  image: string;
-  orgLogo: string | null;
-  googleFormUrl: string;
-  description: string;
-}
+  interface UserProfile {
+    uid: string;
+    email: string | null;
+    displayName: string | null;
+    photoURL: string | null;
+    role: 'student' | 'admin';
+    registeredClasses: string[];
+  }
 
-interface UserProfile {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-  role: 'student' | 'admin';
-  registeredClasses: string[];
-}
-
-function LeapApp() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('title-asc');
-  const [scrolled, setScrolled] = useState(false);
   const [classes, setClasses] = useState<LeapClass[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdminView, setIsAdminView] = useState(false);
+  const [currentView, setCurrentView] = useState<'home' | 'about' | 'major-events' | 'classes' | 'faq' | 'contact'>('home');
+  const [scrolled, setScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc'>('title-asc');
+  const [activeSubtheme, setActiveSubtheme] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewingClass, setViewingClass] = useState<LeapClass | null>(null);
-  const [currentView, setCurrentView] = useState('home');
-  const [activeSubtheme, setActiveSubtheme] = useState<string | null>(null);
-  const [isAdminView, setIsAdminView] = useState(false);
 
-  /* ── SCROLL PARALLAX ── */
-  useEffect(() => {
-    const hero = document.querySelector('.hero-bg') as HTMLElement | null;
-    if (!hero) return;
-    const onScroll = () => {
-      const progress = Math.min(window.scrollY / hero.offsetHeight, 1);
-      hero.style.setProperty('--nayon-scale', String(1 + progress * 0.28));
-      hero.style.setProperty('--nayon-ty', `${progress * 24}px`);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  const navigateTo = (view: 'home' | 'about' | 'major-events' | 'classes' | 'faq' | 'contact') => {
+    setCurrentView(view);
+    setIsMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const filteredAndSortedClasses: LeapClass[] = useMemo(() => {
-    let result: LeapClass[] = classes.filter((c: LeapClass) =>
+    let result = classes.filter((c: LeapClass) => (
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.org.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.subtheme.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    ));
     if (activeSubtheme) {
       result = result.filter((c: LeapClass) => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
     }
@@ -779,13 +811,10 @@ function LeapApp() {
       .sort((a: string, b: string) => new Date(a).getTime() - new Date(b).getTime())
   ), [filteredAndSortedClasses]);
 
-  const isVerifiedDlsuUser = Boolean(
-    user?.emailVerified && user.email?.toLowerCase().endsWith('@dlsu.edu.ph')
-  );
+  const isVerifiedDlsuUser = Boolean(user?.emailVerified && user.email?.toLowerCase().endsWith('@dlsu.edu.ph'));
 
-  const hasAppAccess = isVerifiedDlsuUser && Boolean(userProfile);
+  const hasAppAccess = isVerifiedDlsuUser;
 
-  /* ── AUTH SETUP ── */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -794,7 +823,7 @@ function LeapApp() {
         if (!currentUser.emailVerified || !currentEmail?.endsWith('@dlsu.edu.ph')) {
           setUserProfile(null);
           setIsAdminView(false);
-          setCurrentView('home');
+          navigateTo('home');
           await signOut(auth);
           alert('Please use a verified @dlsu.edu.ph Google account to sign in.');
           setLoading(false);
@@ -824,7 +853,6 @@ function LeapApp() {
     return () => unsubscribe();
   }, []);
 
-  /* ── FETCH CLASSES ── */
   useEffect(() => {
     if (!user) return;
     const fetchClasses = async () => {
@@ -887,55 +915,50 @@ function LeapApp() {
       transition={{ delay: index * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className={styles.classCardWrapper}
     >
-      <div className={styles.cardHeaderBar}>
-        {item.orgLogo ? (
-          <img src={item.orgLogo} alt={item.org} className={styles.cardOrgLogo} referrerPolicy="no-referrer" />
-        ) : (
-          <div className={styles.cardOrgLogoPlaceholder}>
-            {item.org.charAt(0).toUpperCase()}
-          </div>
-        )}
-        {item.subtheme && (
-          <span className={`${styles.cardBadge} ${styles.cardBadgeTheme}`}>{item.subtheme}</span>
-        )}
-        {item.date && (
-          <span className={`${styles.cardBadge} ${styles.cardBadgeDay}`}>
-            {item.date.split(' ').slice(0, 2).join(' ')}
-          </span>
-        )}
-      </div>
-
       <div className={styles.cardImageWrapper}>
         <img src={item.image} alt={item.title} className={styles.cardImage} referrerPolicy="no-referrer" />
         <div className={styles.cardImageGradient} />
         <div className={styles.cardSlotsLabel}>
           {item.slots} SLOTS
         </div>
-      </div>
 
-      <div className={styles.cardContent}>
-        <p className={styles.cardOrganization}>
-          {item.org}
-        </p>
-        <h3 className={styles.cardTitle} style={{ fontFamily: "'Playfair Display', serif" }}
-          onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-          {item.title}
-        </h3>
-        <div className={styles.cardMetadata}>
-          <div className={styles.metadataItem}><Calendar size={12} className={styles.metadataIcon} /><span>{item.date} · {item.time}</span></div>
-          <div className={styles.metadataItem}><MapPin size={12} className={styles.metadataIcon} /><span>{item.venue} ({item.modality})</span></div>
-        </div>
-        <div className={styles.cardActions}>
-          <a href={item.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className={styles.registerBtn}>
-            Register via Google Forms <ExternalLink size={14} />
-          </a>
-          <button
-            onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={styles.learnMoreBtn}>
-            Learn More <ChevronRight size={14} />
-          </button>
+        <div className={styles.cardOverlayContent}>
+          <div className={styles.cardOverlayTopRow}>
+            {item.orgLogo ? (
+              <img src={item.orgLogo} alt={item.org} className={styles.cardOrgLogo} referrerPolicy="no-referrer" />
+            ) : (
+              <div className={styles.cardOrgLogoPlaceholder}>
+                {item.org.charAt(0).toUpperCase()}
+              </div>
+            )}
+            {item.subtheme && (
+              <span className={`${styles.cardBadge} ${styles.cardBadgeTheme}`}>{item.subtheme}</span>
+            )}
+          </div>
+
+          <p className={styles.cardOrganization}>{item.org}</p>
+          <h3 className={styles.cardTitle} style={{ fontFamily: "'Playfair Display', serif" }}
+            onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            {item.title}
+          </h3>
+
+          <div className={styles.cardMetadataOverlay}>
+            <div className={styles.metadataItem}><Calendar size={12} className={styles.metadataIcon} /><span>{item.date} · {item.time}</span></div>
+            <div className={styles.metadataItem}><MapPin size={12} className={styles.metadataIcon} /><span>{item.venue} ({item.modality})</span></div>
+          </div>
+
+          <div className={styles.cardActionsOverlay}>
+            <a href={item.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className={styles.registerBtnOverlay}>
+              Register <ExternalLink size={13} />
+            </a>
+            <button
+              onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              className={styles.learnMoreBtnOverlay}>
+              Learn More <ChevronRight size={13} />
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -952,6 +975,39 @@ function LeapApp() {
         <h3 className={styles.adminCardTitle} style={{ fontFamily: "'Playfair Display', serif" }}>Classes are managed in Contentful</h3>
         <p className={styles.adminCardDesc}>To add, edit, or delete classes, please use the Contentful CMS dashboard. The changes will automatically reflect here.</p>
         <a href="https://app.contentful.com" target="_blank" rel="noopener noreferrer" className={styles.adminCTABtn}>Open Contentful <ExternalLink size={20} /></a>
+      </div>
+    </div>
+  );
+
+  const Contact = () => (
+    <div style={{ padding: '9rem 1.5rem 4rem', background: '#f5edcc', minHeight: '70vh' }}>
+      <div style={{ maxWidth: 880, margin: '0 auto' }}>
+        <div style={{ background: 'rgba(255,255,255,0.72)', borderRadius: 28, padding: '2rem', border: '1px solid rgba(222,154,73,0.22)', boxShadow: '0 16px 48px rgba(51,75,70,0.08)' }}>
+          <p style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#de9a49', marginBottom: '0.75rem' }}>Support</p>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(2rem, 4vw, 3.2rem)', color: '#334b46', marginBottom: '1rem' }}>Contact the LEAP team</h2>
+          <p style={{ color: '#567069', fontSize: '1rem', lineHeight: 1.7, maxWidth: 680, marginBottom: '1.5rem' }}>
+            Reach out for registration help, class concerns, or general questions about the program.
+          </p>
+          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginBottom: '1.5rem' }}>
+            <div style={{ background: '#fff', borderRadius: 20, padding: '1.1rem 1.2rem', border: '1px solid rgba(222,154,73,0.18)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <Mail size={18} color="#de9a49" />
+                <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#334b46' }}>Email</h3>
+              </div>
+              <p style={{ margin: 0, color: '#567069' }}>leap@dlsu.edu.ph</p>
+            </div>
+            <div style={{ background: '#fff', borderRadius: 20, padding: '1.1rem 1.2rem', border: '1px solid rgba(222,154,73,0.18)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <Clock size={18} color="#de9a49" />
+                <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#334b46' }}>Response Time</h3>
+              </div>
+              <p style={{ margin: 0, color: '#567069' }}>Within 1-2 business days</p>
+            </div>
+          </div>
+          <a href="mailto:leap@dlsu.edu.ph" className={styles.navRegisterBtn} style={{ display: 'inline-flex', textDecoration: 'none' }}>
+            <Mail size={16} /> Send Email
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -977,40 +1033,68 @@ function LeapApp() {
       ? 'bg-transparent py-4'
       : 'light-page-nav py-4';
 
+  // ── HERO SECTION: logo + tagline, plus main carousel on home ──
   const HeroSection = (
     <header className={styles.heroSection}>
       <div className={styles.heroBackdropContainer}>
         <div className={styles.heroBackdropTop} />
         <div className={styles.heroBackdropRight} />
       </div>
+      <NayonScene />
       <Fireflies />
       <div className={styles.heroContent}>
-        <motion.div initial={{ opacity: 0, scale: 0.88, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="mb-6 fade-up">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.88, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-4 fade-up"
+        >
           <img src={leapLogo} alt="LEAP 2026 — Isang Nayon, Isang Layunin" className={styles.heroLogo} />
         </motion.div>
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}>
-          <span className={`${styles.heroEyebrow} fade-up delay-1`}>Isang Nayon, Isang Layunin</span>
-          <p className="fade-up delay-2" style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 300, fontSize: 'clamp(1rem,2.2vw,1.2rem)', color: 'rgba(224,210,175,0.72)', maxWidth: '540px', margin: '0.75rem auto 2.5rem', lineHeight: 1.8 }}>
-            Discover over 200 unique classes and events. Join your community in a week of alternative learning and growth.
-          </p>
-          {!user ? (
-            <div className={styles.heroCTAButtons}>
-              <button onClick={handleSignIn} className={styles.heroPrimaryBtn}>
-                Sign In with DLSU Account <ChevronRight size={20} />
-              </button>
-            </div>
-          ) : (
-            <div className={styles.heroCTAButtons}>
-              <a href="#classes-section" className={styles.heroPrimaryBtn}>Register Now <ChevronRight size={20} /></a>
-              <button onClick={() => window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0)} className={styles.heroSecondaryBtn}>View Schedule</button>
-            </div>
-          )}
-          <HeroStats />
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <span className={`${styles.heroEyebrow} fade-up delay-1`} style={{ fontFamily: "'Tropikal', 'Playfair Display', serif", textTransform: 'none', fontSize: 'clamp(1rem, 1.35vw, 1.3rem)', letterSpacing: '0.08em', padding: '0.55rem 1.5rem' }}>Isang Nayon, Isang Layunin</span>
         </motion.div>
+        {hasAppAccess && currentView === 'home' && (
+          <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.45rem', marginLeft: '50%', transform: 'translateX(-50%)' }}>
+            <MainEventsSection />
+          </div>
+        )}
       </div>
-      <NayonScene />
     </header>
   );
+
+  const HeroExtras = hasAppAccess && currentView === 'home' ? (
+    <div style={{ background: '#f5edcc', padding: '0.6rem 0 0.75rem' }}>
+      <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.85rem', marginLeft: '50%', transform: 'translateX(-50%)' }}>
+        <SubthemesStrip activeTheme={activeSubtheme} onSelect={(t) => { setActiveSubtheme(t); setCurrentPage(1); setSelectedDay(null); }} compact />
+        {activeSubtheme && (
+          <div style={{ textAlign: 'center', marginTop: '0.45rem' }}>
+            <button
+              onClick={() => { setActiveSubtheme(null); setCurrentPage(1); setSelectedDay(null); }}
+              style={{
+                background: 'rgba(222,154,73,0.15)',
+                border: '1px solid rgba(222,154,73,0.4)',
+                borderRadius: 999,
+                padding: '0.28rem 0.9rem',
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: '#803e2f',
+                cursor: 'pointer',
+              }}
+            >
+              Clear {activeSubtheme}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null;
 
   if (!hasAppAccess) {
     return (
@@ -1039,19 +1123,19 @@ function LeapApp() {
       {/* NAV */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${navClass}`}>
         <div className={styles.navInner}>
-          <div className={styles.navLogo} onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }}>
+          <div className={styles.navLogo} onClick={() => navigateTo('home')}>
             <img src={leapLogo} alt="LEAP 2026" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
           </div>
           <div className={styles.navCenter}>
-            <button onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'home' ? 'active' : ''}`}>Home</button>
-            <button onClick={() => { setCurrentView('about'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'about' ? 'active' : ''}`}>Overview</button>
-            <button onClick={() => { setCurrentView('major-events'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'major-events' ? 'active' : ''}`}>Featured</button>
-            <button onClick={() => { setCurrentView('home'); window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0); }} className="nav-link">Classes</button>
-            <button onClick={() => { setCurrentView('faq'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'faq' ? 'active' : ''}`}>FAQs</button>
+            <button onClick={() => navigateTo('home')} className={`nav-link ${currentView === 'home' ? 'active' : ''}`}>Home</button>
+            <button onClick={() => navigateTo('about')} className={`nav-link ${currentView === 'about' ? 'active' : ''}`}>Overview</button>
+            <button onClick={() => navigateTo('major-events')} className={`nav-link ${currentView === 'major-events' ? 'active' : ''}`}>Featured</button>
+            <button onClick={() => navigateTo('classes')} className={`nav-link ${currentView === 'classes' ? 'active' : ''}`}>Classes</button>
+            <button onClick={() => navigateTo('faq')} className={`nav-link ${currentView === 'faq' ? 'active' : ''}`}>FAQs</button>
             {userProfile?.role === 'admin' && <button onClick={() => setIsAdminView(true)} className="leap-admin-link">Admin</button>}
           </div>
           <div className="leap-nav-right hidden md:flex">
-            <button className="nav-icon-btn" onClick={() => { setCurrentView('home'); setTimeout(() => { document.getElementById('classes-section')?.scrollIntoView({ behavior: 'smooth' }); }, 100); }} title="Search classes">
+            <button className="nav-icon-btn" onClick={() => navigateTo('classes')} title="Search classes">
               <Search size={15} />
             </button>
             <button className="nav-icon-btn" title="Saved classes"><Bookmark size={15} /></button>
@@ -1089,11 +1173,11 @@ function LeapApp() {
         {isMenuOpen && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className={styles.mobileMenu}>
             <div className={styles.mobileMenuContent}>
-              <button onClick={() => { setCurrentView('home'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className={styles.mobileMenuItem}>Home</button>
-              <button onClick={() => { setCurrentView('about'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className={styles.mobileMenuItem}>Overview</button>
-              <button onClick={() => { setCurrentView('major-events'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className={styles.mobileMenuItem}>Featured</button>
-              <button onClick={() => { setCurrentView('home'); setIsMenuOpen(false); window.setTimeout(() => window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0), 100); }} className={styles.mobileMenuItem}>Classes</button>
-              <button onClick={() => { setCurrentView('faq'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className={styles.mobileMenuItem}>FAQs</button>
+              <button onClick={() => { navigateTo('home'); setIsMenuOpen(false); }} className={styles.mobileMenuItem}>Home</button>
+              <button onClick={() => { navigateTo('about'); setIsMenuOpen(false); }} className={styles.mobileMenuItem}>Overview</button>
+              <button onClick={() => { navigateTo('major-events'); setIsMenuOpen(false); }} className={styles.mobileMenuItem}>Featured</button>
+              <button onClick={() => { navigateTo('classes'); setIsMenuOpen(false); }} className={styles.mobileMenuItem}>Classes</button>
+              <button onClick={() => { navigateTo('faq'); setIsMenuOpen(false); }} className={styles.mobileMenuItem}>FAQs</button>
               {userProfile?.role === 'admin' && <button onClick={() => { setIsAdminView(true); setIsMenuOpen(false); }} className={`${styles.mobileMenuItem} ${styles.adminLink}`}>Admin Dashboard</button>}
               {user ? (
                 <button onClick={handleSignOut} className={styles.mobileMenuSignOutBtn}><LogOut size={22} /> Sign Out</button>
@@ -1122,19 +1206,35 @@ function LeapApp() {
           onPageChange={(page) => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           viewingClass={viewingClass}
           onClassSelect={(leapClass) => { setViewingClass(leapClass); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          activeSubtheme={activeSubtheme}
-          onSubthemeSelect={(theme) => { setActiveSubtheme(theme); setCurrentPage(1); setSelectedDay(null); }}
           onSignIn={handleSignIn}
-          onHeroScroll={() => window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0)}
+          onHeroScroll={() => navigateTo('classes')}
           HeroSection={HeroSection}
-          MainEventsSection={<MainEventsSection />}
-          SubthemesStrip={<SubthemesStrip activeTheme={activeSubtheme} onSelect={(t) => { setActiveSubtheme(t); setCurrentPage(1); setSelectedDay(null); }} />}
+          HeroExtras={HeroExtras}
           renderClassCard={renderClassCard}
         />
       )}
 
       {currentView === 'about' && <About />}
       {currentView === 'major-events' && <MainEvents />}
+      {currentView === 'classes' && (
+        <Classes
+          user={user}
+          searchQuery={searchQuery}
+          onSearchChange={(query) => { setSearchQuery(query); setCurrentPage(1); }}
+          sortBy={sortBy}
+          onSortChange={(sort) => setSortBy(sort)}
+          filteredAndSortedClasses={filteredAndSortedClasses}
+          uniqueDays={uniqueDays}
+          selectedDay={selectedDay}
+          onDaySelect={(day) => { setSelectedDay(day === selectedDay ? null : day); setCurrentPage(1); }}
+          currentPage={currentPage}
+          onPageChange={(page) => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          viewingClass={viewingClass}
+          onClassSelect={(leapClass) => { setViewingClass(leapClass); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onSignIn={handleSignIn}
+          renderClassCard={renderClassCard}
+        />
+      )}
       {currentView === 'faq' && <FAQs />}
       {currentView === 'contact' && <Contact />}
 
@@ -1153,18 +1253,18 @@ function LeapApp() {
           <div>
             <h4 className={styles.footerColumnTitle}>Quick Links</h4>
             <ul className={styles.footerColumnLinks}>
-              <li><button onClick={() => { setCurrentView('about'); window.scrollTo(0, 0); }} className={styles.footerLink}>About LEAP</button></li>
-              <li><button onClick={() => { setCurrentView('home'); window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0); }} className={styles.footerLink}>Class List</button></li>
-              <li><button onClick={() => { setCurrentView('major-events'); window.scrollTo(0, 0); }} className={styles.footerLink}>Major Events</button></li>
-              <li><button onClick={() => { setCurrentView('faq'); window.scrollTo(0, 0); }} className={styles.footerLink}>FAQs</button></li>
+              <li><button onClick={() => navigateTo('about')} className={styles.footerLink}>About LEAP</button></li>
+              <li><button onClick={() => navigateTo('classes')} className={styles.footerLink}>Class List</button></li>
+              <li><button onClick={() => navigateTo('major-events')} className={styles.footerLink}>Major Events</button></li>
+              <li><button onClick={() => navigateTo('faq')} className={styles.footerLink}>FAQs</button></li>
             </ul>
           </div>
           <div>
             <h4 className={styles.footerColumnTitle}>Support</h4>
             <ul className={styles.footerColumnLinks}>
-              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className={styles.footerLink}>Contact OPS</button></li>
-              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className={styles.footerLink}>Technical Issues</button></li>
-              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className={styles.footerLink}>Privacy Policy</button></li>
+              <li><button onClick={() => navigateTo('contact')} className={styles.footerLink}>Contact OPS</button></li>
+              <li><button onClick={() => navigateTo('contact')} className={styles.footerLink}>Technical Issues</button></li>
+              <li><button onClick={() => navigateTo('contact')} className={styles.footerLink}>Privacy Policy</button></li>
             </ul>
           </div>
         </div>
@@ -1177,7 +1277,7 @@ function LeapApp() {
       <CustomCursor />
     </div>
   );
-}
+};
 
 export default function App() {
   return <ErrorBoundary><LeapApp /></ErrorBoundary>;
