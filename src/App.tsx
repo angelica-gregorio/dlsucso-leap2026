@@ -1498,6 +1498,7 @@ const LeapApp = () => {
               className={styles.navMobileBtn}
               style={{ color: currentView === 'home' && !scrolled ? '#f9ecb6' : '#334b46' }}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
