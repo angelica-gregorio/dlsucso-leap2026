@@ -557,10 +557,21 @@ const SubthemesStrip = ({
   onSelect: (t: string | null) => void;
   compact?: boolean;
 }) => (
+  /*
+   * FIX: wrap the compact inner in an overflow-hidden shell so the
+   * horizontally-scrollable row never bleeds outside its container,
+   * while still letting the pills be larger and on a single line.
+   */
   <div className={compact ? styles.subthemesCompactShell : styles.subthemesSection}>
-    <div className={compact ? styles.subthemesCompactInner : styles.subthemesInner}>
+    <div
+      className={compact ? styles.subthemesCompactInner : styles.subthemesInner}
+      /* FIX: clip overflow on the compact variant so the scrollable row
+         doesn't break the page layout */
+      style={compact ? { overflow: 'hidden' } : undefined}
+    >
       <span className={compact ? styles.subthemesCompactLabel : styles.subthemesLabel}>Subthemes</span>
       {compact ? (
+        /* FIX: add subthemesRowCompact class for no-wrap + overflow-x:auto */
         <div className={`${styles.subthemesRow} ${styles.subthemesRowCompact}`}>
           <button
             className={`${styles.subthemeAssetButton} ${activeTheme === null ? styles.subthemeAssetActive : ''}`}
@@ -1227,6 +1238,8 @@ const LeapApp = () => {
             <button onClick={() => navigateTo('faq')} className={`nav-link ${currentView === 'faq' ? 'active' : ''}`}>FAQs</button>
             {userProfile?.role === 'admin' && <button onClick={() => setIsAdminView(true)} className="leap-admin-link">Admin</button>}
           </div>
+          {/* FIX: navRight uses the module class; on mobile the global CSS hides it
+              and collapses the grid to [1fr auto], pushing the toggle to the far right */}
           <div className="leap-nav-right hidden md:flex">
             <button className="nav-icon-btn" onClick={() => navigateTo('classes')} title="Search classes">
               <Search size={15} />
@@ -1253,6 +1266,8 @@ const LeapApp = () => {
               </>
             )}
           </div>
+          {/* FIX: mobile toggle is now the last grid child; with grid-template-columns: 1fr auto
+              on mobile it naturally sits at the far right */}
           <div className={styles.navMobileToggle}>
             <button className={styles.navMobileBtn} style={{ color: currentView === 'home' && !scrolled ? '#f9ecb6' : '#334b46' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X size={28} /> : <Menu size={28} />}

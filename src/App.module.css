@@ -1503,9 +1503,25 @@
   @apply container mx-auto mt-16 pt-8 border-t border-white/10 text-center text-leap-cream/40 text-xs tracking-wide;
 }
 
+/* Desktop: hidden */
 .navMobileToggle {
-  @apply flex md:hidden;
+  display: none;
   justify-self: end;
+  align-self: center;
+}
+
+/* Mobile: show, pin to column 2 (far right) */
+@media (max-width: 768px) {
+  .navMobileToggle {
+    display: flex !important;
+    grid-column: 2 !important;
+    justify-self: end !important;
+    align-self: center !important;
+  }
+
+  .navInner {
+    grid-template-columns: 1fr auto !important;
+  }
 }
 
 .cardOrgName {
@@ -1551,4 +1567,11 @@
 
 .adminCardDesc {
   @apply text-leap-olive mb-8 text-lg;
+}
+
+/* ── FIX: Mobile Classes layout ── */
+@media (max-width: 768px) {
+  .navMobileBtn {
+    color: #f9ecb6 !important;
+  }
 }
