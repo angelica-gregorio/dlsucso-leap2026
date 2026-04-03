@@ -923,7 +923,43 @@ const LeapApp = () => {
       } catch (error) { console.error("Contentful Error (Classes):", error); }
       finally { setLoading(false); }
     };
+
     fetchClasses();
+
+    // Smart polling: fetch periodically but ONLY when the tab is visible
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const startPolling = () => {
+      if (!intervalId) {
+        // Poll every 60 seconds (60000 ms). It's a sweet spot for freshness vs resources.
+        intervalId = setInterval(fetchClasses, 60000);
+      }
+    };
+
+    const stopPolling = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+
+    startPolling();
+
+    // Re-fetch instantly when returning to tab, pause polling when hidden
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchClasses();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stopPolling();
+    };
   }, [user]);
 
   useEffect(() => {
