@@ -619,7 +619,7 @@ const SubthemesStrip = ({
 /* ══════════════════════════════════════════════════════
    MAIN EVENTS SECTION
 ══════════════════════════════════════════════════════ */
-const MainEventsSection = () => {
+const MainEventsSection = ({ onEventSelect }: { onEventSelect?: (event: any) => void }) => {
   const [events, setEvents] = useState<any[]>([]);
   const [activeIndex, setActiveIndex] = useState(1);
 
@@ -664,6 +664,7 @@ const MainEventsSection = () => {
 
             return {
               id: item.sys.id,
+              title: item.fields.mainEventTitle || 'Untitled Event',
               label: item.fields.mainEventTitle || 'Untitled Event',
               image: imgUrl,
               org: item.fields.mainEventOrganizationInCharge || '',
@@ -793,7 +794,7 @@ const MainEventsSection = () => {
                   className="group relative"
                 >
                   <img
-                    src={event.image}
+                    src={event.image || '/leap-placeholder.jpg'}
                     alt={event.label}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                     referrerPolicy="no-referrer"
@@ -849,7 +850,10 @@ const MainEventsSection = () => {
                             Register <ExternalLink size={13} />
                           </a>
                           <button
-                            onClick={(e) => { e.stopPropagation(); }}
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              if (onEventSelect) onEventSelect(event); 
+                            }}
                             className={styles.learnMoreBtnOverlay}>
                             Learn More <ChevronRight size={13} />
                           </button>
@@ -1306,7 +1310,10 @@ const LeapApp = () => {
         </motion.div>
         {hasAppAccess && currentView === 'home' && (
           <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.45rem', marginLeft: '50%', transform: 'translateX(-50%)' }}>
-            <MainEventsSection />
+            <MainEventsSection onEventSelect={(item) => {
+              setViewingClass(item);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }} />
           </div>
         )}
       </div>
