@@ -31,6 +31,18 @@ import styles from './App.module.css';
 interface ErrorBoundaryProps { children: ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
 
+function useWindowWidth() {
+  const [width, setWidth] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth : 1280
+  );
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handler, { passive: true });
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return width;
+}
+
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState;
   public props: ErrorBoundaryProps;
@@ -84,31 +96,41 @@ const ScrollProgress = () => {
 const CustomCursor = () => {
   const [dot, setDot] = useState({ x: -100, y: -100 });
   const [isVisible, setIsVisible] = useState(false);
+  const [isPointerDevice, setIsPointerDevice] = useState(false);
 
   useEffect(() => {
-    const mv = (e: MouseEvent) => { 
-      setDot({ x: e.clientX, y: e.clientY }); 
+    const mq = window.matchMedia('(pointer: fine)');
+    setIsPointerDevice(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsPointerDevice(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  useEffect(() => {
+    if (!isPointerDevice) return;
+    const mv = (e: MouseEvent) => {
+      setDot({ x: e.clientX, y: e.clientY });
       setIsVisible(true);
     };
     const leave = () => setIsVisible(false);
     const enter = () => setIsVisible(true);
-
     window.addEventListener('mousemove', mv);
     document.addEventListener('mouseleave', leave);
     document.addEventListener('mouseenter', enter);
-
     return () => {
       window.removeEventListener('mousemove', mv);
       document.removeEventListener('mouseleave', leave);
       document.removeEventListener('mouseenter', enter);
     };
-  }, []);
+  }, [isPointerDevice]);
+
+  if (!isPointerDevice) return null;
 
   return (
-    <div style={{ 
-      position: 'fixed', pointerEvents: 'none', zIndex: 99999, 
+    <div style={{
+      position: 'fixed', pointerEvents: 'none', zIndex: 99999,
       left: dot.x, top: dot.y, transform: 'translate(-15%, -15%)',
-      opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease' 
+      opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease'
     }}>
       <img src={salakotCursor} alt="Cursor" style={{ width: 32, height: 32, display: 'block' }} />
     </div>
@@ -537,6 +559,68 @@ const NayonScene = () => {
 };
 
 /* ══════════════════════════════════════════════════════
+   ANIMATED TAGLINE — "Isang Nayon, Isang Layunin"
+   Typewriter effect, plays once on mount, lightweight
+══════════════════════════════════════════════════════ */
+const AnimatedTagline = () => {
+  const text = 'Isang Nayon, Isang Layunin';
+  const [displayed, setDisplayed] = useState('');
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    let i = 0;
+    const timer = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) {
+        clearInterval(timer);
+        setDone(true);
+      }
+    }, 48); // ~1.25s total — fast enough to feel snappy
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <motion.span
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, delay: 0.15 }}
+      style={{
+        fontFamily: "'Tropikal', 'Playfair Display', serif",
+        textTransform: 'none',
+        fontSize: 'clamp(1rem, 1.35vw, 1.3rem)',
+        letterSpacing: '0.08em',
+        padding: '0.55rem 1.5rem',
+        display: 'inline-block',
+        color: '#de9a49',
+        background: 'rgba(222,154,73,0.1)',
+        border: '1px solid rgba(222,154,73,0.32)',
+        borderRadius: 999,
+        position: 'relative',
+        overflow: 'hidden',
+        maxWidth: '90vw',
+      }}
+    >
+      {displayed}
+      {!done && (
+        <span style={{
+          display: 'inline-block',
+          width: 2,
+          height: '1em',
+          background: '#de9a49',
+          marginLeft: 2,
+          verticalAlign: 'middle',
+          animation: 'cursorBlink 0.7s step-end infinite',
+        }} />
+      )}
+      <style>{`
+        @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+      `}</style>
+    </motion.span>
+  );
+};
+
+/* ══════════════════════════════════════════════════════
    SUBTHEMES STRIP
 ══════════════════════════════════════════════════════ */
 const SUBTHEMES = [
@@ -557,21 +641,13 @@ const SubthemesStrip = ({
   onSelect: (t: string | null) => void;
   compact?: boolean;
 }) => (
-  /*
-   * FIX: wrap the compact inner in an overflow-hidden shell so the
-   * horizontally-scrollable row never bleeds outside its container,
-   * while still letting the pills be larger and on a single line.
-   */
   <div className={compact ? styles.subthemesCompactShell : styles.subthemesSection}>
     <div
       className={compact ? styles.subthemesCompactInner : styles.subthemesInner}
-      /* FIX: clip overflow on the compact variant so the scrollable row
-         doesn't break the page layout */
-      style={compact ? { overflow: 'hidden' } : undefined}
+      style={compact ? { overflow: 'visible' } : undefined}
     >
       <span className={compact ? styles.subthemesCompactLabel : styles.subthemesLabel}>Subthemes</span>
       {compact ? (
-        /* FIX: add subthemesRowCompact class for no-wrap + overflow-x:auto */
         <div className={`${styles.subthemesRow} ${styles.subthemesRowCompact}`}>
           <button
             className={`${styles.subthemeAssetButton} ${activeTheme === null ? styles.subthemeAssetActive : ''}`}
@@ -617,36 +693,95 @@ const SubthemesStrip = ({
 );
 
 /* ══════════════════════════════════════════════════════
-   MAIN EVENTS SECTION
+   SPINNING GLOW RING — conic gradient border for center card
+══════════════════════════════════════════════════════ */
+const GlowRing = () => (
+  <div style={{
+    position: 'absolute',
+    inset: -3,
+    borderRadius: 31,
+    background: 'conic-gradient(from 0deg, #fae185, #de9a49, #c07830, #de9a49, #fae185)',
+    animation: 'spinRing 4s linear infinite',
+    zIndex: -1,
+    opacity: 0.7,
+    WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))',
+    mask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))',
+  }} />
+);
+
+/* ══════════════════════════════════════════════════════
+   AMBIENT ORBS — blurred background light blobs
+══════════════════════════════════════════════════════ */
+const AmbientOrbs = () => (
+  <>
+    <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: '#4ab09a', filter: 'blur(70px)', opacity: 0.14, top: '8%', left: '3%', animation: 'orbDrift 9s ease-in-out infinite', pointerEvents: 'none' }} />
+    <div style={{ position: 'absolute', width: 220, height: 220, borderRadius: '50%', background: '#de9a49', filter: 'blur(65px)', opacity: 0.12, top: '15%', right: '5%', animation: 'orbDrift 7s ease-in-out infinite 2.5s', pointerEvents: 'none' }} />
+    <div style={{ position: 'absolute', width: 200, height: 200, borderRadius: '50%', background: '#5ca0a8', filter: 'blur(60px)', opacity: 0.11, bottom: '10%', left: '18%', animation: 'orbDrift 11s ease-in-out infinite 1.2s', pointerEvents: 'none' }} />
+    <style>{`
+      @keyframes spinRing { to { transform: rotate(360deg); } }
+      @keyframes orbDrift { 0%,100%{transform:translate(0,0)} 50%{transform:translate(18px,-14px)} }
+      @keyframes starTwinkleAnim { 0%,100%{opacity:.08;transform:scale(1)} 50%{opacity:.75;transform:scale(1.5)} }
+      @keyframes cardSlideIn { from{opacity:0;transform:scale(.92) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    `}</style>
+  </>
+);
+
+/* ══════════════════════════════════════════════════════
+   STAR PARTICLES
+══════════════════════════════════════════════════════ */
+const StarParticles = () => {
+  const stars = Array.from({ length: 26 }, (_, i) => ({
+    x: ((i * 17.3 + (i % 4) * 22) % 92) + 4,
+    y: ((i * 11.9 + (i % 5) * 14) % 72) + 5,
+    size: 1.2 + (i % 3) * 0.7,
+    dur: 2.4 + (i % 5) * 0.55,
+    del: (i * 0.58) % 5.5,
+  }));
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+      {stars.map((s, i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          left: `${s.x}%`, top: `${s.y}%`,
+          width: s.size, height: s.size,
+          borderRadius: '50%',
+          background: '#fae185',
+          boxShadow: `0 0 ${s.size * 3}px ${s.size}px rgba(250,225,133,0.65)`,
+          animation: `starTwinkleAnim ${s.dur}s ease-in-out infinite ${s.del}s`,
+        } as CSSProperties} />
+      ))}
+    </div>
+  );
+};
+
+/* ══════════════════════════════════════════════════════
+   MAIN EVENTS SECTION — fully animated carousel
 ══════════════════════════════════════════════════════ */
 const MainEventsSection = () => {
   const [events, setEvents] = useState<any[]>([]);
-  const [activeIndex, setActiveIndex] = useState(1);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const fetchMainEvents = async () => {
       if (!contentfulClient) return;
       try {
         const response = await contentfulClient.getEntries({ content_type: 'mainEvents', include: 2, limit: 5 });
-        
         if (response.items.length > 0) {
           const eventList = response.items.map((item: any) => {
             const pubMat = item.fields.mainEventPosterPublishingMaterial;
             const mediaAsset = Array.isArray(pubMat) ? pubMat[0] : pubMat;
-            
             let imgUrl = `https://placehold.co/812x510?text=No+Image+Found`;
             if (mediaAsset?.fields?.file?.url) {
-              imgUrl = mediaAsset.fields.file.url.startsWith('http') 
-                ? mediaAsset.fields.file.url 
+              imgUrl = mediaAsset.fields.file.url.startsWith('http')
+                ? mediaAsset.fields.file.url
                 : `https:${mediaAsset.fields.file.url}`;
             }
-
             let formattedDate = '', formattedTime = '';
             if (item.fields.mainEventStartDate) {
               const startObj = new Date(item.fields.mainEventStartDate);
               formattedDate = startObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
               formattedTime = startObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-              
               if (item.fields.mainEventEndDate) {
                 const endObj = new Date(item.fields.mainEventEndDate);
                 const endDateStr = endObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -658,10 +793,8 @@ const MainEventsSection = () => {
                 }
               }
             }
-
             const orgLogoMat = item.fields.mainEventOrganizationInChargeLogo;
             const orgLogoAsset = Array.isArray(orgLogoMat) ? orgLogoMat[0] : orgLogoMat;
-
             return {
               id: item.sys.id,
               label: item.fields.mainEventTitle || 'Untitled Event',
@@ -678,12 +811,10 @@ const MainEventsSection = () => {
               description: item.fields.mainEventDescription || ''
             };
           });
-          
           if (eventList.length === 2) {
             eventList.push({ ...eventList[0], id: `${eventList[0].id}-dup1` });
             eventList.push({ ...eventList[1], id: `${eventList[1].id}-dup1` });
           }
-          
           setEvents(eventList);
           setActiveIndex(0);
         }
@@ -693,53 +824,37 @@ const MainEventsSection = () => {
     };
 
     fetchMainEvents();
-
     let intervalId: ReturnType<typeof setInterval> | null = null;
-    const startPolling = () => {
-      if (!intervalId) intervalId = setInterval(fetchMainEvents, 60000);
-    };
-    const stopPolling = () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-    };
-
+    const startPolling = () => { if (!intervalId) intervalId = setInterval(fetchMainEvents, 60000); };
+    const stopPolling = () => { if (intervalId) { clearInterval(intervalId); intervalId = null; } };
     startPolling();
-
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        fetchMainEvents();
-        startPolling();
-      } else {
-        stopPolling();
-      }
+      if (document.visibilityState === 'visible') { fetchMainEvents(); startPolling(); }
+      else { stopPolling(); }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      stopPolling();
-    };
+    return () => { document.removeEventListener('visibilitychange', handleVisibilityChange); stopPolling(); };
   }, []);
 
-  const goPrev = () => setActiveIndex((current) => (current - 1 + events.length) % events.length);
-  const goNext = () => setActiveIndex((current) => (current + 1) % events.length);
+  const goTo = (idx: number) => {
+    setActiveIndex(idx);
+    if (autoRef.current) clearInterval(autoRef.current);
+    autoRef.current = setInterval(() => setActiveIndex((c) => (c + 1) % events.length), 4500);
+  };
+  const goPrev = () => goTo((activeIndex - 1 + events.length) % events.length);
+  const goNext = () => goTo((activeIndex + 1) % events.length);
 
   useEffect(() => {
     if (events.length <= 1) return;
-    const rotateInterval = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % events.length);
-    }, 4200);
-
-    return () => window.clearInterval(rotateInterval);
+    autoRef.current = setInterval(() => setActiveIndex((c) => (c + 1) % events.length), 4500);
+    return () => { if (autoRef.current) clearInterval(autoRef.current); };
   }, [events.length]);
 
   const totalEvents = events.length;
-  
+
   if (totalEvents === 0) {
     return (
-      <section className="relative overflow-hidden rounded-[28px] px-0 py-2 min-h-[400px] flex items-center justify-center">
+      <section style={{ minHeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="leap-spinner" />
       </section>
     );
@@ -747,156 +862,168 @@ const MainEventsSection = () => {
 
   const visibleIndexes = totalEvents === 1
     ? [0]
-    : [
-        (activeIndex - 1 + totalEvents) % totalEvents,
-        activeIndex,
-        (activeIndex + 1) % totalEvents,
-      ];
+    : [(activeIndex - 1 + totalEvents) % totalEvents, activeIndex, (activeIndex + 1) % totalEvents];
 
   return (
-    <section className="relative overflow-hidden rounded-[28px] px-0 py-2">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_70%_at_50%_50%,rgba(222,154,73,0.18)_0%,rgba(222,154,73,0)_100%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-[#0e1a0c]/85" />
+    <section style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, padding: '0.75rem 0 1rem' }}>
+      {/* Ambient orbs + star particles */}
+      <AmbientOrbs />
+      <StarParticles />
+      {/* Radial center glow */}
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 65% 60% at 50% 45%, rgba(222,154,73,0.14) 0%, rgba(222,154,73,0) 70%)', pointerEvents: 'none' }} />
+      {/* Bottom fade */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120, background: 'linear-gradient(to bottom, transparent, rgba(14,26,12,0.8))', pointerEvents: 'none' }} />
 
-      <div className="relative mx-auto w-full max-w-[1500px] px-2 sm:px-4">
-        <div className="relative mx-auto w-full max-w-[1600px] overflow-visible py-1 sm:py-3">
-          <div className="flex items-center justify-center -space-x-10 sm:-space-x-16 lg:-space-x-24">
-            {visibleIndexes.map((eventIndex, slot) => {
-              const event = events[eventIndex];
-              const isCenter = totalEvents === 1 ? true : slot === 1;
+      <div style={{ position: 'relative', zIndex: 5, maxWidth: 1500, margin: '0 auto', padding: '0 clamp(0.5rem, 2vw, 1rem)' }}>
+        {/* Card fan */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem 0' }}>
+          {visibleIndexes.map((eventIndex, slot) => {
+            const event = events[eventIndex];
+            const isCenter = totalEvents === 1 ? true : slot === 1;
+            const isLeft = slot === 0;
 
-              return (
-                <motion.button
-                  key={`${event.label}-${eventIndex}-${activeIndex}-slot${slot}`}
-                  type="button"
-                  onClick={() => setActiveIndex(eventIndex)}
-                  initial={false}
-                  animate={{
-                    scale: isCenter ? 1 : 0.88,
-                    y: isCenter ? 0 : 18,
-                    opacity: isCenter ? 1 : 0.85,
-                    zIndex: isCenter ? 3 : 2,
-                    boxShadow: isCenter
-                      ? '0 24px 62px rgba(0,0,0,0.34), inset 0 2px 12px rgba(249,236,182,0.35), inset 0 -1px 0 rgba(255,255,255,0.3)'
-                      : '0 12px 28px rgba(0,0,0,0.24)',
-                  }}
-                  transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-                  style={{
-                    width: isCenter ? 'clamp(360px, 46vw, 860px)' : 'clamp(250px, 31vw, 620px)',
-                    height: isCenter ? 'clamp(280px, 38vw, 470px)' : 'clamp(220px, 30vw, 390px)',
-                    borderRadius: 34,
-                    overflow: 'hidden',
-                    border: isCenter ? '1px solid rgba(249,236,182,0.45)' : '1px solid rgba(249,236,182,0.2)',
-                    background: '#fff',
-                    position: 'relative',
-                  }}
-                  className="group relative"
-                >
-                  <img
-                    src={event.image}
-                    alt={event.label}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background: isCenter
-                        ? 'linear-gradient(to top, rgba(0,0,0,0.22), rgba(0,0,0,0.6) 80%, rgba(0,0,0,0.8))'
-                        : 'linear-gradient(to top, rgba(0,0,0,0.3), rgba(0,0,0,0.1) 45%, rgba(0,0,0,0))',
-                    }}
-                  />
-                  {isCenter && event.org && (
-                    <>
-                      <div className={styles.cardSlotsLabel} style={{ padding: '6px 14px', top: '32px', right: '32px', zIndex: 10 }}>
-                        {event.slots} SLOTS
-                      </div>
-                      
-                      <div className={styles.cardOverlayTopRow} style={{ position: 'absolute', top: '32px', left: '32px', zIndex: 10, margin: 0 }}>
+            return (
+              <motion.button
+                key={`${event.id}-slot${slot}`}
+                type="button"
+                onClick={() => goTo(eventIndex)}
+                initial={false}
+                animate={{
+                  scale: isCenter ? 1 : 0.84,
+                  y: isCenter ? 0 : 24,
+                  opacity: isCenter ? 1 : 0.78,
+                  zIndex: isCenter ? 3 : 1,
+                  filter: isCenter ? 'brightness(1) saturate(1)' : 'brightness(0.75) saturate(0.65)',
+                  rotate: isCenter ? 0 : isLeft ? -3.5 : 3.5,
+                }}
+                transition={{ duration: 0.44, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                  width: isCenter ? 'clamp(310px, 43vw, 800px)' : 'clamp(200px, 28vw, 560px)',
+                  height: isCenter ? 'clamp(250px, 34vw, 440px)' : 'clamp(190px, 26vw, 360px)',
+                  borderRadius: 28,
+                  overflow: 'hidden',
+                  border: isCenter ? '1.5px solid rgba(249,236,182,0.52)' : '1px solid rgba(249,236,182,0.15)',
+                  background: '#0a1408',
+                  position: 'relative',
+                  flexShrink: 0,
+                  marginLeft: slot === 0 ? 0 : slot === 1 ? 'clamp(-3rem, -4vw, -2rem)' : 'clamp(-3rem, -4vw, -2rem)',
+                  cursor: isCenter ? 'default' : 'pointer',
+                  transformOrigin: isLeft ? 'right center' : 'left center',
+                }}
+              >
+                {/* Spinning glow ring on center card only */}
+                {isCenter && <GlowRing />}
+
+                <img
+                  src={event.image}
+                  alt={event.label}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  referrerPolicy="no-referrer"
+                />
+
+                {/* Overlay gradient */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: isCenter
+                    ? 'linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.28) 50%, rgba(0,0,0,0.52) 100%)'
+                    : 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.08) 55%, rgba(0,0,0,0.3) 100%)',
+                }} />
+
+                {isCenter && event.org && (
+                  <>
+                    {/* Top badges */}
+                    <div style={{ position: 'absolute', top: 22, left: 22, right: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                         {event.orgLogo ? (
-                          <img src={event.orgLogo} alt={event.org} className={styles.cardOrgLogo} referrerPolicy="no-referrer" />
+                          <img src={event.orgLogo} alt={event.org}
+                            style={{ width: 30, height: 30, borderRadius: 8, objectFit: 'cover', border: '2px solid rgba(222,154,73,0.65)', boxShadow: '0 0 12px rgba(222,154,73,0.3)' }}
+                            referrerPolicy="no-referrer" />
                         ) : (
-                          <div className={styles.cardOrgLogoPlaceholder}>
+                          <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(222,154,73,0.22)', border: '1.5px solid rgba(222,154,73,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.62rem', fontWeight: 800, color: '#de9a49', boxShadow: '0 0 10px rgba(222,154,73,0.25)' }}>
                             {event.org.charAt(0).toUpperCase()}
                           </div>
                         )}
                         {event.subtheme && (
-                          <span className={`${styles.cardBadge} ${styles.cardBadgeTheme}`}>{event.subtheme}</span>
+                          <motion.span
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.22, duration: 0.32 }}
+                            style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.56rem', fontWeight: 800, letterSpacing: '0.13em', textTransform: 'uppercase', background: 'rgba(51,75,70,0.78)', color: '#fae185', padding: '0.22rem 0.65rem', borderRadius: 5, backdropFilter: 'blur(10px)', border: '1px solid rgba(250,225,133,0.22)' }}>
+                            {event.subtheme}
+                          </motion.span>
                         )}
                       </div>
-
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.4 }}
-                        className={styles.cardOverlayContent}
-                        style={{ pointerEvents: 'none', padding: '36px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
-                      >
-                        <p className={styles.cardOrganization} style={{ textAlign: 'center', width: '100%', marginBottom: '4px' }}>{event.org}</p>
-                        <h3 className={styles.cardTitle} style={{ fontFamily: "'Playfair Display', serif", textAlign: 'center', width: '100%' }}>
-                          {event.label}
-                        </h3>
-
-                        <div className={styles.cardMetadataOverlay} style={{ alignItems: 'center' }}>
-                          <div className={styles.metadataItem}><Calendar size={12} className={styles.metadataIcon} /><span>{event.date} · {event.time}</span></div>
-                          <div className={styles.metadataItem}><MapPin size={12} className={styles.metadataIcon} /><span>{event.venue} ({event.modality})</span></div>
-                        </div>
-
-                        <div className={styles.cardActionsOverlay} style={{ pointerEvents: 'auto', justifyContent: 'center', width: '100%', marginTop: '4px' }}>
-                          <a href={event.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className={styles.registerBtnOverlay}>
-                            Register <ExternalLink size={13} />
-                          </a>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); }}
-                            className={styles.learnMoreBtnOverlay}>
-                            Learn More <ChevronRight size={13} />
-                          </button>
-                        </div>
+                      <motion.div
+                        initial={{ opacity: 0, x: 8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.22, duration: 0.32 }}
+                        style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.13em', background: 'rgba(0,0,0,0.72)', color: '#fae185', padding: '0.22rem 0.75rem', borderRadius: 5, backdropFilter: 'blur(10px)', border: '1px solid rgba(250,225,133,0.15)', boxShadow: '0 0 12px rgba(250,225,133,0.15)' }}>
+                        {event.slots} SLOTS
                       </motion.div>
-                    </>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-          
-          {totalEvents > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-4 sm:mt-5">
-              <button
-                type="button"
-                aria-label="Previous event"
-                onClick={goPrev}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(249,236,182,0.28)] bg-[rgba(12,9,4,0.72)] text-[#f9ecb6] shadow-[0_10px_24px_rgba(0,0,0,0.2)] transition hover:bg-[rgba(222,154,73,0.18)] hover:text-[#fae185]"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <div className="flex items-center gap-2">
-                {events.map((event, index) => {
-                  const isActive = index === activeIndex;
-                  return (
-                    <button
-                      key={`carousel-dot-${index}`}
-                      type="button"
-                      aria-label={`Show ${event.label}`}
-                      onClick={() => setActiveIndex(index)}
-                      className={`transition-all duration-300 ${isActive ? 'h-2.5 w-9 rounded-full bg-[#fae185] shadow-[0_0_18px_rgba(250,225,133,0.65)]' : 'h-2.5 w-2.5 rounded-full bg-[rgba(249,236,182,0.35)] hover:bg-[rgba(250,225,133,0.7)]'}`}
-                    />
-                  );
-                })}
-              </div>
-              <button
-                type="button"
-                aria-label="Next event"
-                onClick={goNext}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(249,236,182,0.28)] bg-[rgba(12,9,4,0.72)] text-[#f9ecb6] shadow-[0_10px_24px_rgba(0,0,0,0.2)] transition hover:bg-[rgba(222,154,73,0.18)] hover:text-[#fae185]"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          )}
+                    </div>
+
+                    {/* Bottom info */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 'clamp(1rem, 2.5vw, 1.75rem)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
+                    >
+                      <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#fae185', marginBottom: '0.28rem', opacity: 0.88 }}>
+                        {event.org}
+                      </p>
+                      <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 'clamp(1rem, 2vw, 1.7rem)', fontWeight: 800, color: '#fff', lineHeight: 1.08, marginBottom: '0.5rem', textShadow: '0 2px 16px rgba(0,0,0,0.7)' }}>
+                        {event.label}
+                      </h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(249,236,182,0.84)', fontSize: '0.68rem', fontFamily: "'DM Sans',sans-serif" }}>
+                          <Calendar size={10} style={{ color: '#fae185', flexShrink: 0 }} />
+                          <span>{event.date} · {event.time}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(249,236,182,0.84)', fontSize: '0.68rem', fontFamily: "'DM Sans',sans-serif" }}>
+                          <MapPin size={10} style={{ color: '#fae185', flexShrink: 0 }} />
+                          <span>{event.venue} ({event.modality})</span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                        <a href={event.googleFormUrl || '#'} target="_blank" rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ background: 'linear-gradient(135deg,#fae185,#de9a49,#c07830)', color: '#1a1008', border: 'none', borderRadius: 8, padding: '0.5rem 1.1rem', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 5, textDecoration: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(222,154,73,0.45)', transition: 'filter .2s, transform .15s' }}>
+                          Register <ExternalLink size={11} />
+                        </a>
+                        <button onClick={(e) => e.stopPropagation()}
+                          style={{ background: 'rgba(15,10,4,0.65)', border: '1px solid rgba(250,225,133,0.45)', color: '#fae185', borderRadius: 8, padding: '0.5rem 1.1rem', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'background .2s' }}>
+                          Learn More <ChevronRight size={11} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </motion.button>
+            );
+          })}
         </div>
+
+        {/* Dots + arrows */}
+        {totalEvents > 1 && (
+          <div style={{ marginTop: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.9rem' }}>
+            <button type="button" aria-label="Previous" onClick={goPrev}
+              style={{ width: 38, height: 38, borderRadius: '50%', border: '1px solid rgba(249,236,182,0.28)', background: 'rgba(12,9,4,0.72)', color: '#f9ecb6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s', backdropFilter: 'blur(8px)' }}>
+              <ChevronLeft size={16} />
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              {events.map((_, index) => (
+                <button key={index} type="button" aria-label={`Event ${index + 1}`}
+                  onClick={() => goTo(index)}
+                  style={{ height: 9, width: index === activeIndex ? 34 : 9, borderRadius: 999, background: index === activeIndex ? '#fae185' : 'rgba(249,236,182,0.32)', border: 'none', cursor: 'pointer', transition: 'all 0.32s ease', boxShadow: index === activeIndex ? '0 0 12px rgba(250,225,133,0.7)' : 'none', padding: 0 }} />
+              ))}
+            </div>
+            <button type="button" aria-label="Next" onClick={goNext}
+              style={{ width: 38, height: 38, borderRadius: '50%', border: '1px solid rgba(249,236,182,0.28)', background: 'rgba(12,9,4,0.72)', color: '#f9ecb6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s', backdropFilter: 'blur(8px)' }}>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -904,28 +1031,13 @@ const MainEventsSection = () => {
 
 const LeapApp = () => {
   interface LeapClass {
-    id: string;
-    title: string;
-    org: string;
-    modality: string;
-    date: string;
-    time: string;
-    venue: string;
-    slots: number;
-    subtheme: string;
-    image: string;
-    orgLogo: string | null;
-    googleFormUrl: string;
-    description: string;
+    id: string; title: string; org: string; modality: string; date: string;
+    time: string; venue: string; slots: number; subtheme: string; image: string;
+    orgLogo: string | null; googleFormUrl: string; description: string;
   }
-
   interface UserProfile {
-    uid: string;
-    email: string | null;
-    displayName: string | null;
-    photoURL: string | null;
-    role: 'student' | 'admin';
-    registeredClasses: string[];
+    uid: string; email: string | null; displayName: string | null;
+    photoURL: string | null; role: 'student' | 'admin'; registeredClasses: string[];
   }
 
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -945,21 +1057,18 @@ const LeapApp = () => {
   const hasLoggedProfilePermissionIssue = useRef(false);
 
   const navigateTo = (view: 'home' | 'about' | 'major-events' | 'classes' | 'faq' | 'contact') => {
-    setCurrentView(view);
-    setIsMenuOpen(false);
+    setCurrentView(view); setIsMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const filteredAndSortedClasses: LeapClass[] = useMemo(() => {
-    let result = classes.filter((c: LeapClass) => (
+    let result = classes.filter((c) => (
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.org.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.subtheme.toLowerCase().includes(searchQuery.toLowerCase())
     ));
-    if (activeSubtheme) {
-      result = result.filter((c: LeapClass) => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
-    }
-    result.sort((a: LeapClass, b: LeapClass) => {
+    if (activeSubtheme) result = result.filter((c) => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
+    result.sort((a, b) => {
       if (sortBy === 'title-asc') return a.title.localeCompare(b.title);
       if (sortBy === 'title-desc') return b.title.localeCompare(a.title);
       if (sortBy === 'slots-desc') return b.slots - a.slots;
@@ -970,12 +1079,11 @@ const LeapApp = () => {
   }, [classes, searchQuery, sortBy, activeSubtheme]);
 
   const uniqueDays: string[] = useMemo(() => (
-    Array.from(new Set(filteredAndSortedClasses.map((c: LeapClass) => c.date)))
-      .sort((a: string, b: string) => new Date(a).getTime() - new Date(b).getTime())
+    Array.from(new Set(filteredAndSortedClasses.map((c) => c.date)))
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
   ), [filteredAndSortedClasses]);
 
   const isVerifiedDlsuUser = Boolean(user?.emailVerified && user.email?.toLowerCase().endsWith('@dlsu.edu.ph'));
-
   const hasAppAccess = isVerifiedDlsuUser;
 
   useEffect(() => {
@@ -986,66 +1094,29 @@ const LeapApp = () => {
           if (currentUser) {
             const currentEmail = currentUser.email?.toLowerCase();
             if (!currentUser.emailVerified || !currentEmail?.endsWith('@dlsu.edu.ph')) {
-              setUserProfile(null);
-              setIsAdminView(false);
-              navigateTo('home');
+              setUserProfile(null); setIsAdminView(false); navigateTo('home');
               await signOut(auth);
               alert('Please use a verified @dlsu.edu.ph Google account to sign in.');
               return;
             }
-
             try {
               const userDoc = await getDocFromServer(doc(db, 'users', currentUser.uid));
               if (userDoc.exists()) {
                 setUserProfile(userDoc.data() as UserProfile);
               } else {
-                const newProfile: UserProfile = {
-                  uid: currentUser.uid,
-                  email: currentUser.email,
-                  displayName: currentUser.displayName,
-                  photoURL: currentUser.photoURL,
-                  role: 'student',
-                  registeredClasses: [],
-                };
+                const newProfile: UserProfile = { uid: currentUser.uid, email: currentUser.email, displayName: currentUser.displayName, photoURL: currentUser.photoURL, role: 'student', registeredClasses: [] };
                 await setDoc(doc(db, 'users', currentUser.uid), newProfile);
                 setUserProfile(newProfile);
               }
             } catch (error: unknown) {
-              const isPermissionDenied =
-                typeof error === 'object' &&
-                error !== null &&
-                'code' in error &&
-                (error as { code?: string }).code === 'permission-denied';
-
-              if (isPermissionDenied) {
-                if (!hasLoggedProfilePermissionIssue.current) {
-                  console.warn('Firestore profile access denied by security rules. Using auth-only fallback profile.');
-                  hasLoggedProfilePermissionIssue.current = true;
-                }
-              } else {
-                console.error('Firestore profile bootstrap failed:', error);
-              }
-              // Fallback profile keeps the UI usable even when Firestore rules deny access.
-              setUserProfile({
-                uid: currentUser.uid,
-                email: currentUser.email,
-                displayName: currentUser.displayName,
-                photoURL: currentUser.photoURL,
-                role: 'student',
-                registeredClasses: [],
-              });
+              const isPermissionDenied = typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'permission-denied';
+              if (isPermissionDenied) { if (!hasLoggedProfilePermissionIssue.current) { console.warn('Firestore profile access denied.'); hasLoggedProfilePermissionIssue.current = true; } }
+              else { console.error('Firestore profile bootstrap failed:', error); }
+              setUserProfile({ uid: currentUser.uid, email: currentUser.email, displayName: currentUser.displayName, photoURL: currentUser.photoURL, role: 'student', registeredClasses: [] });
             }
-          } else {
-            setUserProfile(null);
-            setIsAdminView(false);
-            setCurrentView('home');
-          }
-        } catch (error: unknown) {
-          console.error('Auth state handling failed:', error);
-          setUserProfile(null);
-        } finally {
-          setLoading(false);
-        }
+          } else { setUserProfile(null); setIsAdminView(false); setCurrentView('home'); }
+        } catch (error: unknown) { console.error('Auth state handling failed:', error); setUserProfile(null); }
+        finally { setLoading(false); }
       })();
     });
     return () => unsubscribe();
@@ -1063,17 +1134,11 @@ const LeapApp = () => {
             const startObj = new Date(item.fields.startDate);
             formattedDate = startObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
             formattedTime = startObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-            
             if (item.fields.endDate) {
               const endObj = new Date(item.fields.endDate);
               const endDateStr = endObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-              
-              if (formattedDate === endDateStr) {
-                formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
-              } else {
-                formattedDate += ` to ${endDateStr}`;
-                formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
-              }
+              if (formattedDate === endDateStr) { formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`; }
+              else { formattedDate += ` to ${endDateStr}`; formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`; }
             }
           }
           return {
@@ -1090,43 +1155,16 @@ const LeapApp = () => {
       } catch (error) { console.error("Contentful Error (Classes):", error); }
       finally { setLoading(false); }
     };
-
     fetchClasses();
-
-    // Fetch periodically but ONLY when the tab is visible
     let intervalId: ReturnType<typeof setInterval> | null = null;
-
-    const startPolling = () => {
-      if (!intervalId) {
-        // Poll every 60 seconds
-        intervalId = setInterval(fetchClasses, 60000);
-      }
-    };
-
-    const stopPolling = () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-    };
-
+    const startPolling = () => { if (!intervalId) intervalId = setInterval(fetchClasses, 60000); };
+    const stopPolling = () => { if (intervalId) { clearInterval(intervalId); intervalId = null; } };
     startPolling();
-
-    // Re-fetch instantly when returning to tab, pause polling when hidden
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        fetchClasses();
-        startPolling();
-      } else {
-        stopPolling();
-      }
+      if (document.visibilityState === 'visible') { fetchClasses(); startPolling(); } else { stopPolling(); }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      stopPolling();
-    };
+    return () => { document.removeEventListener('visibilitychange', handleVisibilityChange); stopPolling(); };
   }, [user]);
 
   useEffect(() => {
@@ -1142,7 +1180,6 @@ const LeapApp = () => {
       if (!result.user.emailVerified || !email?.endsWith('@dlsu.edu.ph')) {
         await signOut(auth);
         alert('Access Denied: Please use your verified official @dlsu.edu.ph email address to sign in.');
-        return;
       }
     } catch (error) { console.error("Sign In Error:", error); }
   };
@@ -1164,44 +1201,30 @@ const LeapApp = () => {
       <div className={styles.cardImageWrapper}>
         <img src={item.image} alt={item.title} className={styles.cardImage} referrerPolicy="no-referrer" />
         <div className={styles.cardImageGradient} />
-        <div className={styles.cardSlotsLabel}>
-          {item.slots} SLOTS
-        </div>
-
+        <div className={styles.cardSlotsLabel}>{item.slots} SLOTS</div>
         <div className={styles.cardOverlayContent}>
           <div className={styles.cardOverlayTopRow}>
             {item.orgLogo ? (
               <img src={item.orgLogo} alt={item.org} className={styles.cardOrgLogo} referrerPolicy="no-referrer" />
             ) : (
-              <div className={styles.cardOrgLogoPlaceholder}>
-                {item.org.charAt(0).toUpperCase()}
-              </div>
+              <div className={styles.cardOrgLogoPlaceholder}>{item.org.charAt(0).toUpperCase()}</div>
             )}
-            {item.subtheme && (
-              <span className={`${styles.cardBadge} ${styles.cardBadgeTheme}`}>{item.subtheme}</span>
-            )}
+            {item.subtheme && <span className={`${styles.cardBadge} ${styles.cardBadgeTheme}`}>{item.subtheme}</span>}
           </div>
-
           <p className={styles.cardOrganization}>{item.org}</p>
           <h3 className={styles.cardTitle} style={{ fontFamily: "'Playfair Display', serif" }}
             onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
             {item.title}
           </h3>
-
           <div className={styles.cardMetadataOverlay}>
             <div className={styles.metadataItem}><Calendar size={12} className={styles.metadataIcon} /><span>{item.date} · {item.time}</span></div>
             <div className={styles.metadataItem}><MapPin size={12} className={styles.metadataIcon} /><span>{item.venue} ({item.modality})</span></div>
           </div>
-
           <div className={styles.cardActionsOverlay}>
-            <a href={item.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className={styles.registerBtnOverlay}>
+            <a href={item.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className={styles.registerBtnOverlay}>
               Register <ExternalLink size={13} />
             </a>
-            <button
-              onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className={styles.learnMoreBtnOverlay}>
+            <button onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={styles.learnMoreBtnOverlay}>
               Learn More <ChevronRight size={13} />
             </button>
           </div>
@@ -1219,7 +1242,7 @@ const LeapApp = () => {
       <div className={styles.adminCard}>
         <div className={styles.adminIconWrap} style={{ width: 80, height: 80 }}><Edit size={36} /></div>
         <h3 className={styles.adminCardTitle} style={{ fontFamily: "'Playfair Display', serif" }}>Classes are managed in Contentful</h3>
-        <p className={styles.adminCardDesc}>To add, edit, or delete classes, please use the Contentful CMS dashboard. The changes will automatically reflect here.</p>
+        <p className={styles.adminCardDesc}>To add, edit, or delete classes, please use the Contentful CMS dashboard.</p>
         <a href="https://app.contentful.com" target="_blank" rel="noopener noreferrer" className={styles.adminCTABtn}>Open Contentful <ExternalLink size={20} /></a>
       </div>
     </div>
@@ -1231,9 +1254,7 @@ const LeapApp = () => {
         <div style={{ background: 'rgba(255,255,255,0.72)', borderRadius: 28, padding: '2rem', border: '1px solid rgba(222,154,73,0.22)', boxShadow: '0 16px 48px rgba(51,75,70,0.08)' }}>
           <p style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#de9a49', marginBottom: '0.75rem' }}>Support</p>
           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(2rem, 4vw, 3.2rem)', color: '#334b46', marginBottom: '1rem' }}>Contact the LEAP team</h2>
-          <p style={{ color: '#567069', fontSize: '1rem', lineHeight: 1.7, maxWidth: 680, marginBottom: '1.5rem' }}>
-            Reach out for registration help, class concerns, or general questions about the program.
-          </p>
+          <p style={{ color: '#567069', fontSize: '1rem', lineHeight: 1.7, maxWidth: 680, marginBottom: '1.5rem' }}>Reach out for registration help, class concerns, or general questions.</p>
           <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginBottom: '1.5rem' }}>
             <div style={{ background: '#fff', borderRadius: 20, padding: '1.1rem 1.2rem', border: '1px solid rgba(222,154,73,0.18)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
@@ -1274,12 +1295,11 @@ const LeapApp = () => {
   }
 
   const navClass = scrolled
-    ? 'scrolled-nav py-2'
-    : currentView === 'home'
-      ? 'bg-transparent py-4'
-      : 'light-page-nav py-4';
+  ? 'scrolled-nav py-2'
+  : currentView === 'home'
+    ? 'bg-transparent py-4'
+    : 'dark-page-nav py-4';
 
-  // ── HERO SECTION: logo + tagline, plus main carousel on home ──
   const HeroSection = (
     <header className={styles.heroSection}>
       <div className={styles.heroBackdropContainer}>
@@ -1301,8 +1321,10 @@ const LeapApp = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-4 fade-up delay-1"
         >
-          <span className={`${styles.heroEyebrow} fade-up delay-1`} style={{ fontFamily: "'Tropikal', 'Playfair Display', serif", textTransform: 'none', fontSize: 'clamp(1rem, 1.35vw, 1.3rem)', letterSpacing: '0.08em', padding: '0.55rem 1.5rem' }}>Isang Nayon, Isang Layunin</span>
+          {/* ANIMATED TAGLINE — typewriter effect */}
+          <AnimatedTagline />
         </motion.div>
         {hasAppAccess && currentView === 'home' && (
           <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.45rem', marginLeft: '50%', transform: 'translateX(-50%)' }}>
@@ -1313,33 +1335,99 @@ const LeapApp = () => {
     </header>
   );
 
+  /* ── SECTION TRANSITION: hero (dark green) → subthemes (dark green) → classes (cream) ── */
   const HeroExtras = hasAppAccess && currentView === 'home' ? (
     <div style={{ background: 'transparent', padding: '0' }}>
-      <div style={{ width: 'min(1500px, 98vw)', marginTop: '0', marginLeft: '50%', transform: 'translateX(-50%)', position: 'relative' }}>
-        <div className={styles.subthemesBackdropTop} />
-        <div className={styles.subthemesBackdropRight} />
-        <SubthemesStrip activeTheme={activeSubtheme} onSelect={(t) => { setActiveSubtheme(t); setCurrentPage(1); setSelectedDay(null); }} compact />
-        {activeSubtheme && (
-          <div style={{ textAlign: 'center', marginTop: '0.45rem' }}>
-            <button
-              onClick={() => { setActiveSubtheme(null); setCurrentPage(1); setSelectedDay(null); }}
-              style={{
-                background: 'rgba(222,154,73,0.15)',
-                border: '1px solid rgba(222,154,73,0.4)',
-                borderRadius: 999,
-                padding: '0.28rem 0.9rem',
-                fontSize: '0.68rem',
-                fontWeight: 700,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                color: '#803e2f',
-                cursor: 'pointer',
-              }}
-            >
-              Clear {activeSubtheme}
-            </button>
-          </div>
-        )}
+      {/* Gradient bridge: dark → subthemes dark → cream */}
+      <div style={{
+        width: '100%',
+        background: 'linear-gradient(180deg, #0e1a0c 0%, #132015 35%, #1a2e1e 65%, #2a3d22 85%, #fffdf6 100%)',
+        paddingBottom: '1px',
+      }}>
+        <div style={{ width: 'min(1500px, 98vw)', margin: '0 auto', position: 'relative' }}>
+          <div className={styles.subthemesBackdropTop} />
+          <div className={styles.subthemesBackdropRight} />
+          <SubthemesStrip activeTheme={activeSubtheme} onSelect={(t) => { setActiveSubtheme(t); setCurrentPage(1); setSelectedDay(null); }} compact />
+          {activeSubtheme && (
+            <div style={{ textAlign: 'center', paddingBottom: '1rem' }}>
+              <button
+                onClick={() => { setActiveSubtheme(null); setCurrentPage(1); setSelectedDay(null); }}
+                style={{ background: 'rgba(222,154,73,0.15)', border: '1px solid rgba(222,154,73,0.4)', borderRadius: 999, padding: '0.28rem 0.9rem', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fae185', cursor: 'pointer' }}
+              >
+                Clear {activeSubtheme}
+              </button>
+            </div>
+          )}
+        </div>
+        {/* Smooth wave divider into cream */}
+        {/* Rich layered transition into classes */}
+<div style={{ position: 'relative', lineHeight: 0, marginTop: '-2px', overflow: 'hidden' }}>
+  {/* Glow bloom above the wave */}
+  <div style={{
+    position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+    width: '60%', height: 80,
+    background: 'radial-gradient(ellipse 80% 100% at 50% 100%, rgba(222,154,73,0.18) 0%, transparent 70%)',
+    pointerEvents: 'none', zIndex: 1,
+  }} />
+  {/* Palay silhouette row */}
+  <svg viewBox="0 0 1440 90" preserveAspectRatio="none"
+    style={{ width: '100%', height: 90, display: 'block', position: 'relative', zIndex: 2 }}>
+    <defs>
+      <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#1a2e1e" stopOpacity="1"/>
+        <stop offset="100%" stopColor="#fffdf6" stopOpacity="1"/>
+      </linearGradient>
+      <linearGradient id="stemGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#3a6a22"/>
+        <stop offset="100%" stopColor="#2a4a18"/>
+      </linearGradient>
+    </defs>
+
+    {/* Back wave layer - dark */}
+    <path d="M0,20 C180,50 360,10 540,30 C720,50 900,15 1080,35 C1260,55 1380,25 1440,38 L1440,90 L0,90 Z"
+      fill="#132015" opacity="0.7"/>
+
+    {/* Palay stalks scattered along the boundary */}
+    {[40,110,190,270,340,420,510,590,670,760,840,920,1010,1090,1180,1260,1340,1410].map((x, i) => {
+      const h = 28 + (i % 4) * 6;
+      const lean = ((i % 3) - 1) * 4;
+      const grainY = [0, 5, 10, 15, 20];
+      return (
+        <g key={i} transform={`translate(${x}, ${55 - h})`} opacity="0.55">
+          <path d={`M0,${h} Q${lean},${h/2} ${lean*0.6},0`}
+            stroke="url(#stemGrad)" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+          {grainY.map((gy, gi) => (
+            <ellipse key={gi}
+              cx={lean * (gy / h) + (gi % 2 === 0 ? -3 : 3)}
+              cy={gy}
+              rx="2.8" ry="5"
+              fill="#de9a49" opacity="0.7"
+              transform={`rotate(${-18 + (gi%2)*36}, ${lean*(gy/h)+(gi%2===0?-3:3)}, ${gy})`}
+            />
+          ))}
+        </g>
+      );
+    })}
+
+    {/* Mid wave */}
+    <path d="M0,35 C200,15 400,55 600,35 C800,15 1000,50 1200,30 C1320,18 1400,40 1440,45 L1440,90 L0,90 Z"
+      fill="#1d2e1a" opacity="0.5"/>
+
+    {/* Front wave - blends into cream */}
+    <path d="M0,48 C160,28 320,62 520,45 C720,28 880,58 1080,42 C1240,30 1360,52 1440,56 L1440,90 L0,90 Z"
+      fill="url(#waveGrad1)"/>
+
+    {/* Gold shimmer line along crest */}
+    <path d="M0,48 C160,28 320,62 520,45 C720,28 880,58 1080,42 C1240,30 1360,52 1440,56"
+      stroke="rgba(222,154,73,0.28)" strokeWidth="1" fill="none"/>
+
+    {/* Tiny gold sparkle dots along the crest */}
+    {[120,280,450,620,790,960,1130,1300].map((x, i) => {
+      const yBase = i % 2 === 0 ? 44 : 50;
+      return <circle key={i} cx={x} cy={yBase} r="1.5" fill="#fae185" opacity="0.45"/>;
+    })}
+  </svg>
+</div>
       </div>
     </div>
   ) : null;
@@ -1368,7 +1456,7 @@ const LeapApp = () => {
 
   return (
     <div className={styles.appContainer}>
-      {/* NAV */}
+      {/* ── NAV ── */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${navClass}`}>
         <div className={styles.navInner}>
           <div className={styles.navLogo} onClick={() => navigateTo('home')}>
@@ -1382,20 +1470,15 @@ const LeapApp = () => {
             <button onClick={() => navigateTo('faq')} className={`nav-link ${currentView === 'faq' ? 'active' : ''}`}>FAQs</button>
             {userProfile?.role === 'admin' && <button onClick={() => setIsAdminView(true)} className="leap-admin-link">Admin</button>}
           </div>
-          {/* FIX: navRight uses the module class; on mobile the global CSS hides it
-              and collapses the grid to [1fr auto], pushing the toggle to the far right */}
           <div className="leap-nav-right hidden md:flex">
-            <button className="nav-icon-btn" onClick={() => navigateTo('classes')} title="Search classes">
-              <Search size={15} />
-            </button>
+            <button className="nav-icon-btn" onClick={() => navigateTo('classes')} title="Search classes"><Search size={15} /></button>
             <button className="nav-icon-btn" title="Saved classes"><Bookmark size={15} /></button>
             {user ? (
               <>
                 <button className="nav-icon-btn" title={user.displayName || 'Profile'}>
                   {user.photoURL
                     ? <img src={user.photoURL} alt="Profile" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
-                    : <User size={15} />
-                  }
+                    : <User size={15} />}
                 </button>
                 <button onClick={handleSignOut} className="btn-leap-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.72rem', borderRadius: 6, gap: '0.4rem' }}>
                   <LogOut size={13} /> Sign Out
@@ -1410,17 +1493,19 @@ const LeapApp = () => {
               </>
             )}
           </div>
-          {/* FIX: mobile toggle is now the last grid child; with grid-template-columns: 1fr auto
-              on mobile it naturally sits at the far right */}
           <div className={styles.navMobileToggle}>
-            <button className={styles.navMobileBtn} style={{ color: currentView === 'home' && !scrolled ? '#f9ecb6' : '#334b46' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <button
+              className={styles.navMobileBtn}
+              style={{ color: currentView === 'home' && !scrolled ? '#f9ecb6' : '#334b46' }}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
               {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
         </div>
       </nav>
 
-      {/* MOBILE MENU */}
+      {/* ── MOBILE MENU ── */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className={styles.mobileMenu}>
@@ -1441,54 +1526,36 @@ const LeapApp = () => {
         )}
       </AnimatePresence>
 
-      {/* ROUTE RENDERING */}
+      {/* ── ROUTES ── */}
       {currentView === 'home' && (
         <Home
-          user={user}
-          classes={classes}
-          searchQuery={searchQuery}
-          onSearchChange={(query) => { setSearchQuery(query); setCurrentPage(1); }}
-          sortBy={sortBy}
-          onSortChange={(sort) => setSortBy(sort)}
-          filteredAndSortedClasses={filteredAndSortedClasses}
-          uniqueDays={uniqueDays}
-          selectedDay={selectedDay}
-          onDaySelect={(day) => { setSelectedDay(day); setCurrentPage(1); }}
-          viewingClass={viewingClass}
-          onClassSelect={(leapClass) => { setViewingClass(leapClass); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          onSignIn={handleSignIn}
-          onHeroScroll={() => navigateTo('classes')}
-          HeroSection={HeroSection}
-          HeroExtras={HeroExtras}
-          renderClassCard={renderClassCard}
+          user={user} classes={classes}
+          searchQuery={searchQuery} onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+          sortBy={sortBy} onSortChange={(s) => setSortBy(s)}
+          filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
+          selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
+          viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onSignIn={handleSignIn} onHeroScroll={() => navigateTo('classes')}
+          HeroSection={HeroSection} HeroExtras={HeroExtras} renderClassCard={renderClassCard}
         />
       )}
-
       {currentView === 'about' && <About />}
       {currentView === 'major-events' && <MainEvents />}
       {currentView === 'classes' && (
         <Classes
-          user={user}
-          searchQuery={searchQuery}
-          onSearchChange={(query) => { setSearchQuery(query); setCurrentPage(1); }}
-          sortBy={sortBy}
-          onSortChange={(sort) => setSortBy(sort)}
-          filteredAndSortedClasses={filteredAndSortedClasses}
-          uniqueDays={uniqueDays}
-          selectedDay={selectedDay}
-          onDaySelect={(day) => { setSelectedDay(day); setCurrentPage(1); }}
-          currentPage={currentPage}
-          onPageChange={(page) => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          viewingClass={viewingClass}
-          onClassSelect={(leapClass) => { setViewingClass(leapClass); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          onSignIn={handleSignIn}
-          renderClassCard={renderClassCard}
+          user={user} searchQuery={searchQuery} onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+          sortBy={sortBy} onSortChange={(s) => setSortBy(s)}
+          filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
+          selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
+          currentPage={currentPage} onPageChange={(p) => { setCurrentPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onSignIn={handleSignIn} renderClassCard={renderClassCard}
         />
       )}
       {currentView === 'faq' && <FAQs />}
       {currentView === 'contact' && <Contact />}
 
-      {/* FOOTER */}
+      {/* ── FOOTER ── */}
       <footer className={styles.footer}>
         <div className={styles.footerContainer}>
           <div className={styles.footerBrand}>
@@ -1519,7 +1586,7 @@ const LeapApp = () => {
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>© 2026 LEAP Operations Team · De La Salle University · Central Student Organization</p>
+          <p>© 2026 LEAP Operations Team · De La Salle University · Council of Student Organizations</p>
         </div>
       </footer>
 
