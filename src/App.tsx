@@ -1325,6 +1325,31 @@ const LeapApp = () => {
         >
           {/* ANIMATED TAGLINE — typewriter effect */}
           <AnimatedTagline />
+          {!user && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'center', width: '100%' }}
+            >
+              <button 
+                onClick={handleSignIn} 
+                className="btn-leap-primary" 
+                style={{ 
+                  padding: '1rem 2.5rem', 
+                  fontSize: '1rem', 
+                  borderRadius: '1rem', 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  fontWeight: 800,
+                  boxShadow: '0 8px 24px rgba(222,154,73,0.25)',
+                  cursor: 'pointer'
+                }}
+              >
+                <LogIn size={20} /> Register / Sign In
+              </button>
+            </motion.div>
+          )}
         </motion.div>
         {hasAppAccess && currentView === 'home' && (
           <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.45rem', marginLeft: '50%', transform: 'translateX(-50%)' }}>
@@ -1441,11 +1466,6 @@ const LeapApp = () => {
               <img src={leapLogo} alt="LEAP 2026" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
             </div>
             <div />
-            <div className={styles.navRight} style={{ display: 'flex' }}>
-              <button onClick={handleSignIn} className={styles.navRegisterBtn}>
-                <LogIn size={13} /> Register / Sign In
-              </button>
-            </div>
           </div>
         </nav>
         {HeroSection}
