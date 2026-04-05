@@ -22,10 +22,12 @@ export default function FAQs() {
         <div className="faq-list">
           {faqs.map((faq, i) => {
             const answerId = `faq-answer-${i}`;
+            const buttonId = `faq-question-${i}`;
             return (
             <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
               className={`faq-item ${open === i ? 'faq-open' : ''}`}>
               <button
+                id={buttonId}
                 className="faq-question"
                 onClick={() => setOpen(open === i ? null : i)}
                 aria-expanded={open === i}
@@ -41,6 +43,7 @@ export default function FAQs() {
                   <motion.div
                     id={answerId}
                     role="region"
+                    aria-labelledby={buttonId}
                     initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} style={{ overflow: 'hidden' }}>
                     <p className="faq-answer">{faq.a}</p>
                   </motion.div>
