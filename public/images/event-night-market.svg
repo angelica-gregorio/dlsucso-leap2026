@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a3a35;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0e2820;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4ab09a;stop-opacity:0" />
+      <stop offset="50%" style="stop-color:#4ab09a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4ab09a;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)" />
+  <circle cx="150" cy="300" r="200" fill="rgba(74,176,154,0.07)" />
+  <circle cx="680" cy="120" r="150" fill="rgba(222,154,73,0.06)" />
+  <rect x="0" y="220" width="800" height="2" fill="url(#accent)" opacity="0.3" />
+  <text x="400" y="190" font-family="serif" font-size="36" font-weight="bold" fill="#fae185" text-anchor="middle">LEAP 2026</text>
+  <text x="400" y="240" font-family="sans-serif" font-size="18" fill="rgba(249,236,182,0.7)" text-anchor="middle">Nayon Night Market</text>
+  <text x="400" y="275" font-family="sans-serif" font-size="13" fill="rgba(249,236,182,0.45)" text-anchor="middle">Midweek Special · June 23, 2026</text>
+  <rect x="340" y="300" width="120" height="2" fill="url(#accent)" />
+</svg>

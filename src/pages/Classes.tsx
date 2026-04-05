@@ -267,7 +267,7 @@ export default function Classes({
                         onChange={(e) =>
                           onSortChange(e.target.value as 'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc')
                         }
-                        aria-label="Sort events"
+                        aria-label="Sort classes"
                         className="leap-select"
                         style={{ padding: '0.875rem 1.25rem', flexShrink: 0, boxSizing: 'border-box' }}
                       >

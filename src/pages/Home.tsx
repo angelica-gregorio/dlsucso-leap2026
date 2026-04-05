@@ -108,7 +108,7 @@ export default function Home({
                   style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: '1rem', paddingTop: '0.75rem', paddingBottom: '0.75rem', boxSizing: 'border-box' }}
                   value={searchQuery} onChange={e => onSearchChange(e.target.value)} />
               </div>
-              <select value={sortBy} onChange={e => onSortChange(e.target.value as any)} aria-label="Sort events" className="leap-select" style={{ padding: '0.75rem 1.25rem', flexShrink: 0 }}>
+              <select value={sortBy} onChange={e => onSortChange(e.target.value as 'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc')} aria-label="Sort classes" className="leap-select" style={{ padding: '0.75rem 1.25rem', flexShrink: 0 }}>
                 <option value="title-asc">Title (A–Z)</option>
                 <option value="title-desc">Title (Z–A)</option>
                 <option value="slots-desc">Most Slots</option>

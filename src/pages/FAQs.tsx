@@ -1,48 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Mail } from 'lucide-react';
-import type { ReactNode } from 'react';
-
-interface PageWrapperProps {
-  children: ReactNode;
-}
-
-const PageWrapper = ({ children }: PageWrapperProps) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-    className="flex-grow"
-  >
-    {children}
-  </motion.div>
-);
-
-interface PageHeroProps {
-  title: string;
-  subtitle: string;
-  accent: string;
-}
-
-const PageHero = ({ title, subtitle, accent }: PageHeroProps) => (
-  <div className="page-hero" style={{ paddingTop: '10rem', paddingBottom: '4rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-    <div className="page-hero-glow" />
-    <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-      style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#de9a49', marginBottom: '1rem' }}>
-      {accent}
-    </motion.p>
-    <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
-      className="page-hero-title">
-      {title}
-    </motion.h1>
-    <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }}
-      className="page-hero-subtitle">
-      {subtitle}
-    </motion.p>
-    <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.4, duration: 0.6 }}
-      style={{ width: 60, height: 2, background: 'linear-gradient(90deg,transparent,#de9a49,transparent)', margin: '2rem auto 0' }} />
-  </div>
-);
+import { PageWrapper, PageHero } from '../components/PageCommon';
 
 export default function FAQs() {
   const [open, setOpen] = useState<number | null>(null);
@@ -61,10 +20,17 @@ export default function FAQs() {
       <PageHero title="Frequently Asked Questions" subtitle="Everything you need to know before you register" accent="LEAP 2026 · Help Center" />
       <main className="container mx-auto px-4 pb-24 max-w-3xl">
         <div className="faq-list">
-          {faqs.map((faq, i) => (
+          {faqs.map((faq, i) => {
+            const answerId = `faq-answer-${i}`;
+            return (
             <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
               className={`faq-item ${open === i ? 'faq-open' : ''}`}>
-              <button className="faq-question" onClick={() => setOpen(open === i ? null : i)}>
+              <button
+                className="faq-question"
+                onClick={() => setOpen(open === i ? null : i)}
+                aria-expanded={open === i}
+                aria-controls={answerId}
+              >
                 <span>{faq.q}</span>
                 <div className={`faq-chevron ${open === i ? 'faq-chevron-open' : ''}`}>
                   <ChevronRight size={18} />
@@ -72,13 +38,17 @@ export default function FAQs() {
               </button>
               <AnimatePresence>
                 {open === i && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} style={{ overflow: 'hidden' }}>
+                  <motion.div
+                    id={answerId}
+                    role="region"
+                    initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} style={{ overflow: 'hidden' }}>
                     <p className="faq-answer">{faq.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="faq-cta-card">
           <p style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.5rem', fontWeight: 700, color: '#334b46', marginBottom: '0.5rem' }}>Still have questions?</p>
