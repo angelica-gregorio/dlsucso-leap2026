@@ -7,20 +7,41 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft,
   Menu, X, Info, LogOut, LogIn, AlertCircle,
-  Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Heart, Leaf, Star, Mail, Clock,
-  Globe, Zap, Layers, Bookmark, User  // ← ADD THESE
+  Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Mail, Clock,
+  Bookmark, User, BookOpen, Wrench, Handshake, HeartPulse
 } from 'lucide-react';
 
-import { contentfulClient } from './contentful';
+import { contentfulClient } from './services/contentful';
 import {
   auth, db, googleProvider, signInWithPopup, signOut,
-  onAuthStateChanged, doc, getDoc, setDoc
-} from './firebase';
+  onAuthStateChanged, doc, getDocFromServer, setDoc
+} from './services/firebase';
 import type { User as FirebaseUser } from "firebase/auth";
+
+import Home from './pages/Home';
+import About from './pages/About';
+import MainEvents from './pages/MainEvents';
+import FAQs from './pages/FAQs';
+import Classes from './pages/Classes';
+
 import leapLogo from './assets/leap.webp';
+import salakotCursor from './assets/salakot_cursor.webp';
+import styles from './App.module.css';
 
 interface ErrorBoundaryProps { children: ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
+
+// function useWindowWidth() {
+//   const [width, setWidth] = useState(() =>
+//     typeof window !== 'undefined' ? window.innerWidth : 1280
+//   );
+//   useEffect(() => {
+//     const handler = () => setWidth(window.innerWidth);
+//     window.addEventListener('resize', handler, { passive: true });
+//     return () => window.removeEventListener('resize', handler);
+//   }, []);
+//   return width;
+// }
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState;
@@ -35,12 +56,12 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-leap-cream p-6">
-          <div className="leap-info-card p-8 rounded-3xl max-w-md text-center">
+        <div className={styles.errorContainer}>
+          <div className={styles.errorCard}>
             <AlertCircle className="mx-auto text-leap-maroon mb-4" size={48} />
-            <h2 className="text-2xl font-bold text-leap-dark mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Something went wrong</h2>
-            <p className="text-leap-olive mb-6">We encountered an unexpected error. Please try refreshing the page.</p>
-            <button onClick={() => window.location.reload()} className="btn-leap-primary px-8 py-3 rounded-2xl font-bold shadow-lg">Refresh Page</button>
+            <h2 className={styles.errorTitle} style={{ fontFamily: "'Playfair Display', serif" }}>Something went wrong</h2>
+            <p className={styles.errorMessage}>We encountered an unexpected error. Please try refreshing the page.</p>
+            <button onClick={() => window.location.reload()} className={styles.errorButton}>Refresh Page</button>
           </div>
         </div>
       );
@@ -48,6 +69,73 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     return this.props.children;
   }
 }
+
+/* ══════════════════════════════════════════════════════
+   SCROLL PROGRESS BAR
+══════════════════════════════════════════════════════ */
+const ScrollProgress = () => {
+  const [pct, setPct] = useState(0);
+  useEffect(() => {
+    const upd = () => {
+      const el = document.documentElement;
+      setPct(el.scrollTop / (el.scrollHeight - el.clientHeight));
+    };
+    window.addEventListener('scroll', upd);
+    return () => window.removeEventListener('scroll', upd);
+  }, []);
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 9999, pointerEvents: 'none', background: 'rgba(222,154,73,0.12)' }}>
+      <div style={{ height: '100%', width: `${pct * 100}%`, background: 'linear-gradient(90deg,#de9a49,#fae185,#de9a49)', transition: 'width 0.1s linear', boxShadow: '0 0 8px rgba(222,154,73,0.8)' }} />
+    </div>
+  );
+};
+
+/* ══════════════════════════════════════════════════════
+   CUSTOM CURSOR
+══════════════════════════════════════════════════════ */
+const CustomCursor = () => {
+  const [dot, setDot] = useState({ x: -100, y: -100 });
+  const [isVisible, setIsVisible] = useState(false);
+  const [isPointerDevice, setIsPointerDevice] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(pointer: fine)');
+    setIsPointerDevice(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsPointerDevice(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  useEffect(() => {
+    if (!isPointerDevice) return;
+    const mv = (e: MouseEvent) => {
+      setDot({ x: e.clientX, y: e.clientY });
+      setIsVisible(true);
+    };
+    const leave = () => setIsVisible(false);
+    const enter = () => setIsVisible(true);
+    window.addEventListener('mousemove', mv);
+    document.addEventListener('mouseleave', leave);
+    document.addEventListener('mouseenter', enter);
+    return () => {
+      window.removeEventListener('mousemove', mv);
+      document.removeEventListener('mouseleave', leave);
+      document.removeEventListener('mouseenter', enter);
+    };
+  }, [isPointerDevice]);
+
+  if (!isPointerDevice) return null;
+
+  return (
+    <div style={{
+      position: 'fixed', pointerEvents: 'none', zIndex: 99999,
+      left: dot.x, top: dot.y, transform: 'translate(-15%, -15%)',
+      opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease'
+    }}>
+      <img src={salakotCursor} alt="Cursor" style={{ width: 32, height: 32, display: 'block' }} />
+    </div>
+  );
+};
 
 /* ══════════════════════════════════════════════════════
    PARALLAX MOUSE HOOK
@@ -66,57 +154,6 @@ function useParallaxMouse() {
 }
 
 /* ══════════════════════════════════════════════════════
-   SCROLL PROGRESS BAR
-══════════════════════════════════════════════════════ */
-const ScrollProgress = () => {
-  const [pct, setPct] = useState(0);
-  useEffect(() => {
-    const upd = () => {
-      const el = document.documentElement;
-      setPct(el.scrollTop / (el.scrollHeight - el.clientHeight));
-    };
-    window.addEventListener('scroll', upd);
-    return () => window.removeEventListener('scroll', upd);
-  }, []);
-  return (
-    <div style={{ position:'fixed', top:0, left:0, right:0, height:3, zIndex:9999, pointerEvents:'none', background:'rgba(222,154,73,0.12)' }}>
-      <div style={{ height:'100%', width:`${pct*100}%`, background:'linear-gradient(90deg,#de9a49,#fae185,#de9a49)', transition:'width 0.1s linear', boxShadow:'0 0 8px rgba(222,154,73,0.8)' }} />
-    </div>
-  );
-};
-
-/* ══════════════════════════════════════════════════════
-   CUSTOM CURSOR
-══════════════════════════════════════════════════════ */
-const CustomCursor = () => {
-  const [dot,  setDot]  = useState({ x:-100, y:-100 });
-  const [ring, setRing] = useState({ x:-100, y:-100 });
-  const dotRef  = useRef({ x:-100, y:-100 });
-  const ringRef = useRef({ x:-100, y:-100 });
-  useEffect(() => {
-    const mv = (e: MouseEvent) => { dotRef.current = { x:e.clientX, y:e.clientY }; setDot({ x:e.clientX, y:e.clientY }); };
-    window.addEventListener('mousemove', mv);
-    return () => window.removeEventListener('mousemove', mv);
-  }, []);
-  useEffect(() => {
-    let id: number;
-    const loop = () => {
-      ringRef.current = { x: ringRef.current.x + (dotRef.current.x - ringRef.current.x)*0.12, y: ringRef.current.y + (dotRef.current.y - ringRef.current.y)*0.12 };
-      setRing({ ...ringRef.current });
-      id = requestAnimationFrame(loop);
-    };
-    id = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(id);
-  }, []);
-  return (
-    <>
-      <div style={{ position:'fixed', pointerEvents:'none', zIndex:99999, left:dot.x-5, top:dot.y-5, width:10, height:10, borderRadius:'50%', background:'#de9a49', mixBlendMode:'screen' }} />
-      <div style={{ position:'fixed', pointerEvents:'none', zIndex:99998, left:ring.x-18, top:ring.y-18, width:36, height:36, borderRadius:'50%', border:'1.5px solid rgba(222,154,73,0.5)', mixBlendMode:'screen' }} />
-    </>
-  );
-};
-
-/* ══════════════════════════════════════════════════════
    FIREFLIES
 ══════════════════════════════════════════════════════ */
 const FLIES = Array.from({ length: 24 }, (_, i) => ({
@@ -131,7 +168,7 @@ const FLIES = Array.from({ length: 24 }, (_, i) => ({
 }));
 
 const Fireflies = () => (
-  <div style={{ position:'absolute', inset:0, zIndex:3, pointerEvents:'none', overflow:'hidden' }}>
+  <div style={{ position: 'absolute', inset: 0, zIndex: 3, pointerEvents: 'none', overflow: 'hidden' }}>
     {FLIES.map(f => (
       <div
         key={f.id}
@@ -151,68 +188,33 @@ const Fireflies = () => (
   </div>
 );
 
-/* ══════════════════════════════════════════════════════
-   ANIMATED COUNTER + HERO STATS STRIP
-══════════════════════════════════════════════════════ */
-const AnimatedCounter = ({ end, label, suffix='' }: { end:number; label:string; suffix?:string }) => {
-  const [n, setN] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
-        let v=0; const step=end/60;
-        const t = setInterval(() => { v+=step; if (v>=end){ setN(end); clearInterval(t); } else setN(Math.floor(v)); }, 16);
-      }
-    }, { threshold:0.5 });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [end]);
-  return (
-    <div ref={ref} style={{ textAlign:'center', padding:'0 24px' }}>
-      <div style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(1.6rem,2.8vw,2.4rem)', fontWeight:800, color:'#fae185', lineHeight:1 }}>{n}{suffix}</div>
-      <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'0.65rem', fontWeight:600, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(222,154,73,0.7)', marginTop:5 }}>{label}</div>
-    </div>
-  );
-};
-const HeroStats = () => (
-  <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.55, duration:0.6 }}
-    style={{ display:'flex', justifyContent:'center', alignItems:'center', padding:'18px 0', borderTop:'1px solid rgba(222,154,73,0.18)', borderBottom:'1px solid rgba(222,154,73,0.18)', background:'rgba(0,0,0,0.14)', borderRadius:10, maxWidth:560, margin:'2.5rem auto 0' }}>
-    <AnimatedCounter end={200} suffix="+" label="Classes" />
-    <div style={{ width:1, height:36, background:'rgba(222,154,73,0.22)' }} />
-    <AnimatedCounter end={7} label="Days" />
-    <div style={{ width:1, height:36, background:'rgba(222,154,73,0.22)' }} />
-    <AnimatedCounter end={5000} suffix="+" label="Students" />
-    <div style={{ width:1, height:36, background:'rgba(222,154,73,0.22)' }} />
-    <AnimatedCounter end={50} suffix="+" label="Orgs" />
-  </motion.div>
-);
-
-/* ══════════════════════════════════════════════════════
-   NAYON SCENE
-══════════════════════════════════════════════════════ */
-const TOOLTIPS: Record<string, { label:string; desc:string }> = {
-  hut1:     { label:'Bahay Kubo',  desc:'Traditional Filipino stilt house'  },
-  hut2:     { label:'Bahay Kubo',  desc:'Heart of the Filipino nayon'       },
-  palay:    { label:'Palay',       desc:'The golden harvest — rice paddies' },
-  salakot:  { label:'Salakot',     desc:"Farmer's iconic woven hat"         },
-  bayong:   { label:'Bayong',      desc:'Handwoven Filipino basket bag'     },
-  pandesal: { label:'Pandesal',    desc:'The beloved Filipino bread roll'   },
+const TOOLTIPS: Record<string, { label: string; desc: string }> = {
+  hut1: { label: 'Bahay-Kubo', desc: 'A humble home rooted in community and tradition.' },
+  hut2: { label: 'Pavilion', desc: 'A welcoming space for gathering and learning.' },
+  palay: { label: 'Palay', desc: 'A symbol of harvest, care, and shared growth.' },
+  salakot: { label: 'Salakot', desc: 'A classic Filipino hat for sun and field work.' },
+  bayong: { label: 'Bayong', desc: 'A woven bag for everyday market life.' },
+  pandesal: { label: 'Pandesal', desc: 'A warm staple that brings people together.' },
 };
 
 const NayonScene = () => {
   useParallaxMouse();
-  const [hovered, setHovered] = useState<string|null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
 
   return (
     <>
       <AnimatePresence>
         {hovered && (
-          <motion.div key={hovered}
-            initial={{ opacity:0, y:8, scale:0.92 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y:4, scale:0.96 }}
-            transition={{ duration:0.18, ease:[0.34,1.4,0.64,1] }}
-            style={{ position:'fixed', bottom:'auto', top:'80px', left:'50%', transform:'translateX(-50%)', background:'rgba(8,5,2,0.94)', border:'1px solid rgba(222,154,73,0.52)', borderRadius:8, padding:'8px 18px', pointerEvents:'none', zIndex:20, backdropFilter:'blur(14px)', boxShadow:'0 8px 32px rgba(0,0,0,0.55)', whiteSpace:'nowrap' }}>
-            <p style={{ fontFamily:"'Playfair Display',serif", fontSize:14, color:'#fae185', margin:0, fontWeight:700 }}>{TOOLTIPS[hovered]?.label}</p>
-            <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:'rgba(249,236,182,0.52)', margin:0, marginTop:2 }}>{TOOLTIPS[hovered]?.desc}</p>
+          <motion.div
+            key={hovered}
+            initial={{ opacity: 0, y: 8, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: [0.34, 1.4, 0.64, 1] }}
+            style={{ position: 'fixed', bottom: 'auto', top: '80px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(8,5,2,0.94)', border: '1px solid rgba(222,154,73,0.52)', borderRadius: 8, padding: '8px 18px', pointerEvents: 'none', zIndex: 20, backdropFilter: 'blur(14px)', boxShadow: '0 8px 32px rgba(0,0,0,0.55)', whiteSpace: 'nowrap' }}
+          >
+            <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 14, color: '#fae185', margin: 0, fontWeight: 700 }}>{TOOLTIPS[hovered]?.label}</p>
+            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: 'rgba(249,236,182,0.52)', margin: 0, marginTop: 2 }}>{TOOLTIPS[hovered]?.desc}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -220,7 +222,7 @@ const NayonScene = () => {
       <svg
         viewBox="0 0 1440 480"
         preserveAspectRatio="xMidYMax meet"
-        style={{ position:'absolute', bottom:0, left:0, width:'100%', height:'auto', zIndex:2, pointerEvents:'none' }}
+        style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 'auto', zIndex: 2, pointerEvents: 'none' }}
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
@@ -340,7 +342,6 @@ const NayonScene = () => {
           </g>
         ))}
 
-        
         <g style={{ transform: 'translate(calc(36px + var(--px, 0) * 7px), calc(226px + var(--py, 0) * 4px))' }}>
           <path d="M0 190 Q3 152 -2 115 Q-5 86 0 56 Q4 26 2 0" stroke="#7a5a30" strokeWidth="9" fill="none" strokeLinecap="round"/>
           <path d="M0 190 Q3 152 -2 115 Q-5 86 0 56 Q4 26 2 0" stroke="#a07840" strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.3"/>
@@ -558,460 +559,516 @@ const NayonScene = () => {
 };
 
 /* ══════════════════════════════════════════════════════
-   PAGE WRAPPER
+   ANIMATED TAGLINE — "Isang Nayon, Isang Layunin"
+   Typewriter effect, plays once on mount, lightweight
 ══════════════════════════════════════════════════════ */
-const PageWrapper = ({ children }: { children: ReactNode }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-    className="flex-grow"
-  >
-    {children}
-  </motion.div>
-);
+const AnimatedTagline = () => {
+  const text = 'Isang Nayon, Isang Layunin';
+  const [displayed, setDisplayed] = useState('');
+  const [done, setDone] = useState(false);
 
-/* ══════════════════════════════════════════════════════
-   PAGE HERO BANNER
-══════════════════════════════════════════════════════ */
-const PageHero = ({ title, subtitle, accent }: { title: string; subtitle: string; accent: string }) => (
-  <div className="page-hero" style={{ paddingTop: '10rem', paddingBottom: '4rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-    <div className="page-hero-glow" />
-    <motion.p initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
-      style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'0.7rem', fontWeight:700, letterSpacing:'0.3em', textTransform:'uppercase', color:'#de9a49', marginBottom:'1rem' }}>
-      {accent}
-    </motion.p>
-    <motion.h1 initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.18 }}
-      className="page-hero-title">
-      {title}
-    </motion.h1>
-    <motion.p initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.26 }}
-      className="page-hero-subtitle">
-      {subtitle}
-    </motion.p>
-    <motion.div initial={{ scaleX:0 }} animate={{ scaleX:1 }} transition={{ delay:0.4, duration:0.6 }}
-      style={{ width:60, height:2, background:'linear-gradient(90deg,transparent,#de9a49,transparent)', margin:'2rem auto 0' }}/>
-  </div>
-);
-
-/* ══════════════════════════════════════════════════════
-   SUBTHEMES DATA
-══════════════════════════════════════════════════════ */
-const SUBTHEMES = [
-  { icon: <Star size={20}/>, label: 'Palayan ng Karunungan' },
-  { icon: <Palette size={20}/>, label: 'Pamilihan ng Kakayahan' },
-  { icon: <Leaf size={20}/>, label: 'Plaza ng Malikhaing Diwa' },
-  { icon: <Globe size={20}/>, label: 'Dambana ng Pagkakaisa' },
-  { icon: <Zap size={20}/>, label: 'Palaisdaan ng Kalusugan' },
-  { icon: <Layers size={20}/>, label: 'Bahay ng Bayanihan' },
-];
-
-/* ══════════════════════════════════════════════════════
-   MAIN EVENTS SECTION
-══════════════════════════════════════════════════════ */
-const MainEventsSection = () => {
-  const events = [
-    {
-      tag: 'Opening Ceremony',
-      date: 'June 20, 2026', time: '8:00 AM', venue: 'Henry Sy Sr. Hall',
-      title: 'LEAP 2026 Kickoff Rally',
-      desc: 'Live performances, special guests, and the ceremonial launch of a week that will change how you see learning.',
-      img: 'https://picsum.photos/seed/kickoff2026/600/400', accent: '#de9a49',
-    },
-    {
-      tag: 'Midweek Special',
-      date: 'June 23, 2026', time: '3:00 PM', venue: 'Agno Food Court Plaza',
-      title: 'Nayon Night Market',
-      desc: 'An open-air celebration of Filipino creativity — food, crafts, live music, and student showcases filling the campus.',
-      img: 'https://picsum.photos/seed/nightmarket/600/400', accent: '#4ab09a',
-    },
-    {
-      tag: 'Closing Night',
-      date: 'June 26, 2026', time: '6:00 PM', venue: 'Teresa Yuchengco Auditorium',
-      title: 'Culminating Night',
-      desc: 'Student output showcases, awards night, and a closing concert that sends LEAP 2026 off with a bang.',
-      img: 'https://picsum.photos/seed/culminating2026/600/400', accent: '#b05a32',
-    },
-  ];
+  useEffect(() => {
+    let i = 0;
+    const timer = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) {
+        clearInterval(timer);
+        setDone(true);
+      }
+    }, 48); // ~1.25s total — fast enough to feel snappy
+    return () => clearInterval(timer);
+  }, []);
 
   return (
-    <section className="main-events-section">
-      <div className="main-events-inner">
-        <div className="main-events-header">
-          <div>
-            <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'0.58rem', fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase', color:'#de9a49', display:'block', marginBottom:'0.4rem' }}>
-              LEAP 2026 · Landmark Moments
-            </span>
-            <h2 className="main-events-title">Main Events</h2>
-          </div>
-          <div className="main-events-nav">
-            <button className="carousel-nav-btn" aria-label="Previous slide"><ChevronLeft size={15}/></button>
-            <button className="carousel-nav-btn" aria-label="Next slide"><ChevronRight size={15}/></button>
-          </div>
-        </div>
-        <div className="main-events-grid">
-          {events.map((ev, i) => (
-            <motion.div key={i} initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ delay:i*0.1, duration:0.5 }} className="main-event-card">
-              <div className="main-event-img-wrap">
-                <img src={ev.img} alt={ev.title} className="main-event-img" referrerPolicy="no-referrer"/>
-                <div className="main-event-img-overlay"/>
-                <span className="main-event-tag">{ev.tag}</span>
-              </div>
-              <div className="main-event-body">
-                <div className="main-event-meta">
-                  <span className="main-event-meta-item"><Calendar size={11}/>{ev.date}</span>
-                  <span className="main-event-meta-item"><Clock size={11}/>{ev.time}</span>
-                  <span className="main-event-meta-item"><MapPin size={11}/>{ev.venue}</span>
-                </div>
-                <h3 className="main-event-title">{ev.title}</h3>
-                <p className="main-event-desc">{ev.desc}</p>
-                <div className="main-event-cta">
-                  <div style={{ height:2, width:28, background:ev.accent, borderRadius:2 }}/>
-                  <span className="main-event-link">View Details <ExternalLink size={11}/></span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
+    <motion.span
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, delay: 0.15 }}
+      style={{
+        fontFamily: "'Tropikal', 'Playfair Display', serif",
+        textTransform: 'none',
+        fontSize: 'clamp(1rem, 1.35vw, 1.3rem)',
+        letterSpacing: '0.08em',
+        padding: '0.55rem 1.5rem',
+        display: 'inline-block',
+        color: '#de9a49',
+        background: 'rgba(222,154,73,0.1)',
+        border: '1px solid rgba(222,154,73,0.32)',
+        borderRadius: 999,
+        position: 'relative',
+        overflow: 'hidden',
+        maxWidth: '90vw',
+      }}
+    >
+      {displayed}
+      {!done && (
+        <span style={{
+          display: 'inline-block',
+          width: 2,
+          height: '1em',
+          background: '#de9a49',
+          marginLeft: 2,
+          verticalAlign: 'middle',
+          animation: 'cursorBlink 0.7s step-end infinite',
+        }} />
+      )}
+      <style>{`
+        @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+      `}</style>
+    </motion.span>
   );
 };
 
 /* ══════════════════════════════════════════════════════
    SUBTHEMES STRIP
 ══════════════════════════════════════════════════════ */
-const SubthemesStrip = ({ activeTheme, onSelect }: { activeTheme: string|null; onSelect: (t: string|null) => void }) => (
-  <div className="subthemes-section">
-    <div className="subthemes-inner">
-      <span className="subthemes-label">Subthemes</span>
-      <div className="subthemes-row">
-        <button
-          className={`subtheme-pill ${activeTheme === null ? 'active' : ''}`}
-          onClick={() => onSelect(null)}
-        >
-          <span className="subtheme-pill-icon"><Sparkles size={20}/></span>
-          <span className="subtheme-pill-label">All</span>
-        </button>
-        {SUBTHEMES.map((s, i) => (
+const SUBTHEMES = [
+  { icon: <BookOpen size={20} />, label: 'Palayan ng Karunungan' },
+  { icon: <Wrench size={20} />, label: 'Pamilihan ng Kakayahan' },
+  { icon: <Palette size={20} />, label: 'Plaza ng Malikhaing Diwa' },
+  { icon: <Handshake size={20} />, label: 'Dambana ng Pagkakaisa' },
+  { icon: <HeartPulse size={20} />, label: 'Palaisdaan ng Kalusugan' },
+  { icon: <Users size={20} />, label: 'Bahay ng Bayanihan' },
+];
+
+const SubthemesStrip = ({
+  activeTheme,
+  onSelect,
+  compact = false,
+}: {
+  activeTheme: string | null;
+  onSelect: (t: string | null) => void;
+  compact?: boolean;
+}) => (
+  <div className={compact ? styles.subthemesCompactShell : styles.subthemesSection}>
+    <div
+      className={compact ? styles.subthemesCompactInner : styles.subthemesInner}
+      style={compact ? { overflow: 'visible' } : undefined}
+    >
+      <span className={compact ? styles.subthemesCompactLabel : styles.subthemesLabel}>Subthemes</span>
+      {compact ? (
+        <div className={`${styles.subthemesRow} ${styles.subthemesRowCompact}`}>
           <button
-            key={i}
-            className={`subtheme-pill ${activeTheme === s.label ? 'active' : ''}`}
-            onClick={() => onSelect(activeTheme === s.label ? null : s.label)}
+            className={`${styles.subthemeAssetButton} ${activeTheme === null ? styles.subthemeAssetActive : ''}`}
+            onClick={() => onSelect(null)}
           >
-            <span className="subtheme-pill-icon">{s.icon}</span>
-            <span className="subtheme-pill-label">{s.label}</span>
+            <span className={styles.subthemeAssetIcon}><Sparkles size={20} /></span>
+            <span className={styles.subthemeAssetLabel}>All Themes</span>
           </button>
-        ))}
-      </div>
+          {SUBTHEMES.map((s, i) => (
+            <button
+              key={i}
+              className={`${styles.subthemeAssetButton} ${activeTheme === s.label ? styles.subthemeAssetActive : ''}`}
+              onClick={() => onSelect(activeTheme === s.label ? null : s.label)}
+            >
+              <span className={styles.subthemeAssetIcon}>{s.icon}</span>
+              <span className={styles.subthemeAssetLabel}>{s.label}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className={styles.subthemesRow}>
+          <button
+            className={`${styles.subthemePill} ${activeTheme === null ? styles.subthemePillActive : ''}`}
+            onClick={() => onSelect(null)}
+          >
+            <span className={styles.subthemePillIcon}><Sparkles size={20} /></span>
+            <span className={styles.subthemePillLabel}>All</span>
+          </button>
+          {SUBTHEMES.map((s, i) => (
+            <button
+              key={i}
+              className={`${styles.subthemePill} ${activeTheme === s.label ? styles.subthemePillActive : ''}`}
+              onClick={() => onSelect(activeTheme === s.label ? null : s.label)}
+            >
+              <span className={styles.subthemePillIcon}>{s.icon}</span>
+              <span className={styles.subthemePillLabel}>{s.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   </div>
 );
 
 /* ══════════════════════════════════════════════════════
-   ABOUT PAGE
+   SPINNING GLOW RING — conic gradient border for center card
 ══════════════════════════════════════════════════════ */
-const AboutPage = () => {
-  const values = [
-    { icon: Sparkles, title: 'Innovation', desc: 'Breaking boundaries of traditional learning with creative and unconventional approaches.' },
-    { icon: Users, title: 'Community', desc: 'Fostering meaningful connections between students, orgs, and the greater DLSU family.' },
-    { icon: Leaf, title: 'Growth', desc: 'Cultivating personal and professional development beyond the classroom walls.' },
-    { icon: Heart, title: 'Service', desc: 'Grounded in the Lasallian tradition of faith, service, and communion in mission.' },
-  ];
-  return (
-    <PageWrapper>
-      <PageHero title="About LEAP 2026" subtitle="Isang Nayon, Isang Layunin — One Village, One Purpose" accent="DLSU · Central Student Organization"/>
-      <main className="container mx-auto px-4 pb-24 max-w-5xl">
-        <div className="about-intro-grid">
-          <motion.div initial={{ opacity:0, x:-24 }} whileInView={{ opacity:1, x:0 }} viewport={{ once:true }} transition={{ duration:0.6 }}>
-            <h2 className="section-label">What is LEAP?</h2>
-            <p className="about-body">The <strong>Lasallian Enrichment Alternative Program</strong> is De La Salle University's annual week-long celebration of alternative learning — a space where students step outside the lecture hall and into something wilder, warmer, and more human.</p>
-            <p className="about-body" style={{ marginTop:'1rem' }}>For one week every year, the campus transforms into a nayon — a village buzzing with workshops, performances, talks, and hands-on experiences spanning every field imaginable.</p>
-          </motion.div>
-          <motion.div initial={{ opacity:0, x:24 }} whileInView={{ opacity:1, x:0 }} viewport={{ once:true }} transition={{ duration:0.6, delay:0.1 }}
-            className="about-stat-panel">
-            <div className="about-stat"><span className="about-stat-num">200+</span><span className="about-stat-lbl">Classes offered</span></div>
-            <div className="about-stat-div"/>
-            <div className="about-stat"><span className="about-stat-num">7</span><span className="about-stat-lbl">Days of learning</span></div>
-            <div className="about-stat-div"/>
-            <div className="about-stat"><span className="about-stat-num">5,000+</span><span className="about-stat-lbl">Students engaged</span></div>
-            <div className="about-stat-div"/>
-            <div className="about-stat"><span className="about-stat-num">50+</span><span className="about-stat-lbl">Organizations</span></div>
-          </motion.div>
-        </div>
-        <div className="vm-grid">
-          {[
-            { label:'Our Vision', icon:'🌾', text:'A DLSU community where every student discovers their full potential through immersive, joyful, and transformative learning experiences rooted in Lasallian values.' },
-            { label:'Our Mission', icon:'🏡', text:'To curate an inclusive week of alternative education — accessible, engaging, and deeply human — that complements academic rigor with lived experience and creative exploration.' },
-          ].map((item,i) => (
-            <motion.div key={i} initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ delay:i*0.12 }} className="vm-card">
-              <span className="vm-icon">{item.icon}</span>
-              <h3 className="vm-label">{item.label}</h3>
-              <p className="vm-text">{item.text}</p>
-            </motion.div>
-          ))}
-        </div>
-        <div className="values-section">
-          <h2 className="section-heading">Core Values</h2>
-          <div className="values-grid">
-            {values.map((v, i) => (
-              <motion.div key={i} initial={{ opacity:0, y:24 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ delay:i*0.1 }} className="value-card">
-                <div className="value-icon-wrap"><v.icon size={22}/></div>
-                <h4 className="value-title">{v.title}</h4>
-                <p className="value-desc">{v.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-        <motion.div initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} className="theme-banner">
-          <div className="theme-banner-inner">
-            <p className="theme-banner-eyebrow">2026 Theme</p>
-            <h2 className="theme-banner-title">Isang Nayon, Isang Layunin</h2>
-            <p className="theme-banner-body">One Village, One Purpose. This year's theme draws from the Filipino bayanihan spirit — the collective strength of a community that moves, builds, and grows together. Like a nayon gathered around the harvest, LEAP 2026 calls every Lasallian to find their place in the circle.</p>
-          </div>
-        </motion.div>
-      </main>
-    </PageWrapper>
-  );
-};
-
-/* ══════════════════════════════════════════════════════
-   MAJOR EVENTS PAGE
-══════════════════════════════════════════════════════ */
-const MajorEventsPage = () => {
-  const events = [
-    {
-      tag: 'Opening Ceremony', date: 'June 20, 2026', time: '8:00 AM', venue: 'Henry Sy Sr. Hall Grounds',
-      title: 'LEAP 2026 Kickoff Rally',
-      desc: 'The grand opening of LEAP 2026. Live performances, special guest speakers, surprise acts, and the ceremonial launch of a week that will change how you see learning.',
-      img: 'https://picsum.photos/seed/kickoff2026/800/450', accent: '#de9a49',
-    },
-    {
-      tag: 'Midweek Special', date: 'June 23, 2026', time: '3:00 PM', venue: 'Agno Food Court Plaza',
-      title: 'Nayon Night Market',
-      desc: 'An open-air celebration of Filipino creativity — food, crafts, live music, and student showcases filling the campus with the spirit of a traditional Filipino market.',
-      img: 'https://picsum.photos/seed/nightmarket/800/450', accent: '#4ab09a',
-    },
-    {
-      tag: 'Closing Ceremony', date: 'June 26, 2026', time: '6:00 PM', venue: 'Teresa Yuchengco Auditorium',
-      title: 'Culminating Night',
-      desc: 'A grand celebration of everything the week produced — student output showcases, awards night, and a closing concert that sends LEAP 2026 off with a bang.',
-      img: 'https://picsum.photos/seed/culminating2026/800/450', accent: '#b05a32',
-    },
-  ];
-  return (
-    <PageWrapper>
-      <PageHero title="Major Events" subtitle="Landmark moments that define the LEAP experience" accent="LEAP 2026 · Schedule"/>
-      <main className="container mx-auto px-4 pb-24 max-w-5xl">
-        <div className="events-list">
-          {events.map((ev, i) => (
-            <motion.div key={i} initial={{ opacity:0, y:28 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ delay:i*0.12, duration:0.55 }} className="event-card">
-              <div className="event-img-wrap">
-                <img src={ev.img} alt={ev.title} className="event-img" referrerPolicy="no-referrer"/>
-                <div className="event-img-overlay"/>
-                <span className="event-tag" style={{ background: ev.accent }}>{ev.tag}</span>
-              </div>
-              <div className="event-body">
-                <div className="event-meta">
-                  <span className="event-meta-item"><Calendar size={13}/>{ev.date}</span>
-                  <span className="event-meta-item"><Clock size={13}/>{ev.time}</span>
-                  <span className="event-meta-item"><MapPin size={13}/>{ev.venue}</span>
-                </div>
-                <h3 className="event-title">{ev.title}</h3>
-                <p className="event-desc">{ev.desc}</p>
-                <div className="event-cta">
-                  <div className="event-num">{String(i+1).padStart(2,'0')}</div>
-                  <div className="event-divider-line" style={{ background: ev.accent }}/>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </main>
-    </PageWrapper>
-  );
-};
-
-/* ══════════════════════════════════════════════════════
-   FAQ PAGE
-══════════════════════════════════════════════════════ */
-const FAQPage = () => {
-  const [open, setOpen] = useState<number|null>(null);
-  const faqs = [
-    { q: "Who can participate in LEAP classes?", a: "All currently enrolled undergraduate students of De La Salle University are eligible and encouraged to participate in LEAP classes. Some specialized workshops may have additional requirements listed on their registration forms." },
-    { q: "How many classes can I register for?", a: "Students can register for a maximum of 3 classes to ensure everyone gets a chance to participate. Please choose your classes carefully to avoid schedule conflicts — slots are given on a first-come, first-served basis." },
-    { q: "Are LEAP classes graded?", a: "No, LEAP classes are completely non-credit and non-graded. They are designed purely for personal enrichment, skill development, and the joy of learning something new." },
-    { q: "What happens if I miss a class I registered for?", a: "While there are no academic penalties, we highly encourage attendance as slots are limited. Repeated absences may affect your priority registration for future LEAP events and deprive another student of the opportunity." },
-    { q: "Can I change my registered classes?", a: "Yes, you can drop a class and register for a different one up until the registration deadline, provided there are still available slots in the new class." },
-    { q: "Are there classes suitable for all skill levels?", a: "Absolutely! LEAP classes are designed for everyone — beginners to advanced. Each class description includes the target skill level so you can find the perfect fit for where you are right now." },
-    { q: "Where do I get help if I have registration issues?", a: "Reach out to the LEAP Operations Team at leap@dlsu.edu.ph or visit us at the SPS Building, Room 302. We're available Monday–Friday, 9AM–5PM throughout the registration period." },
-  ];
-  return (
-    <PageWrapper>
-      <PageHero title="Frequently Asked Questions" subtitle="Everything you need to know before you register" accent="LEAP 2026 · Help Center"/>
-      <main className="container mx-auto px-4 pb-24 max-w-3xl">
-        <div className="faq-list">
-          {faqs.map((faq, i) => (
-            <motion.div key={i} initial={{ opacity:0, y:16 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ delay:i*0.05 }}
-              className={`faq-item ${open===i?'faq-open':''}`}>
-              <button className="faq-question" onClick={() => setOpen(open===i?null:i)}>
-                <span>{faq.q}</span>
-                <div className={`faq-chevron ${open===i?'faq-chevron-open':''}`}>
-                  <ChevronRight size={18}/>
-                </div>
-              </button>
-              <AnimatePresence>
-                {open===i && (
-                  <motion.div initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }} exit={{ height:0, opacity:0 }} transition={{ duration:0.28, ease:[0.22,1,0.36,1] }} style={{ overflow:'hidden' }}>
-                    <p className="faq-answer">{faq.a}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          ))}
-        </div>
-        <motion.div initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} className="faq-cta-card">
-          <p style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.5rem', fontWeight:700, color:'#334b46', marginBottom:'0.5rem' }}>Still have questions?</p>
-          <p style={{ color:'rgba(51,75,70,0.7)', marginBottom:'1.5rem' }}>Our team is always happy to help. Drop us a message.</p>
-          <a href="mailto:leap@dlsu.edu.ph" className="btn-leap-primary" style={{ display:'inline-flex', textDecoration:'none' }}>
-            <Mail size={16}/> Contact the Team
-          </a>
-        </motion.div>
-      </main>
-    </PageWrapper>
-  );
-};
-
-/* ══════════════════════════════════════════════════════
-   CONTACT PAGE
-══════════════════════════════════════════════════════ */
-const ContactPage = () => (
-  <PageWrapper>
-    <PageHero title="Contact Us" subtitle="We're here to help you make the most of LEAP 2026" accent="LEAP 2026 · Get in Touch"/>
-    <main className="container mx-auto px-4 pb-24 max-w-4xl">
-      <div className="contact-grid">
-        <motion.div initial={{ opacity:0, x:-20 }} whileInView={{ opacity:1, x:0 }} viewport={{ once:true }} className="contact-info">
-          {[
-            { icon: MapPin, label:'Visit Us', val:'SPS Building, Room 302\nDe La Salle University, Manila' },
-            { icon: Mail, label:'Email Us', val:'leap@dlsu.edu.ph' },
-            { icon: Clock, label:'Office Hours', val:'Monday – Friday\n9:00 AM – 5:00 PM' },
-            { icon: Users, label:'LEAP Operations Team', val:'Central Student Organization\nDe La Salle University' },
-          ].map((item,i) => (
-            <motion.div key={i} initial={{ opacity:0, y:12 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ delay:i*0.08 }} className="contact-item">
-              <div className="contact-icon-wrap"><item.icon size={20}/></div>
-              <div>
-                <p className="contact-item-label">{item.label}</p>
-                <p className="contact-item-val">{item.val}</p>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-        <motion.div initial={{ opacity:0, x:20 }} whileInView={{ opacity:1, x:0 }} viewport={{ once:true }} className="contact-card">
-          <h3 className="contact-card-title">Send a Message</h3>
-          <p className="contact-card-sub">For general inquiries, partnership opportunities, or technical issues during registration.</p>
-          <div className="contact-field">
-            <label className="contact-label">Your Name</label>
-            <input className="contact-input" placeholder="Juan dela Cruz" type="text"/>
-          </div>
-          <div className="contact-field">
-            <label className="contact-label">DLSU Email</label>
-            <input className="contact-input" placeholder="juandelacruz@dlsu.edu.ph" type="email"/>
-          </div>
-          <div className="contact-field">
-            <label className="contact-label">Message</label>
-            <textarea className="contact-input contact-textarea" placeholder="How can we help you?"/>
-          </div>
-          <button className="btn-leap-primary" style={{ width:'100%', justifyContent:'center' }}>
-            <Mail size={16}/> Send Message
-          </button>
-        </motion.div>
-      </div>
-    </main>
-  </PageWrapper>
+const GlowRing = () => (
+  <div style={{
+    position: 'absolute',
+    inset: -3,
+    borderRadius: 31,
+    background: 'conic-gradient(from 0deg, #fae185, #de9a49, #c07830, #de9a49, #fae185)',
+    animation: 'spinRing 4s linear infinite',
+    zIndex: -1,
+    opacity: 0.7,
+    WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))',
+    mask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))',
+  }} />
 );
 
 /* ══════════════════════════════════════════════════════
-   MAIN APP
+   AMBIENT ORBS — blurred background light blobs
 ══════════════════════════════════════════════════════ */
-interface LeapClass {
-  id: string;
-  title: string;
-  org: string;
-  modality: string;
-  date: string;
-  time: string;
-  venue: string;
-  slots: number;
-  subtheme: string;
-  image: string;
-  orgLogo: string | null;
-  googleFormUrl: string;
-  description: string;
-}
+const AmbientOrbs = () => (
+  <>
+    <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: '#4ab09a', filter: 'blur(70px)', opacity: 0.14, top: '8%', left: '3%', animation: 'orbDrift 9s ease-in-out infinite', pointerEvents: 'none' }} />
+    <div style={{ position: 'absolute', width: 220, height: 220, borderRadius: '50%', background: '#de9a49', filter: 'blur(65px)', opacity: 0.12, top: '15%', right: '5%', animation: 'orbDrift 7s ease-in-out infinite 2.5s', pointerEvents: 'none' }} />
+    <div style={{ position: 'absolute', width: 200, height: 200, borderRadius: '50%', background: '#5ca0a8', filter: 'blur(60px)', opacity: 0.11, bottom: '10%', left: '18%', animation: 'orbDrift 11s ease-in-out infinite 1.2s', pointerEvents: 'none' }} />
+    <style>{`
+      @keyframes spinRing { to { transform: rotate(360deg); } }
+      @keyframes orbDrift { 0%,100%{transform:translate(0,0)} 50%{transform:translate(18px,-14px)} }
+      @keyframes starTwinkleAnim { 0%,100%{opacity:.08;transform:scale(1)} 50%{opacity:.75;transform:scale(1.5)} }
+      @keyframes cardSlideIn { from{opacity:0;transform:scale(.92) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    `}</style>
+  </>
+);
 
-interface UserProfile {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-  role: 'student' | 'admin';
-  registeredClasses: string[];
-}
+/* ══════════════════════════════════════════════════════
+   STAR PARTICLES
+══════════════════════════════════════════════════════ */
+const StarParticles = () => {
+  const stars = Array.from({ length: 26 }, (_, i) => ({
+    x: ((i * 17.3 + (i % 4) * 22) % 92) + 4,
+    y: ((i * 11.9 + (i % 5) * 14) % 72) + 5,
+    size: 1.2 + (i % 3) * 0.7,
+    dur: 2.4 + (i % 5) * 0.55,
+    del: (i * 0.58) % 5.5,
+  }));
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+      {stars.map((s, i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          left: `${s.x}%`, top: `${s.y}%`,
+          width: s.size, height: s.size,
+          borderRadius: '50%',
+          background: '#fae185',
+          boxShadow: `0 0 ${s.size * 3}px ${s.size}px rgba(250,225,133,0.65)`,
+          animation: `starTwinkleAnim ${s.dur}s ease-in-out infinite ${s.del}s`,
+        } as CSSProperties} />
+      ))}
+    </div>
+  );
+};
 
-function LeapApp() {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('title-asc');
-  const [scrolled, setScrolled] = useState(false);
-  const [classes, setClasses] = useState<LeapClass[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [viewingClass, setViewingClass] = useState<{
-    id: string;
-    title: string;
-    org: string;
-    modality: string;
-    date: string;
-    time: string;
-    venue: string;
-    slots: number;
-    subtheme: string;
-    image: string;
-    orgLogo: string | null;
-    googleFormUrl: string;
-    description: string;
-  } | null>(null);
-  const [currentView, setCurrentView] = useState('home');
-  const [activeSubtheme, setActiveSubtheme] = useState<string | null>(null);
-  const [isAdminView, setIsAdminView] = useState(false);
-  const ITEMS_PER_PAGE = 6;
+/* ══════════════════════════════════════════════════════
+   MAIN EVENTS SECTION — fully animated carousel
+══════════════════════════════════════════════════════ */
+const MainEventsSection = () => {
+  const [events, setEvents] = useState<any[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  /* ── SCROLL PARALLAX — mountain zooms as you scroll ── */
   useEffect(() => {
-    const hero = document.querySelector('.hero-bg') as HTMLElement | null;
-    if (!hero) return;
-    const onScroll = () => {
-      const progress = Math.min(window.scrollY / hero.offsetHeight, 1);
-      hero.style.setProperty('--nayon-scale', String(1 + progress * 0.28));
-      hero.style.setProperty('--nayon-ty',    `${progress * 24}px`);
+    const fetchMainEvents = async () => {
+      if (!contentfulClient) return;
+      try {
+        const response = await contentfulClient.getEntries({ content_type: 'mainEvents', include: 2, limit: 5 });
+        if (response.items.length > 0) {
+          const eventList = response.items.map((item: any) => {
+            const pubMat = item.fields.mainEventPosterPublishingMaterial;
+            const mediaAsset = Array.isArray(pubMat) ? pubMat[0] : pubMat;
+            let imgUrl = `https://placehold.co/812x510?text=No+Image+Found`;
+            if (mediaAsset?.fields?.file?.url) {
+              imgUrl = mediaAsset.fields.file.url.startsWith('http')
+                ? mediaAsset.fields.file.url
+                : `https:${mediaAsset.fields.file.url}`;
+            }
+            let formattedDate = '', formattedTime = '';
+            if (item.fields.mainEventStartDate) {
+              const startObj = new Date(item.fields.mainEventStartDate);
+              formattedDate = startObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+              formattedTime = startObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+              if (item.fields.mainEventEndDate) {
+                const endObj = new Date(item.fields.mainEventEndDate);
+                const endDateStr = endObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                if (formattedDate === endDateStr) {
+                  formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+                } else {
+                  formattedDate += ` to ${endDateStr}`;
+                  formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+                }
+              }
+            }
+            const orgLogoMat = item.fields.mainEventOrganizationInChargeLogo;
+            const orgLogoAsset = Array.isArray(orgLogoMat) ? orgLogoMat[0] : orgLogoMat;
+            return {
+              id: item.sys.id,
+              label: item.fields.mainEventTitle || 'Untitled Event',
+              image: imgUrl,
+              org: item.fields.mainEventOrganizationInCharge || '',
+              modality: item.fields.mainEventClassModality || 'Face-to-Face',
+              date: formattedDate,
+              time: formattedTime,
+              venue: item.fields.mainEventVenue || '',
+              slots: item.fields.mainEventNumberOfSlots || 0,
+              subtheme: item.fields.mainEventSubtheme || '',
+              orgLogo: orgLogoAsset?.fields?.file?.url ? `https:${orgLogoAsset.fields.file.url}` : null,
+              googleFormUrl: item.fields.mainEventRegistrationLink || '',
+              description: item.fields.mainEventDescription || ''
+            };
+          });
+          if (eventList.length === 2) {
+            eventList.push({ ...eventList[0], id: `${eventList[0].id}-dup1` });
+            eventList.push({ ...eventList[1], id: `${eventList[1].id}-dup1` });
+          }
+          setEvents(eventList);
+          setActiveIndex(0);
+        }
+      } catch (error) {
+        console.error("Contentful Error (Main Events):", error);
+      }
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+
+    fetchMainEvents();
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const startPolling = () => { if (!intervalId) intervalId = setInterval(fetchMainEvents, 60000); };
+    const stopPolling = () => { if (intervalId) { clearInterval(intervalId); intervalId = null; } };
+    startPolling();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') { fetchMainEvents(); startPolling(); }
+      else { stopPolling(); }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => { document.removeEventListener('visibilitychange', handleVisibilityChange); stopPolling(); };
   }, []);
 
+  const goTo = (idx: number) => {
+    setActiveIndex(idx);
+    if (autoRef.current) clearInterval(autoRef.current);
+    autoRef.current = setInterval(() => setActiveIndex((c) => (c + 1) % events.length), 4500);
+  };
+  const goPrev = () => goTo((activeIndex - 1 + events.length) % events.length);
+  const goNext = () => goTo((activeIndex + 1) % events.length);
+
+  useEffect(() => {
+    if (events.length <= 1) return;
+    autoRef.current = setInterval(() => setActiveIndex((c) => (c + 1) % events.length), 4500);
+    return () => { if (autoRef.current) clearInterval(autoRef.current); };
+  }, [events.length]);
+
+  const totalEvents = events.length;
+
+  if (totalEvents === 0) {
+    return (
+      <section style={{ minHeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="leap-spinner" />
+      </section>
+    );
+  }
+
+  const visibleIndexes = totalEvents === 1
+    ? [0]
+    : [(activeIndex - 1 + totalEvents) % totalEvents, activeIndex, (activeIndex + 1) % totalEvents];
+
+  return (
+    <section style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, padding: '0.75rem 0 1rem' }}>
+      {/* Ambient orbs + star particles */}
+      <AmbientOrbs />
+      <StarParticles />
+      {/* Radial center glow */}
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 65% 60% at 50% 45%, rgba(222,154,73,0.14) 0%, rgba(222,154,73,0) 70%)', pointerEvents: 'none' }} />
+      {/* Bottom fade */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120, background: 'linear-gradient(to bottom, transparent, rgba(14,26,12,0.8))', pointerEvents: 'none' }} />
+
+      <div style={{ position: 'relative', zIndex: 5, maxWidth: 1500, margin: '0 auto', padding: '0 clamp(0.5rem, 2vw, 1rem)' }}>
+        {/* Card fan */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem 0' }}>
+          {visibleIndexes.map((eventIndex, slot) => {
+            const event = events[eventIndex];
+            const isCenter = totalEvents === 1 ? true : slot === 1;
+            const isLeft = slot === 0;
+
+            return (
+              <motion.button
+                key={`${event.id}-slot${slot}`}
+                type="button"
+                onClick={() => goTo(eventIndex)}
+                initial={false}
+                animate={{
+                  scale: isCenter ? 1 : 0.84,
+                  y: isCenter ? 0 : 24,
+                  opacity: isCenter ? 1 : 0.78,
+                  zIndex: isCenter ? 3 : 1,
+                  filter: isCenter ? 'brightness(1) saturate(1)' : 'brightness(0.75) saturate(0.65)',
+                  rotate: isCenter ? 0 : isLeft ? -3.5 : 3.5,
+                }}
+                transition={{ duration: 0.44, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                  width: isCenter ? 'clamp(310px, 43vw, 800px)' : 'clamp(200px, 28vw, 560px)',
+                  height: isCenter ? 'clamp(250px, 34vw, 440px)' : 'clamp(190px, 26vw, 360px)',
+                  borderRadius: 28,
+                  overflow: 'hidden',
+                  border: isCenter ? '1.5px solid rgba(249,236,182,0.52)' : '1px solid rgba(249,236,182,0.15)',
+                  background: '#0a1408',
+                  position: 'relative',
+                  flexShrink: 0,
+                  marginLeft: slot === 0 ? 0 : slot === 1 ? 'clamp(-3rem, -4vw, -2rem)' : 'clamp(-3rem, -4vw, -2rem)',
+                  cursor: isCenter ? 'default' : 'pointer',
+                  transformOrigin: isLeft ? 'right center' : 'left center',
+                }}
+              >
+                {/* Spinning glow ring on center card only */}
+                {isCenter && <GlowRing />}
+
+                <img
+                  src={event.image}
+                  alt={event.label}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  referrerPolicy="no-referrer"
+                />
+
+                {/* Overlay gradient */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: isCenter
+                    ? 'linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.28) 50%, rgba(0,0,0,0.52) 100%)'
+                    : 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.08) 55%, rgba(0,0,0,0.3) 100%)',
+                }} />
+
+                {isCenter && event.org && (
+                  <>
+                    {/* Top badges */}
+                    <div style={{ position: 'absolute', top: 22, left: 22, right: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                        {event.orgLogo ? (
+                          <img src={event.orgLogo} alt={event.org}
+                            style={{ width: 30, height: 30, borderRadius: 8, objectFit: 'cover', border: '2px solid rgba(222,154,73,0.65)', boxShadow: '0 0 12px rgba(222,154,73,0.3)' }}
+                            referrerPolicy="no-referrer" />
+                        ) : (
+                          <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(222,154,73,0.22)', border: '1.5px solid rgba(222,154,73,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.62rem', fontWeight: 800, color: '#de9a49', boxShadow: '0 0 10px rgba(222,154,73,0.25)' }}>
+                            {event.org.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        {event.subtheme && (
+                          <motion.span
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.22, duration: 0.32 }}
+                            style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.56rem', fontWeight: 800, letterSpacing: '0.13em', textTransform: 'uppercase', background: 'rgba(51,75,70,0.78)', color: '#fae185', padding: '0.22rem 0.65rem', borderRadius: 5, backdropFilter: 'blur(10px)', border: '1px solid rgba(250,225,133,0.22)' }}>
+                            {event.subtheme}
+                          </motion.span>
+                        )}
+                      </div>
+                      <motion.div
+                        initial={{ opacity: 0, x: 8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.22, duration: 0.32 }}
+                        style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.13em', background: 'rgba(0,0,0,0.72)', color: '#fae185', padding: '0.22rem 0.75rem', borderRadius: 5, backdropFilter: 'blur(10px)', border: '1px solid rgba(250,225,133,0.15)', boxShadow: '0 0 12px rgba(250,225,133,0.15)' }}>
+                        {event.slots} SLOTS
+                      </motion.div>
+                    </div>
+
+                    {/* Bottom info */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 'clamp(1rem, 2.5vw, 1.75rem)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
+                    >
+                      <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#fae185', marginBottom: '0.28rem', opacity: 0.88 }}>
+                        {event.org}
+                      </p>
+                      <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 'clamp(1rem, 2vw, 1.7rem)', fontWeight: 800, color: '#fff', lineHeight: 1.08, marginBottom: '0.5rem', textShadow: '0 2px 16px rgba(0,0,0,0.7)' }}>
+                        {event.label}
+                      </h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(249,236,182,0.84)', fontSize: '0.68rem', fontFamily: "'DM Sans',sans-serif" }}>
+                          <Calendar size={10} style={{ color: '#fae185', flexShrink: 0 }} />
+                          <span>{event.date} · {event.time}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(249,236,182,0.84)', fontSize: '0.68rem', fontFamily: "'DM Sans',sans-serif" }}>
+                          <MapPin size={10} style={{ color: '#fae185', flexShrink: 0 }} />
+                          <span>{event.venue} ({event.modality})</span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                        <a href={event.googleFormUrl || '#'} target="_blank" rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ background: 'linear-gradient(135deg,#fae185,#de9a49,#c07830)', color: '#1a1008', border: 'none', borderRadius: 8, padding: '0.5rem 1.1rem', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 5, textDecoration: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(222,154,73,0.45)', transition: 'filter .2s, transform .15s' }}>
+                          Register <ExternalLink size={11} />
+                        </a>
+                        <button onClick={(e) => e.stopPropagation()}
+                          style={{ background: 'rgba(15,10,4,0.65)', border: '1px solid rgba(250,225,133,0.45)', color: '#fae185', borderRadius: 8, padding: '0.5rem 1.1rem', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'background .2s' }}>
+                          Learn More <ChevronRight size={11} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* Dots + arrows */}
+        {totalEvents > 1 && (
+          <div style={{ marginTop: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.9rem' }}>
+            <button type="button" aria-label="Previous" onClick={goPrev}
+              style={{ width: 38, height: 38, borderRadius: '50%', border: '1px solid rgba(249,236,182,0.28)', background: 'rgba(12,9,4,0.72)', color: '#f9ecb6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s', backdropFilter: 'blur(8px)' }}>
+              <ChevronLeft size={16} />
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              {events.map((_, index) => (
+                <button key={index} type="button" aria-label={`Event ${index + 1}`}
+                  onClick={() => goTo(index)}
+                  style={{ height: 9, width: index === activeIndex ? 34 : 9, borderRadius: 999, background: index === activeIndex ? '#fae185' : 'rgba(249,236,182,0.32)', border: 'none', cursor: 'pointer', transition: 'all 0.32s ease', boxShadow: index === activeIndex ? '0 0 12px rgba(250,225,133,0.7)' : 'none', padding: 0 }} />
+              ))}
+            </div>
+            <button type="button" aria-label="Next" onClick={goNext}
+              style={{ width: 38, height: 38, borderRadius: '50%', border: '1px solid rgba(249,236,182,0.28)', background: 'rgba(12,9,4,0.72)', color: '#f9ecb6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s', backdropFilter: 'blur(8px)' }}>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
+const LeapApp = () => {
+  interface LeapClass {
+    id: string; title: string; org: string; modality: string; date: string;
+    time: string; venue: string; slots: number; subtheme: string; image: string;
+    orgLogo: string | null; googleFormUrl: string; description: string;
+  }
+  interface UserProfile {
+    uid: string; email: string | null; displayName: string | null;
+    photoURL: string | null; role: 'student' | 'admin'; registeredClasses: string[];
+  }
+
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [classes, setClasses] = useState<LeapClass[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdminView, setIsAdminView] = useState(false);
+  const [currentView, setCurrentView] = useState<'home' | 'about' | 'major-events' | 'classes' | 'faq' | 'contact'>('home');
+  const [scrolled, setScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc'>('title-asc');
+  const [activeSubtheme, setActiveSubtheme] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [viewingClass, setViewingClass] = useState<LeapClass | null>(null);
+  const hasLoggedProfilePermissionIssue = useRef(false);
+
+  const navigateTo = (view: 'home' | 'about' | 'major-events' | 'classes' | 'faq' | 'contact') => {
+    setCurrentView(view); setIsMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const filteredAndSortedClasses: LeapClass[] = useMemo(() => {
-    let result: LeapClass[] = classes.filter((c: LeapClass) =>
+    let result = classes.filter((c) => (
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.org.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.subtheme.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    if (activeSubtheme) {
-      result = result.filter((c: LeapClass) => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
-    }
-    result.sort((a: LeapClass, b: LeapClass) => {
+    ));
+    if (activeSubtheme) result = result.filter((c) => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
+    result.sort((a, b) => {
       if (sortBy === 'title-asc') return a.title.localeCompare(b.title);
       if (sortBy === 'title-desc') return b.title.localeCompare(a.title);
       if (sortBy === 'slots-desc') return b.slots - a.slots;
@@ -1022,31 +1079,45 @@ function LeapApp() {
   }, [classes, searchQuery, sortBy, activeSubtheme]);
 
   const uniqueDays: string[] = useMemo(() => (
-    Array.from(new Set(filteredAndSortedClasses.map((c: LeapClass) => c.date)))
-      .sort((a: string, b: string) => new Date(a).getTime() - new Date(b).getTime())
+    Array.from(new Set(filteredAndSortedClasses.map((c) => c.date)))
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
   ), [filteredAndSortedClasses]);
 
+  const isVerifiedDlsuUser = Boolean(user?.emailVerified && user.email?.toLowerCase().endsWith('@dlsu.edu.ph'));
+  const hasAppAccess = isVerifiedDlsuUser;
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        if (!currentUser.email?.endsWith('@dlsu.edu.ph')) { await signOut(auth); alert("Please use your @dlsu.edu.ph Google account to sign in."); return; }
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        if (userDoc.exists()) { setUserProfile(userDoc.data() as UserProfile); }
-        else {
-          const newProfile: UserProfile = {
-            uid: currentUser.uid,
-            email: currentUser.email,
-            displayName: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-            role: 'student',
-            registeredClasses: [],
-          };
-          await setDoc(doc(db, 'users', currentUser.uid), newProfile);
-          setUserProfile(newProfile);
-        }
-      } else { setUserProfile(null); }
-      setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      void (async () => {
+        try {
+          setUser(currentUser);
+          if (currentUser) {
+            const currentEmail = currentUser.email?.toLowerCase();
+            if (!currentUser.emailVerified || !currentEmail?.endsWith('@dlsu.edu.ph')) {
+              setUserProfile(null); setIsAdminView(false); navigateTo('home');
+              await signOut(auth);
+              alert('Please use a verified @dlsu.edu.ph Google account to sign in.');
+              return;
+            }
+            try {
+              const userDoc = await getDocFromServer(doc(db, 'users', currentUser.uid));
+              if (userDoc.exists()) {
+                setUserProfile(userDoc.data() as UserProfile);
+              } else {
+                const newProfile: UserProfile = { uid: currentUser.uid, email: currentUser.email, displayName: currentUser.displayName, photoURL: currentUser.photoURL, role: 'student', registeredClasses: [] };
+                await setDoc(doc(db, 'users', currentUser.uid), newProfile);
+                setUserProfile(newProfile);
+              }
+            } catch (error: unknown) {
+              const isPermissionDenied = typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'permission-denied';
+              if (isPermissionDenied) { if (!hasLoggedProfilePermissionIssue.current) { console.warn('Firestore profile access denied.'); hasLoggedProfilePermissionIssue.current = true; } }
+              else { console.error('Firestore profile bootstrap failed:', error); }
+              setUserProfile({ uid: currentUser.uid, email: currentUser.email, displayName: currentUser.displayName, photoURL: currentUser.photoURL, role: 'student', registeredClasses: [] });
+            }
+          } else { setUserProfile(null); setIsAdminView(false); setCurrentView('home'); }
+        } catch (error: unknown) { console.error('Auth state handling failed:', error); setUserProfile(null); }
+        finally { setLoading(false); }
+      })();
     });
     return () => unsubscribe();
   }, []);
@@ -1057,12 +1128,18 @@ function LeapApp() {
       if (!contentfulClient) { setLoading(false); return; }
       try {
         const response = await contentfulClient.getEntries({ content_type: 'leapClass2026' });
-        const classList: LeapClass[] = response.items.map((item: { sys: { id: string }; fields: { title?: string; organizationInCharge?: string; classModality?: string; dateAndTime?: string; venue?: string; numberOfSlots?: number; subtheme?: string; posterPublishingMaterial?: { fields: { file?: { url: string } } }; organizationInChargeLogo?: { fields: { file?: { url: string } } }; registrationLink?: string; description?: string } }) => {
+        const classList: LeapClass[] = response.items.map((item: any) => {
           let formattedDate = '', formattedTime = '';
-          if (item.fields.dateAndTime) {
-            const dateObj = new Date(item.fields.dateAndTime);
-            formattedDate = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-            formattedTime = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+          if (item.fields.startDate) {
+            const startObj = new Date(item.fields.startDate);
+            formattedDate = startObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            formattedTime = startObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            if (item.fields.endDate) {
+              const endObj = new Date(item.fields.endDate);
+              const endDateStr = endObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+              if (formattedDate === endDateStr) { formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`; }
+              else { formattedDate += ` to ${endDateStr}`; formattedTime += ` - ${endObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`; }
+            }
           }
           return {
             id: item.sys.id, title: item.fields.title || '', org: item.fields.organizationInCharge || '',
@@ -1079,6 +1156,15 @@ function LeapApp() {
       finally { setLoading(false); }
     };
     fetchClasses();
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const startPolling = () => { if (!intervalId) intervalId = setInterval(fetchClasses, 60000); };
+    const stopPolling = () => { if (intervalId) { clearInterval(intervalId); intervalId = null; } };
+    startPolling();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') { fetchClasses(); startPolling(); } else { stopPolling(); }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => { document.removeEventListener('visibilitychange', handleVisibilityChange); stopPolling(); };
   }, [user]);
 
   useEffect(() => {
@@ -1090,8 +1176,11 @@ function LeapApp() {
   const handleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const email = result.user.email;
-      if (email && !email.endsWith('@dlsu.edu.ph')) { await signOut(auth); alert("Access Denied: Please use your official @dlsu.edu.ph email address to sign in."); return; }
+      const email = result.user.email?.toLowerCase();
+      if (!result.user.emailVerified || !email?.endsWith('@dlsu.edu.ph')) {
+        await signOut(auth);
+        alert('Access Denied: Please use your verified official @dlsu.edu.ph email address to sign in.');
+      }
     } catch (error) { console.error("Sign In Error:", error); }
   };
 
@@ -1100,104 +1189,102 @@ function LeapApp() {
     catch (error) { console.error("Sign Out Error:", error); }
   };
 
-  const renderClassCard = (item: {
-    id: string;
-    title: string;
-    org: string;
-    modality: string;
-    date: string;
-    time: string;
-    venue: string;
-    slots: number;
-    subtheme: string;
-    image: string;
-    orgLogo: string | null;
-    googleFormUrl: string;
-    description: string;
-  }, index: number) => (
+  const renderClassCard = (item: LeapClass, index: number) => (
     <motion.div
       key={item.id}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="leap-class-card flex flex-col cursor-pointer"
+      className={styles.classCardWrapper}
     >
-      <div className="card-header-bar">
-        {item.orgLogo ? (
-          <img src={item.orgLogo} alt={item.org} className="card-org-logo" referrerPolicy="no-referrer"/>
-        ) : (
-          <div className="card-org-logo-placeholder">
-            {item.org.charAt(0).toUpperCase()}
+      <div className={styles.cardImageWrapper}>
+        <img src={item.image} alt={item.title} className={styles.cardImage} referrerPolicy="no-referrer" />
+        <div className={styles.cardImageGradient} />
+        <div className={styles.cardSlotsLabel}>{item.slots} SLOTS</div>
+        <div className={styles.cardOverlayContent}>
+          <div className={styles.cardOverlayTopRow}>
+            {item.orgLogo ? (
+              <img src={item.orgLogo} alt={item.org} className={styles.cardOrgLogo} referrerPolicy="no-referrer" />
+            ) : (
+              <div className={styles.cardOrgLogoPlaceholder}>{item.org.charAt(0).toUpperCase()}</div>
+            )}
+            {item.subtheme && <span className={`${styles.cardBadge} ${styles.cardBadgeTheme}`}>{item.subtheme}</span>}
           </div>
-        )}
-        {item.subtheme && (
-          <span className="card-badge card-badge-theme">{item.subtheme}</span>
-        )}
-        {item.date && (
-          <span className="card-badge card-badge-day">
-            {item.date.split(' ').slice(0,2).join(' ')}
-          </span>
-        )}
-      </div>
-
-      <div className="relative overflow-hidden" style={{ height: '180px' }}>
-        <img src={item.image} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-        <div className="absolute bottom-3 right-3" style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', borderRadius:4, padding:'2px 8px', fontSize:'0.6rem', fontWeight:800, letterSpacing:'0.12em', color:'#fae185', fontFamily:"'DM Sans',sans-serif" }}>
-          {item.slots} SLOTS
-        </div>
-      </div>
-
-      <div className="p-5 flex flex-col flex-grow">
-        <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'0.65rem', fontWeight:800, letterSpacing:'0.16em', textTransform:'uppercase', color:'#de9a49', marginBottom:'0.35rem' }}>
-          {item.org}
-        </p>
-        <h3 className="text-lg font-bold text-leap-dark leading-tight mb-3" style={{ fontFamily: "'Playfair Display', serif" }}
-          onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-          {item.title}
-        </h3>
-        <div className="space-y-1.5 mb-4 text-sm text-leap-dark/60" style={{ fontSize:'0.78rem' }}>
-          <div className="flex items-center gap-2"><Calendar size={12} className="text-leap-gold flex-shrink-0" /><span>{item.date} · {item.time}</span></div>
-          <div className="flex items-center gap-2"><MapPin size={12} className="text-leap-gold flex-shrink-0" /><span>{item.venue} ({item.modality})</span></div>
-        </div>
-        <div className="mt-auto flex flex-col gap-1.5">
-          <a href={item.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="leap-register-btn">
-            Register via Google Forms <ExternalLink size={14} />
-          </a>
-          <button
-            onClick={() => { setViewingClass(item); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className="learn-more-link">
-            Learn More <ChevronRight size={14} />
-          </button>
+          <p className={styles.cardOrganization}>{item.org}</p>
+          <h3 className={styles.cardTitle} style={{ fontFamily: "'Playfair Display', serif" }}
+            onClick={() => { setViewingClass(item)}}>
+            {item.title}
+          </h3>
+          <div className={styles.cardMetadataOverlay}>
+            <div className={styles.metadataItem}><Calendar size={12} className={styles.metadataIcon} /><span>{item.date} · {item.time}</span></div>
+            <div className={styles.metadataItem}><MapPin size={12} className={styles.metadataIcon} /><span>{item.venue} ({item.modality})</span></div>
+          </div>
+          <div className={styles.cardActionsOverlay}>
+            <a href={item.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className={styles.registerBtnOverlay}>
+              Register <ExternalLink size={13} />
+            </a>
+            <button onClick={() => { setViewingClass(item)}} className={styles.learnMoreBtnOverlay}>
+              Learn More <ChevronRight size={13} />
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>
   );
 
   const AdminDashboard = () => (
-    <div className="container mx-auto px-4 py-12">
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => setIsAdminView(false)} className="p-2 hover:bg-leap-tan/30 rounded-full transition-colors"><ArrowLeft size={24} /></button>
-        <h2 className="text-3xl font-bold text-leap-dark" style={{ fontFamily: "'Playfair Display', serif" }}>Admin Dashboard</h2>
+    <div className={styles.adminWrapper}>
+      <div className={styles.adminHeader}>
+        <button onClick={() => setIsAdminView(false)} className={styles.adminBackBtn}><ArrowLeft size={24} /></button>
+        <h2 className={styles.adminTitle} style={{ fontFamily: "'Playfair Display', serif" }}>Admin Dashboard</h2>
       </div>
-      <div className="glass-card p-12 rounded-3xl text-center max-w-2xl mx-auto">
-        <div className="leap-detail-icon-wrap w-20 h-20 mx-auto mb-6" style={{ width: 80, height: 80 }}><Edit size={36} /></div>
-        <h3 className="text-2xl font-bold text-leap-dark mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>Classes are managed in Contentful</h3>
-        <p className="text-leap-olive mb-8 text-lg">To add, edit, or delete classes, please use the Contentful CMS dashboard. The changes will automatically reflect here.</p>
-        <a href="https://app.contentful.com" target="_blank" rel="noopener noreferrer" className="btn-leap-primary inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold">Open Contentful <ExternalLink size={20} /></a>
+      <div className={styles.adminCard}>
+        <div className={styles.adminIconWrap} style={{ width: 80, height: 80 }}><Edit size={36} /></div>
+        <h3 className={styles.adminCardTitle} style={{ fontFamily: "'Playfair Display', serif" }}>Classes are managed in Contentful</h3>
+        <p className={styles.adminCardDesc}>To add, edit, or delete classes, please use the Contentful CMS dashboard.</p>
+        <a href="https://app.contentful.com" target="_blank" rel="noopener noreferrer" className={styles.adminCTABtn}>Open Contentful <ExternalLink size={20} /></a>
+      </div>
+    </div>
+  );
+
+  const Contact = () => (
+    <div style={{ padding: '9rem 1.5rem 4rem', background: '#f5edcc', minHeight: '70vh' }}>
+      <div style={{ maxWidth: 880, margin: '0 auto' }}>
+        <div style={{ background: 'rgba(255,255,255,0.72)', borderRadius: 28, padding: '2rem', border: '1px solid rgba(222,154,73,0.22)', boxShadow: '0 16px 48px rgba(51,75,70,0.08)' }}>
+          <p style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#de9a49', marginBottom: '0.75rem' }}>Support</p>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(2rem, 4vw, 3.2rem)', color: '#334b46', marginBottom: '1rem' }}>Contact the LEAP team</h2>
+          <p style={{ color: '#567069', fontSize: '1rem', lineHeight: 1.7, maxWidth: 680, marginBottom: '1.5rem' }}>Reach out for registration help, class concerns, or general questions.</p>
+          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginBottom: '1.5rem' }}>
+            <div style={{ background: '#fff', borderRadius: 20, padding: '1.1rem 1.2rem', border: '1px solid rgba(222,154,73,0.18)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <Mail size={18} color="#de9a49" />
+                <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#334b46' }}>Email</h3>
+              </div>
+              <p style={{ margin: 0, color: '#567069' }}>leap@dlsu.edu.ph</p>
+            </div>
+            <div style={{ background: '#fff', borderRadius: 20, padding: '1.1rem 1.2rem', border: '1px solid rgba(222,154,73,0.18)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <Clock size={18} color="#de9a49" />
+                <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#334b46' }}>Response Time</h3>
+              </div>
+              <p style={{ margin: 0, color: '#567069' }}>Within 1-2 business days</p>
+            </div>
+          </div>
+          <a href="mailto:leap@dlsu.edu.ph" className={styles.navRegisterBtn} style={{ display: 'inline-flex', textDecoration: 'none' }}>
+            <Mail size={16} /> Send Email
+          </a>
+        </div>
       </div>
     </div>
   );
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-leap-cream">
-        <div className="flex flex-col items-center gap-4">
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingContent}>
           <div className="leap-spinner" />
-          <p className="text-leap-olive text-sm font-medium tracking-wide uppercase">Loading LEAP 2026…</p>
+          <p className={styles.loadingText}>Loading LEAP 2026…</p>
         </div>
       </div>
     );
@@ -1208,321 +1295,319 @@ function LeapApp() {
   }
 
   const navClass = scrolled
-    ? 'scrolled-nav py-2'
-    : currentView === 'home'
-      ? 'bg-transparent py-4'
-      : 'light-page-nav py-4';
+  ? 'scrolled-nav py-2'
+  : currentView === 'home'
+    ? 'bg-transparent py-4'
+    : 'dark-page-nav py-4';
+
+  const HeroSection = (
+    <header className={styles.heroSection}>
+      <div className={styles.heroBackdropContainer}>
+        <div className={styles.heroBackdropTop} />
+        <div className={styles.heroBackdropRight} />
+      </div>
+      <NayonScene />
+      <Fireflies />
+      <div className={styles.heroContent}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.88, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-4 fade-up"
+        >
+          <img src={leapLogo} alt="LEAP 2026 — Isang Nayon, Isang Layunin" className={styles.heroLogo} />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-4 fade-up delay-1"
+        >
+          {/* ANIMATED TAGLINE — typewriter effect */}
+          <AnimatedTagline />
+          {!user && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'center', width: '100%' }}
+            >
+              <button 
+                onClick={handleSignIn} 
+                className="btn-leap-primary" 
+                style={{ 
+                  padding: '1rem 2.5rem', 
+                  fontSize: '1rem', 
+                  borderRadius: '1rem', 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  fontWeight: 800,
+                  boxShadow: '0 8px 24px rgba(222,154,73,0.25)',
+                  cursor: 'pointer'
+                }}
+              >
+                <LogIn size={20} /> Register / Sign In
+              </button>
+            </motion.div>
+          )}
+        </motion.div>
+        {hasAppAccess && currentView === 'home' && (
+          <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.45rem', marginLeft: '50%', transform: 'translateX(-50%)' }}>
+            <MainEventsSection />
+          </div>
+        )}
+      </div>
+    </header>
+  );
+
+  /* ── SECTION TRANSITION: hero (dark green) → subthemes (dark green) → classes (cream) ── */
+  const HeroExtras = hasAppAccess && currentView === 'home' ? (
+    <div style={{ background: 'transparent', padding: '0' }}>
+      {/* Gradient bridge: dark → subthemes dark → cream */}
+      <div style={{
+        width: '100%',
+        background: 'linear-gradient(180deg, #0e1a0c 0%, #132015 35%, #1a2e1e 65%, #2a3d22 85%, #fffdf6 100%)',
+        paddingBottom: '1px',
+      }}>
+        <div style={{ width: 'min(1500px, 98vw)', margin: '0 auto', position: 'relative' }}>
+          <div className={styles.subthemesBackdropTop} />
+          <div className={styles.subthemesBackdropRight} />
+          <SubthemesStrip activeTheme={activeSubtheme} onSelect={(t) => { setActiveSubtheme(t); setCurrentPage(1); setSelectedDay(null); }} compact />
+          {activeSubtheme && (
+            <div style={{ textAlign: 'center', paddingBottom: '1rem' }}>
+              <button
+                onClick={() => { setActiveSubtheme(null); setCurrentPage(1); setSelectedDay(null); }}
+                style={{ background: 'rgba(222,154,73,0.15)', border: '1px solid rgba(222,154,73,0.4)', borderRadius: 999, padding: '0.28rem 0.9rem', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fae185', cursor: 'pointer' }}
+              >
+                Clear {activeSubtheme}
+              </button>
+            </div>
+          )}
+        </div>
+        {/* Smooth wave divider into cream */}
+        {/* Rich layered transition into classes */}
+<div style={{ position: 'relative', lineHeight: 0, marginTop: '-2px', overflow: 'hidden' }}>
+  {/* Glow bloom above the wave */}
+  <div style={{
+    position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+    width: '60%', height: 80,
+    background: 'radial-gradient(ellipse 80% 100% at 50% 100%, rgba(222,154,73,0.18) 0%, transparent 70%)',
+    pointerEvents: 'none', zIndex: 1,
+  }} />
+  {/* Palay silhouette row */}
+  <svg viewBox="0 0 1440 90" preserveAspectRatio="none"
+    style={{ width: '100%', height: 90, display: 'block', position: 'relative', zIndex: 2 }}>
+    <defs>
+      <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#1a2e1e" stopOpacity="1"/>
+        <stop offset="100%" stopColor="#fffdf6" stopOpacity="1"/>
+      </linearGradient>
+      <linearGradient id="stemGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#3a6a22"/>
+        <stop offset="100%" stopColor="#2a4a18"/>
+      </linearGradient>
+    </defs>
+
+    {/* Back wave layer - dark */}
+    <path d="M0,20 C180,50 360,10 540,30 C720,50 900,15 1080,35 C1260,55 1380,25 1440,38 L1440,90 L0,90 Z"
+      fill="#132015" opacity="0.7"/>
+
+    {/* Palay stalks scattered along the boundary */}
+    {[40,110,190,270,340,420,510,590,670,760,840,920,1010,1090,1180,1260,1340,1410].map((x, i) => {
+      const h = 28 + (i % 4) * 6;
+      const lean = ((i % 3) - 1) * 4;
+      const grainY = [0, 5, 10, 15, 20];
+      return (
+        <g key={i} transform={`translate(${x}, ${55 - h})`} opacity="0.55">
+          <path d={`M0,${h} Q${lean},${h/2} ${lean*0.6},0`}
+            stroke="url(#stemGrad)" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+          {grainY.map((gy, gi) => (
+            <ellipse key={gi}
+              cx={lean * (gy / h) + (gi % 2 === 0 ? -3 : 3)}
+              cy={gy}
+              rx="2.8" ry="5"
+              fill="#de9a49" opacity="0.7"
+              transform={`rotate(${-18 + (gi%2)*36}, ${lean*(gy/h)+(gi%2===0?-3:3)}, ${gy})`}
+            />
+          ))}
+        </g>
+      );
+    })}
+
+    {/* Mid wave */}
+    <path d="M0,35 C200,15 400,55 600,35 C800,15 1000,50 1200,30 C1320,18 1400,40 1440,45 L1440,90 L0,90 Z"
+      fill="#1d2e1a" opacity="0.5"/>
+
+    {/* Front wave - blends into cream */}
+    <path d="M0,48 C160,28 320,62 520,45 C720,28 880,58 1080,42 C1240,30 1360,52 1440,56 L1440,90 L0,90 Z"
+      fill="url(#waveGrad1)"/>
+
+    {/* Gold shimmer line along crest */}
+    <path d="M0,48 C160,28 320,62 520,45 C720,28 880,58 1080,42 C1240,30 1360,52 1440,56"
+      stroke="rgba(222,154,73,0.28)" strokeWidth="1" fill="none"/>
+
+    {/* Tiny gold sparkle dots along the crest */}
+    {[120,280,450,620,790,960,1130,1300].map((x, i) => {
+      const yBase = i % 2 === 0 ? 44 : 50;
+      return <circle key={i} cx={x} cy={yBase} r="1.5" fill="#fae185" opacity="0.45"/>;
+    })}
+  </svg>
+</div>
+      </div>
+    </div>
+  ) : null;
+
+  if (!hasAppAccess) {
+    return (
+      <div className={styles.appContainer}>
+        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 bg-transparent py-4`}>
+          <div className={styles.navInner}>
+            <div className={styles.navLogo} onClick={() => window.scrollTo(0, 0)}>
+              <img src={leapLogo} alt="LEAP 2026" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
+            </div>
+            <div />
+          </div>
+        </nav>
+        {HeroSection}
+        <CustomCursor />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-
-      {/* NAV */}
+    <div className={styles.appContainer}>
+      {/* ── NAV ── */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${navClass}`}>
-        <div className="leap-nav-inner">
-          <div className="leap-nav-logo cursor-pointer" onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }}>
-            <img src={leapLogo} alt="LEAP 2026" className="nav-logo-img" style={{ mixBlendMode: 'screen' }} />
+        <div className={styles.navInner}>
+          <div className={styles.navLogo} onClick={() => navigateTo('home')}>
+            <img src={leapLogo} alt="LEAP 2026" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
           </div>
-          <div className="leap-nav-center hidden md:flex">
-            <button onClick={() => { setCurrentView('home'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'home' ? 'active' : ''}`}>Home</button>
-            <button onClick={() => { setCurrentView('about'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'about' ? 'active' : ''}`}>Overview</button>
-            <button onClick={() => { setCurrentView('major-events'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'major-events' ? 'active' : ''}`}>Featured</button>
-            <button onClick={() => { setCurrentView('home'); window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0); }} className="nav-link">Classes</button>
-            <button onClick={() => { setCurrentView('faq'); window.scrollTo(0, 0); }} className={`nav-link ${currentView === 'faq' ? 'active' : ''}`}>FAQs</button>
+          <div className={styles.navCenter}>
+            <button onClick={() => navigateTo('home')} className={`nav-link ${currentView === 'home' ? 'active' : ''}`}>Home</button>
+            <button onClick={() => navigateTo('about')} className={`nav-link ${currentView === 'about' ? 'active' : ''}`}>Overview</button>
+            <button onClick={() => navigateTo('major-events')} className={`nav-link ${currentView === 'major-events' ? 'active' : ''}`}>Featured</button>
+            <button onClick={() => navigateTo('classes')} className={`nav-link ${currentView === 'classes' ? 'active' : ''}`}>Classes</button>
+            <button onClick={() => navigateTo('faq')} className={`nav-link ${currentView === 'faq' ? 'active' : ''}`}>FAQs</button>
             {userProfile?.role === 'admin' && <button onClick={() => setIsAdminView(true)} className="leap-admin-link">Admin</button>}
           </div>
           <div className="leap-nav-right hidden md:flex">
-            <button className="nav-icon-btn" onClick={() => { setCurrentView('home'); setTimeout(() => { document.getElementById('classes-section')?.scrollIntoView({ behavior:'smooth' }); }, 100); }} title="Search classes">
-              <Search size={15}/>
-            </button>
-            <button className="nav-icon-btn" title="Saved classes"><Bookmark size={15}/></button>
+            <button className="nav-icon-btn" onClick={() => navigateTo('classes')} title="Search classes"><Search size={15} /></button>
+            <button className="nav-icon-btn" title="Saved classes"><Bookmark size={15} /></button>
             {user ? (
               <>
                 <button className="nav-icon-btn" title={user.displayName || 'Profile'}>
                   {user.photoURL
-                    ? <img src={user.photoURL} alt="Profile" style={{ width:20, height:20, borderRadius:'50%', objectFit:'cover' }} referrerPolicy="no-referrer"/>
-                    : <User size={15}/>
-                  }
+                    ? <img src={user.photoURL} alt="Profile" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+                    : <User size={15} />}
                 </button>
-                <button onClick={handleSignOut} className="btn-leap-primary" style={{ padding:'0.45rem 1rem', fontSize:'0.72rem', borderRadius:6, gap:'0.4rem' }}>
-                  <LogOut size={13}/> Sign Out
+                <button onClick={handleSignOut} className="btn-leap-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.72rem', borderRadius: 6, gap: '0.4rem' }}>
+                  <LogOut size={13} /> Sign Out
                 </button>
               </>
             ) : (
               <>
-                <button className="nav-icon-btn" title="Sign in" onClick={handleSignIn}><User size={15}/></button>
-                <button onClick={handleSignIn} className="btn-leap-primary" style={{ padding:'0.45rem 1rem', fontSize:'0.72rem', borderRadius:6, gap:'0.4rem' }}>
-                  <LogIn size={13}/> Register
+                <button className="nav-icon-btn" title="Sign in" onClick={handleSignIn}><User size={15} /></button>
+                <button onClick={handleSignIn} className="btn-leap-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.72rem', borderRadius: 6, gap: '0.4rem' }}>
+                  <LogIn size={13} /> Register
                 </button>
               </>
             )}
           </div>
-          <div className="flex md:hidden" style={{ justifySelf:'end' }}>
-            <button className="p-2" style={{ color: currentView === 'home' && !scrolled ? '#f9ecb6' : '#334b46' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <div className={styles.navMobileToggle}>
+            <button
+              className={styles.navMobileBtn}
+              style={{ color: currentView === 'home' && !scrolled ? '#f9ecb6' : '#334b46' }}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            >
               {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
         </div>
       </nav>
 
-      {/* MOBILE MENU */}
+      {/* ── MOBILE MENU ── */}
       <AnimatePresence>
         {isMenuOpen && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-40 leap-mobile-menu pt-24 px-6 md:hidden">
-            <div className="flex flex-col gap-6 text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: '#f9ecb6' }}>
-              <button onClick={() => { setCurrentView('home'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">Home</button>
-              <button onClick={() => { setCurrentView('about'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">Overview</button>
-              <button onClick={() => { setCurrentView('major-events'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">Featured</button>
-              <button onClick={() => { setCurrentView('home'); setIsMenuOpen(false); window.setTimeout(() => window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0), 100); }} className="text-left hover:text-leap-yellow transition-colors">Classes</button>
-              <button onClick={() => { setCurrentView('faq'); setIsMenuOpen(false); window.scrollTo(0, 0); }} className="text-left hover:text-leap-yellow transition-colors">FAQs</button>
-              {userProfile?.role === 'admin' && <button onClick={() => { setIsAdminView(true); setIsMenuOpen(false); }} className="text-left leap-admin-link text-2xl">Admin Dashboard</button>}
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className={styles.mobileMenu}>
+            <div className={styles.mobileMenuContent}>
+              <button onClick={() => { navigateTo('home'); setIsMenuOpen(false); }} className={styles.mobileMenuItem}>Home</button>
+              <button onClick={() => { navigateTo('about'); setIsMenuOpen(false); }} className={styles.mobileMenuItem}>Overview</button>
+              <button onClick={() => { navigateTo('major-events'); setIsMenuOpen(false); }} className={styles.mobileMenuItem}>Featured</button>
+              <button onClick={() => { navigateTo('classes'); setIsMenuOpen(false); }} className={styles.mobileMenuItem}>Classes</button>
+              <button onClick={() => { navigateTo('faq'); setIsMenuOpen(false); }} className={styles.mobileMenuItem}>FAQs</button>
+              {userProfile?.role === 'admin' && <button onClick={() => { setIsAdminView(true); setIsMenuOpen(false); }} className={`${styles.mobileMenuItem} ${styles.adminLink}`}>Admin Dashboard</button>}
               {user ? (
-                <button onClick={handleSignOut} className="btn-leap-primary py-4 rounded-2xl shadow-xl mt-4 flex items-center justify-center gap-2 text-lg"><LogOut size={22} /> Sign Out</button>
+                <button onClick={handleSignOut} className={styles.mobileMenuSignOutBtn}><LogOut size={22} /> Sign Out</button>
               ) : (
-                <button onClick={handleSignIn} className="btn-leap-primary py-4 rounded-2xl shadow-xl mt-4 flex items-center justify-center gap-2 text-lg"><LogIn size={22} /> Sign In</button>
+                <button onClick={handleSignIn} className={styles.mobileMenuSignInBtn}><LogIn size={22} /> Sign In</button>
               )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* ── ROUTES ── */}
       {currentView === 'home' && (
-        <main className="flex-grow">
-          {/* HERO */}
-          <header className="relative overflow-hidden hero-bg" style={{ minHeight: '100vh', paddingTop: '7rem', paddingBottom: 'clamp(140px, 34vw, 490px)' }}>
-            <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-              <div className="absolute top-16 left-8 w-72 h-72 rounded-full blur-3xl animate-pulse" style={{ background: 'rgba(222,154,73,0.08)', animationDuration: '4s' }} />
-              <div className="absolute top-24 right-12 w-80 h-80 rounded-full blur-3xl animate-pulse" style={{ background: 'rgba(74,176,154,0.06)', animationDuration: '5.5s', animationDelay: '1s' }} />
-            </div>
-            <Fireflies />
-            <div className="container mx-auto text-center max-w-4xl relative" style={{ zIndex: 2 }}>
-              <motion.div initial={{ opacity: 0, scale: 0.88, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="mb-6 fade-up">
-                <img src={leapLogo} alt="LEAP 2026 — Isang Nayon, Isang Layunin" className="leap-logo-hero" />
-              </motion.div>
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}>
-                <span className="leap-eyebrow mb-6 inline-block fade-up delay-1">Isang Nayon, Isang Layunin</span>
-                <p className="fade-up delay-2" style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 300, fontSize: 'clamp(1rem,2.2vw,1.2rem)', color: 'rgba(224,210,175,0.72)', maxWidth: '540px', margin: '0.75rem auto 2.5rem', lineHeight: 1.8 }}>
-                  Discover over 200 unique classes and events. Join your community in a week of alternative learning and growth.
-                </p>
-                {!user ? (
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center fade-up delay-3">
-                    <button onClick={handleSignIn} className="btn-leap-primary px-10 py-4 rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center gap-2">
-                      Sign In with DLSU Account <ChevronRight size={20} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center fade-up delay-3">
-                    <a href="#classes-section" className="btn-leap-primary px-10 py-4 rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center gap-2">Register Now <ChevronRight size={20} /></a>
-                    <button onClick={() => window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0)} className="btn-leap-secondary px-10 py-4 rounded-2xl font-bold text-lg">View Schedule</button>
-                  </div>
-                )}
-                <HeroStats />
-              </motion.div>
-            </div>
-            <NayonScene />
-          </header>
-
-          {/* SEARCH BAR */}
-          <section id="classes" className="search-section sticky top-16 z-30 py-4 px-4">
-            <div className="container mx-auto max-w-5xl">
-              <div className="flex flex-col md:flex-row gap-3">
-                <div className="relative flex-grow">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-leap-olive" size={18} />
-                  <input type="text" placeholder="Search events, workshops, or themes…" className="leap-search w-full pl-12 pr-4 py-3.5" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
-                </div>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Sort events" className="leap-select px-5 py-3.5 appearance-none">
-                  <option value="title-asc">Sort: Title (A–Z)</option>
-                  <option value="title-desc">Sort: Title (Z–A)</option>
-                  <option value="slots-desc">Sort: Most Slots</option>
-                  <option value="slots-asc">Sort: Fewest Slots</option>
-                </select>
-              </div>
-            </div>
-          </section>
-
-          <MainEventsSection />
-
-          <SubthemesStrip activeTheme={activeSubtheme} onSelect={(t) => { setActiveSubtheme(t); setCurrentPage(1); setSelectedDay(null); }} />
-
-          {/* CLASSES SECTION */}
-          <section id="classes-section">
-            {!user ? (
-              <div className="container mx-auto px-4 py-16">
-                <div className="leap-info-card p-12 rounded-3xl text-center max-w-xl mx-auto">
-                  <div className="leap-detail-icon-wrap w-16 h-16 mx-auto mb-6" style={{ width: 64, height: 64 }}><Info size={32} /></div>
-                  <h3 className="text-2xl font-bold text-leap-dark mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Sign in to see classes</h3>
-                  <p className="text-leap-olive mb-8 text-lg">You must be signed in with your DLSU account to view and register for LEAP classes.</p>
-                  <button onClick={handleSignIn} className="btn-leap-primary px-10 py-4 rounded-2xl font-bold text-lg shadow-xl">Sign In Now</button>
-                </div>
-              </div>
-            ) : viewingClass ? (
-              <div className="container mx-auto px-4 py-12 max-w-4xl">
-                <button onClick={() => { setViewingClass(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="leap-see-more mb-8"><ArrowLeft size={16} /> Back to Classes</button>
-                <div className="glass-card rounded-3xl overflow-hidden">
-                  <div className="h-80 w-full relative">
-                    <img src={viewingClass.image} alt={viewingClass.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                    <div className="absolute top-6 left-6 flex gap-2 items-center">
-                      {viewingClass.orgLogo ? (
-                        <img src={viewingClass.orgLogo} alt={viewingClass.org} style={{ width:32,height:32,borderRadius:6,objectFit:'cover',border:'2px solid rgba(222,154,73,0.5)' }} referrerPolicy="no-referrer"/>
-                      ) : null}
-                      <span className="leap-detail-badge">{viewingClass.subtheme}</span>
-                    </div>
-                  </div>
-                  <div className="p-10">
-                    <h1 className="text-4xl font-bold text-leap-dark mb-3" style={{ fontFamily: "'Playfair Display', serif" }}>{viewingClass.title}</h1>
-                    <p className="text-base text-leap-rust font-semibold uppercase tracking-wide mb-8">Organized by {viewingClass.org}</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 text-leap-dark">
-                          <div className="leap-detail-icon-wrap"><Calendar size={20} /></div>
-                          <div><p className="text-xs text-leap-olive font-bold uppercase tracking-widest mb-0.5">Date & Time</p><p className="font-semibold">{viewingClass.date} · {viewingClass.time}</p></div>
-                        </div>
-                        <div className="flex items-center gap-3 text-leap-dark">
-                          <div className="leap-detail-icon-wrap"><MapPin size={20} /></div>
-                          <div><p className="text-xs text-leap-olive font-bold uppercase tracking-widest mb-0.5">Location</p><p className="font-semibold">{viewingClass.venue} ({viewingClass.modality})</p></div>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 text-leap-dark">
-                          <div className="leap-detail-icon-wrap"><Users size={20} /></div>
-                          <div><p className="text-xs text-leap-olive font-bold uppercase tracking-widest mb-0.5">Available Slots</p><p className="font-semibold">{viewingClass.slots} slots</p></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mb-10">
-                      <h3 className="text-2xl font-bold text-leap-dark mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>About this class</h3>
-                      <p className="text-leap-dark/80 leading-relaxed text-lg">{viewingClass.description || "No description provided for this class."}</p>
-                    </div>
-                    <a href={viewingClass.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer" className="btn-leap-primary w-full md:w-auto inline-flex px-10 py-5 rounded-2xl font-bold text-lg items-center justify-center gap-3">Register via Google Forms <ExternalLink size={22} /></a>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="leap-days-layout" style={{ minHeight: '60vh' }}>
-                <aside className="leap-days-sidebar">
-                  <div className="leap-days-sidebar-title">LEAP<br/>Days</div>
-                  {uniqueDays.length === 0 ? (
-                    <p style={{ padding:'1rem 1.5rem', fontFamily:"'DM Sans',sans-serif", fontSize:'0.82rem', color:'rgba(124,107,75,0.6)' }}>No days found.</p>
-                  ) : (
-                    uniqueDays.map((date: string, dayIndex: number) => {
-                      const count = filteredAndSortedClasses.filter((c: LeapClass) => c.date === date).length;
-                      return (
-                        <button
-                          key={date}
-                          className={`day-sidebar-item w-full text-left ${selectedDay === date ? 'active' : ''}`}
-                          onClick={() => { setSelectedDay(date === selectedDay ? null : date); setCurrentPage(1); }}
-                        >
-                          <span className="day-sidebar-num">Day {String(dayIndex + 1).padStart(2,'0')}</span>
-                          <span className="day-sidebar-name">{date.split(',')[0]}</span>
-                          <span className="day-sidebar-count">{count}</span>
-                        </button>
-                      );
-                    })
-                  )}
-                </aside>
-                <main className="leap-classes-main">
-                  {selectedDay === null ? (
-                    <div>
-                      {uniqueDays.map((date: string, dayIndex: number) => {
-                        const dayClasses = filteredAndSortedClasses.filter((c: LeapClass) => c.date === date);
-                        const previewClasses = dayClasses.slice(0, 3);
-                        return (
-                          <div key={date} className="mb-14">
-                            <div className="flex justify-between items-end mb-6">
-                              <div>
-                                <p className="day-eyebrow">Day {dayIndex + 1}</p>
-                                <h2 className="leap-day-label">{date}</h2>
-                                <p className="leap-day-count mt-1">{dayClasses.length} classes available</p>
-                              </div>
-                              {dayClasses.length > 3 && (
-                                <button onClick={() => { setSelectedDay(date); setCurrentPage(1); }} className="leap-see-more">
-                                  See All <ChevronRight size={16} />
-                                </button>
-                              )}
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                              {previewClasses.map((item: LeapClass, index: number) => renderClassCard(item, index))}
-                            </div>
-                            {dayIndex < uniqueDays.length - 1 && (
-                              <div className="leap-divider"><div className="leap-divider-icon" /></div>
-                            )}
-                          </div>
-                        );
-                      })}
-                      {filteredAndSortedClasses.length === 0 && (
-                        <div className="text-center py-16 text-leap-olive">
-                          <p style={{ fontFamily:"'Playfair Display',serif", fontSize:'1.4rem', fontWeight:700, marginBottom:'0.5rem' }}>No classes found</p>
-                          <p style={{ fontSize:'0.9rem' }}>Try adjusting your search or filters.</p>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="flex items-center gap-4 mb-8">
-                        <button onClick={() => { setSelectedDay(null); setCurrentPage(1); }} className="p-2 hover:bg-leap-tan/30 rounded-full transition-colors"><ArrowLeft size={24} /></button>
-                        <div>
-                          <p className="day-eyebrow">All Classes</p>
-                          <h2 className="leap-day-label">{selectedDay}</h2>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                        {filteredAndSortedClasses.filter((c: LeapClass) => c.date === selectedDay)
-                          .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-                          .map((item: LeapClass, index: number) => renderClassCard(item, index))}
-                      </div>
-                      {Math.ceil(filteredAndSortedClasses.filter((c: LeapClass) => c.date === selectedDay).length / ITEMS_PER_PAGE) > 1 && (
-                        <div className="flex justify-center items-center gap-4">
-                          <button disabled={currentPage === 1} onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="leap-page-btn px-6 py-3 font-bold flex items-center gap-2"><ChevronLeft size={16}/> Prev</button>
-                          <span className="font-bold text-leap-dark text-sm">Page {currentPage} of {Math.ceil(filteredAndSortedClasses.filter((c: LeapClass) => c.date === selectedDay).length / ITEMS_PER_PAGE)}</span>
-                          <button disabled={currentPage === Math.ceil(filteredAndSortedClasses.filter((c: LeapClass) => c.date === selectedDay).length / ITEMS_PER_PAGE)} onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="leap-page-btn px-6 py-3 font-bold flex items-center gap-2">Next <ChevronRight size={16}/></button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </main>
-              </div>
-            )}
-          </section>
-        </main>
+        <Home
+          user={user} classes={classes}
+          searchQuery={searchQuery} onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+          sortBy={sortBy} onSortChange={(s) => setSortBy(s)}
+          filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
+          selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
+          viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c) }}
+          onSignIn={handleSignIn} onHeroScroll={() => navigateTo('classes')}
+          HeroSection={HeroSection} HeroExtras={HeroExtras} renderClassCard={renderClassCard}
+        />
       )}
+      {currentView === 'about' && <About />}
+      {currentView === 'major-events' && <MainEvents />}
+      {currentView === 'classes' && (
+        <Classes
+          user={user} searchQuery={searchQuery} onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+          sortBy={sortBy} onSortChange={(s) => setSortBy(s)}
+          filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
+          selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
+          currentPage={currentPage} onPageChange={(p) => { setCurrentPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c) }}
+          onSignIn={handleSignIn} renderClassCard={renderClassCard}
+        />
+      )}
+      {currentView === 'faq' && <FAQs />}
+      {currentView === 'contact' && <Contact />}
 
-      {currentView === 'about' && <AboutPage />}
-      {currentView === 'major-events' && <MajorEventsPage />}
-      {currentView === 'faq' && <FAQPage />}
-      {currentView === 'contact' && <ContactPage />}
-
-      {/* FOOTER */}
-      <footer className="leap-footer text-leap-cream py-16 px-4">
-        <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <img src={leapLogo} alt="LEAP 2026" className="h-10 w-auto" style={{ mixBlendMode: 'screen', filter: 'drop-shadow(0 2px 8px rgba(222,154,73,0.5)) brightness(1.1)' }} />
+      {/* ── FOOTER ── */}
+      <footer className={styles.footer}>
+        <div className={styles.footerContainer}>
+          <div className={styles.footerBrand}>
+            <div className={styles.footerLogoWrapper}>
+              <img src={leapLogo} alt="LEAP 2026" className={styles.footerLogo} />
             </div>
-            <p className="text-leap-cream/60 max-w-md mb-8 text-sm leading-relaxed">Lasallian Enrichment Alternative Program. Empowering students through diverse learning experiences and community building.</p>
-            <div className="flex gap-3">
-              <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-leap-maroon/60 transition-colors cursor-pointer"><Info size={16} /></div>
+            <p className={styles.footerBrandText}>Lasallian Enrichment Alternative Program. Empowering students through diverse learning experiences and community building.</p>
+            <div className={styles.footerSocialIcons}>
+              <div className={styles.footerSocialIcon}><Info size={16} /></div>
             </div>
           </div>
           <div>
-            <h4 className="font-bold text-xs uppercase tracking-widest text-leap-gold mb-6">Quick Links</h4>
-            <ul className="space-y-4 text-leap-cream/60 text-sm">
-              <li><button onClick={() => { setCurrentView('about'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">About LEAP</button></li>
-              <li><button onClick={() => { setCurrentView('home'); window.scrollTo(0, document.getElementById('classes-section')?.offsetTop || 0); }} className="hover:text-white transition-colors">Class List</button></li>
-              <li><button onClick={() => { setCurrentView('major-events'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">Major Events</button></li>
-              <li><button onClick={() => { setCurrentView('faq'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">FAQs</button></li>
+            <h4 className={styles.footerColumnTitle}>Quick Links</h4>
+            <ul className={styles.footerColumnLinks}>
+              <li><button onClick={() => navigateTo('about')} className={styles.footerLink}>About LEAP</button></li>
+              <li><button onClick={() => navigateTo('classes')} className={styles.footerLink}>Class List</button></li>
+              <li><button onClick={() => navigateTo('major-events')} className={styles.footerLink}>Major Events</button></li>
+              <li><button onClick={() => navigateTo('faq')} className={styles.footerLink}>FAQs</button></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-xs uppercase tracking-widest text-leap-gold mb-6">Support</h4>
-            <ul className="space-y-4 text-leap-cream/60 text-sm">
-              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">Contact OPS</button></li>
-              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">Technical Issues</button></li>
-              <li><button onClick={() => { setCurrentView('contact'); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">Privacy Policy</button></li>
+            <h4 className={styles.footerColumnTitle}>Support</h4>
+            <ul className={styles.footerColumnLinks}>
+              <li><button onClick={() => navigateTo('contact')} className={styles.footerLink}>Contact OPS</button></li>
+              <li><button onClick={() => navigateTo('contact')} className={styles.footerLink}>Technical Issues</button></li>
+              <li><button onClick={() => navigateTo('contact')} className={styles.footerLink}>Privacy Policy</button></li>
             </ul>
           </div>
         </div>
-        <div className="container mx-auto mt-16 pt-8 border-t border-white/10 text-center text-leap-cream/40 text-xs tracking-wide">
-          <p>© 2026 LEAP Operations Team · De La Salle University · Central Student Organization</p>
+        <div className={styles.footerBottom}>
+          <p>© 2026 LEAP Operations Team · De La Salle University · Council of Student Organizations</p>
         </div>
       </footer>
 
@@ -1530,7 +1615,7 @@ function LeapApp() {
       <CustomCursor />
     </div>
   );
-}
+};
 
 export default function App() {
   return <ErrorBoundary><LeapApp /></ErrorBoundary>;
