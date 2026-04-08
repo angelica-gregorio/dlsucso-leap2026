@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Calendar, MapPin, Users, ExternalLink, Info, X } from 'lucide-react';
+import { Search, Calendar, MapPin, Users, ExternalLink, Info, X, ChevronDown, ChevronUp } from 'lucide-react';
 import type { User as FirebaseUser } from 'firebase/auth';
 
 interface LeapClass {
@@ -20,6 +20,8 @@ interface HomeProps {
   HeroSection: ReactNode; HeroExtras: ReactNode | null;
   renderClassCard: (item: LeapClass, index: number) => ReactNode;
 }
+
+const CLASSES_PER_DAY = 3;
 
 const HOME_FLIES = Array.from({ length: 30 }, (_, i) => ({
   id: i, x: (i * 16.7 + (i % 4) * 19) % 96 + 2, y: (i * 12.1 + (i % 6) * 11) % 94 + 2,
@@ -43,10 +45,11 @@ export default function Home({
 }: HomeProps) {
   const w = useWindowWidth();
   const isDesktop = w >= 1024;
-  const isWide = w >= 1280;
 
   const displayedDays = uniqueDays.slice(0, 5);
   const [activeDay, setActiveDay] = useState<string | null>(displayedDays[0] ?? null);
+  // Track which day sections are expanded beyond 3 classes
+  const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
   const daySectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const catalogRef = useRef<HTMLDivElement | null>(null);
@@ -90,6 +93,10 @@ export default function Home({
     onDaySelect(day);
   };
 
+  const toggleDayExpanded = (day: string) => {
+    setExpandedDays(prev => ({ ...prev, [day]: !prev[day] }));
+  };
+
   const panelStyle = {
     background: 'linear-gradient(145deg, rgba(255,252,241,0.98), rgba(253,247,228,0.96))',
     backdropFilter: 'blur(12px)',
@@ -103,7 +110,9 @@ export default function Home({
   );
 
   return (
-    <main className="flex-grow hero-bg" style={{ position: 'relative', overflow: 'hidden', isolation: 'isolate' }}>
+    // FIX 1: overflow: 'clip' instead of 'hidden' — prevents horizontal bleed
+    // while NOT creating a scroll container that would break position: sticky.
+    <main className="flex-grow hero-bg" style={{ position: 'relative', overflow: 'clip', isolation: 'isolate' }}>
       {/* Fireflies */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
         {HOME_FLIES.map(f => (
@@ -130,7 +139,10 @@ export default function Home({
               radial-gradient(ellipse 45% 30% at 88% 75%, rgba(222,154,73,0.07) 0%, transparent 50%),
               linear-gradient(180deg, #fffdf6 0%, #fdf8ec 25%, #f9f1da 55%, #f4e8c4 80%, #efdba8 100%)
             `,
-            width: '100%', boxSizing: 'border-box', overflowX: 'hidden', position: 'relative',
+            // FIX 2: overflowX: 'clip' instead of 'hidden' — same reason as above.
+            // 'hidden' would make this section a scroll container, trapping the
+            // sticky sidebar inside a non-scrolling box (= broken sticky).
+            width: '100%', boxSizing: 'border-box', overflowX: 'clip', position: 'relative',
           }}
         >
           {/* top accent stripe */}
@@ -154,19 +166,26 @@ export default function Home({
               </select>
             </div>
 
-            {/* Layout grid */}
+            {/* Layout grid — NOTE: overflow visible on wrapper so sticky works */}
             <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '240px 1fr' : '1fr', gap: '1.25rem', alignItems: 'start', width: '100%', boxSizing: 'border-box' }}>
 
-              {/* Sidebar — sticky day navigator */}
+              {/* ── STICKY SIDEBAR ── */}
               <aside
                 ref={sidebarRef}
                 style={{
                   ...panelStyle,
                   padding: '1.25rem 1.05rem',
+                  // Sticky: stays in view as you scroll through day sections
                   position: isDesktop ? 'sticky' : 'static',
                   top: '5.5rem',
-                  boxSizing: 'border-box' as const,
+                  // Critical: limits height so it never overflows the viewport,
+                  // allowing CSS sticky to actually work
+                  maxHeight: isDesktop ? 'calc(100vh - 7rem)' : 'none',
+                  overflowY: isDesktop ? 'auto' : 'visible',
                   alignSelf: 'start',
+                  boxSizing: 'border-box' as const,
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: 'rgba(222,154,73,0.3) transparent',
                 }}
               >
                 {accentLine}
@@ -236,8 +255,8 @@ export default function Home({
                 )}
               </aside>
 
-              {/* Main content: all day sections stacked */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+              {/* ── MAIN CONTENT: day sections stacked ── */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', minWidth: 0 }}>
                 {!user ? (
                   <div style={{ ...panelStyle, padding: '3.5rem 2rem', textAlign: 'center' }}>
                     <div className="leap-detail-icon-wrap" style={{ width: 64, height: 64, margin: '0 auto 1.5rem' }}><Info size={28} /></div>
@@ -253,6 +272,11 @@ export default function Home({
                   ) : (
                     displayedDays.map((day, idx) => {
                       const dayClasses = filteredAndSortedClasses.filter(c => c.date === day);
+                      const isExpanded = !!expandedDays[day];
+                      const hasMore = dayClasses.length > CLASSES_PER_DAY;
+                      const visibleClasses = isExpanded ? dayClasses : dayClasses.slice(0, CLASSES_PER_DAY);
+                      const hiddenCount = dayClasses.length - CLASSES_PER_DAY;
+
                       return (
                         <div
                           key={day}
@@ -295,8 +319,42 @@ export default function Home({
                                 }
                               `}</style>
                               <div className="home-day-grid">
-                                {dayClasses.map((item, i) => renderClassCard(item, i))}
+                                {visibleClasses.map((item, i) => renderClassCard(item, i))}
                               </div>
+
+                              {/* See More / See Less toggle */}
+                              {hasMore && (
+                                <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'center' }}>
+                                  <button
+                                    onClick={() => toggleDayExpanded(day)}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.45rem',
+                                      padding: '0.6rem 1.5rem',
+                                      borderRadius: 999,
+                                      border: '1.5px solid rgba(222,154,73,0.45)',
+                                      background: isExpanded
+                                        ? 'rgba(222,154,73,0.12)'
+                                        : 'linear-gradient(135deg, rgba(250,225,133,0.18), rgba(222,154,73,0.12))',
+                                      color: '#b05a32',
+                                      fontSize: '0.78rem',
+                                      fontWeight: 800,
+                                      letterSpacing: '0.08em',
+                                      textTransform: 'uppercase',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.22s ease',
+                                      boxShadow: '0 2px 12px rgba(222,154,73,0.18)',
+                                    }}
+                                  >
+                                    {isExpanded ? (
+                                      <><ChevronUp size={15} /> Show Less</>
+                                    ) : (
+                                      <><ChevronDown size={15} /> See {hiddenCount} More {hiddenCount === 1 ? 'Class' : 'Classes'}</>
+                                    )}
+                                  </button>
+                                </div>
+                              )}
                             </>
                           )}
                         </div>
