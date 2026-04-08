@@ -30,18 +30,6 @@ import styles from './App.module.css';
 interface ErrorBoundaryProps { children: ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
 
-// function useWindowWidth() {
-//   const [width, setWidth] = useState(() =>
-//     typeof window !== 'undefined' ? window.innerWidth : 1280
-//   );
-//   useEffect(() => {
-//     const handler = () => setWidth(window.innerWidth);
-//     window.addEventListener('resize', handler, { passive: true });
-//     return () => window.removeEventListener('resize', handler);
-//   }, []);
-//   return width;
-// }
-
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState;
   public props: ErrorBoundaryProps;
@@ -757,7 +745,7 @@ const StarParticles = () => {
 /* ══════════════════════════════════════════════════════
    MAIN EVENTS SECTION 
 ══════════════════════════════════════════════════════ */
-const MainEventsSection = () => {
+const MainEventsSection = ({ onEventSelect }: { onEventSelect?: (item: any) => void }) => {
   const [events, setEvents] = useState<any[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -990,8 +978,16 @@ const MainEventsSection = () => {
                           style={{ background: 'linear-gradient(135deg,#fae185,#de9a49,#c07830)', color: '#1a1008', border: 'none', borderRadius: 8, padding: '0.5rem 1.1rem', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 5, textDecoration: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(222,154,73,0.45)', transition: 'filter .2s, transform .15s' }}>
                           Register <ExternalLink size={11} />
                         </a>
-                        <button onClick={(e) => e.stopPropagation()}
-                          style={{ background: 'rgba(15,10,4,0.65)', border: '1px solid rgba(250,225,133,0.45)', color: '#fae185', borderRadius: 8, padding: '0.5rem 1.1rem', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'background .2s' }}>
+                       <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onEventSelect) {
+                              // Map 'label' to 'title' so the LeapClass modal can read it perfectly
+                              onEventSelect({ ...event, title: event.label }); 
+                            }
+                          }}
+                          style={{ background: 'rgba(15,10,4,0.65)', border: '1px solid rgba(250,225,133,0.45)', color: '#fae185', borderRadius: 8, padding: '0.5rem 1.1rem', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'background .2s' }}
+                        >
                           Learn More <ChevronRight size={11} />
                         </button>
                       </div>
@@ -1392,7 +1388,7 @@ const LeapApp = () => {
         </motion.div>
         {hasAppAccess && currentView === 'home' && (
           <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.45rem', marginLeft: '50%', transform: 'translateX(-50%)' }}>
-            <MainEventsSection />
+            <MainEventsSection onEventSelect={(item) => setViewingClass(item)} />
           </div>
         )}
       </div>
