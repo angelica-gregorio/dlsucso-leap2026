@@ -755,7 +755,7 @@ const StarParticles = () => {
 };
 
 /* ══════════════════════════════════════════════════════
-   MAIN EVENTS SECTION — fully animated carousel
+   MAIN EVENTS SECTION 
 ══════════════════════════════════════════════════════ */
 const MainEventsSection = () => {
   const [events, setEvents] = useState<any[]>([]);
