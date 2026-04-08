@@ -45,6 +45,7 @@ export default function Home({
 }: HomeProps) {
   const w = useWindowWidth();
   const isDesktop = w >= 1024;
+  // const isWide = w >= 1280;
 
   const displayedDays = uniqueDays.slice(0, 5);
   const [activeDay, setActiveDay] = useState<string | null>(displayedDays[0] ?? null);

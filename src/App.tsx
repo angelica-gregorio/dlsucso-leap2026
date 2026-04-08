@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useEffect, useRef, useMemo, type CSSProperties, type ErrorInfo, type ReactNode, Component } from 'react';
+import { useState, useEffect, useRef, useMemo, Suspense, lazy, type CSSProperties, type ErrorInfo, type ReactNode, Component } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft,
@@ -18,29 +18,17 @@ import {
 } from './services/firebase';
 import type { User as FirebaseUser } from "firebase/auth";
 
-import Home from './pages/Home';
-import About from './pages/About';
-import MainEvents from './pages/MainEvents';
-import FAQs from './pages/FAQs';
-import Classes from './pages/Classes';
+const Home = lazy(() => import('./pages/Home'));
+const About = lazy(() => import('./pages/About'));
+const MainEvents = lazy(() => import('./pages/MainEvents'));
+const FAQs = lazy(() => import('./pages/FAQs'));
+const Classes = lazy(() => import('./pages/Classes'));
 
 import leapLogo from './assets/leap.webp';
 import styles from './App.module.css';
 
 interface ErrorBoundaryProps { children: ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
-
-// function useWindowWidth() {
-//   const [width, setWidth] = useState(() =>
-//     typeof window !== 'undefined' ? window.innerWidth : 1280
-//   );
-//   useEffect(() => {
-//     const handler = () => setWidth(window.innerWidth);
-//     window.addEventListener('resize', handler, { passive: true });
-//     return () => window.removeEventListener('resize', handler);
-//   }, []);
-//   return width;
-// }
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState;
@@ -757,7 +745,7 @@ const StarParticles = () => {
 /* ══════════════════════════════════════════════════════
    MAIN EVENTS SECTION 
 ══════════════════════════════════════════════════════ */
-const MainEventsSection = () => {
+const MainEventsSection = ({ onEventSelect }: { onEventSelect?: (item: any) => void }) => {
   const [events, setEvents] = useState<any[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -990,8 +978,16 @@ const MainEventsSection = () => {
                           style={{ background: 'linear-gradient(135deg,#fae185,#de9a49,#c07830)', color: '#1a1008', border: 'none', borderRadius: 8, padding: '0.5rem 1.1rem', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 5, textDecoration: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(222,154,73,0.45)', transition: 'filter .2s, transform .15s' }}>
                           Register <ExternalLink size={11} />
                         </a>
-                        <button onClick={(e) => e.stopPropagation()}
-                          style={{ background: 'rgba(15,10,4,0.65)', border: '1px solid rgba(250,225,133,0.45)', color: '#fae185', borderRadius: 8, padding: '0.5rem 1.1rem', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'background .2s' }}>
+                       <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onEventSelect) {
+                              // Map 'label' to 'title' so the LeapClass modal can read it perfectly
+                              onEventSelect({ ...event, title: event.label }); 
+                            }
+                          }}
+                          style={{ background: 'rgba(15,10,4,0.65)', border: '1px solid rgba(250,225,133,0.45)', color: '#fae185', borderRadius: 8, padding: '0.5rem 1.1rem', fontSize: '0.63rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer', backdropFilter: 'blur(8px)', transition: 'background .2s' }}
+                        >
                           Learn More <ChevronRight size={11} />
                         </button>
                       </div>
@@ -1079,6 +1075,14 @@ const LeapApp = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [viewingClass, setViewingClass] = useState<LeapClass | null>(null);
   const hasLoggedProfilePermissionIssue = useRef(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (authError) {
+      const timer = setTimeout(() => setAuthError(null), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [authError]);
 
   const navigateTo = (view: 'home' | 'about' | 'major-events' | 'classes' | 'faq' | 'contact') => {
     setCurrentView(view); setIsMenuOpen(false);
@@ -1120,7 +1124,6 @@ const LeapApp = () => {
             if (!currentUser.emailVerified || !currentEmail?.endsWith('@dlsu.edu.ph')) {
               setUserProfile(null); setIsAdminView(false); navigateTo('home');
               await signOut(auth);
-              alert('Please use a verified @dlsu.edu.ph Google account to sign in.');
               return;
             }
             try {
@@ -1198,14 +1201,22 @@ const LeapApp = () => {
   }, []);
 
   const handleSignIn = async () => {
+    setAuthError(null);
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const email = result.user.email?.toLowerCase();
+      
       if (!result.user.emailVerified || !email?.endsWith('@dlsu.edu.ph')) {
         await signOut(auth);
-        alert('Access Denied: Please use your verified official @dlsu.edu.ph email address to sign in.');
+        setAuthError('Access Denied: Please use your verified official @dlsu.edu.ph email to sign in.');
       }
-    } catch (error) { console.error("Sign In Error:", error); }
+    } catch (error: any) { 
+      // Ignore the error if the user just closed the popup
+      if (error.code !== 'auth/popup-closed-by-user') {
+        setAuthError('An error occurred during sign in. Please try again.');
+        console.error("Sign In Error:", error); 
+      }
+    }
   };
 
   const handleSignOut = async () => {
@@ -1339,7 +1350,7 @@ const LeapApp = () => {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="mb-4 fade-up"
         >
-          <img src={leapLogo} alt="LEAP 2026 — Isang Nayon, Isang Layunin" className={styles.heroLogo} />
+          <img src={leapLogo} alt="LEAP 2026 — Isang Nayon, Isang Layunin" width="280" height="158" className={styles.heroLogo} />
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -1370,14 +1381,14 @@ const LeapApp = () => {
                   cursor: 'pointer'
                 }}
               >
-                <LogIn size={20} /> Register / Sign In
+                <LogIn size={20} /> Sign In
               </button>
             </motion.div>
           )}
         </motion.div>
         {hasAppAccess && currentView === 'home' && (
           <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.45rem', marginLeft: '50%', transform: 'translateX(-50%)' }}>
-            <MainEventsSection />
+            <MainEventsSection onEventSelect={(item) => setViewingClass(item)} />
           </div>
         )}
       </div>
@@ -1484,15 +1495,55 @@ const LeapApp = () => {
   if (!hasAppAccess) {
     return (
       <div className={styles.appContainer}>
+        <AnimatePresence>
+          {authError && (
+            <motion.div
+              initial={{ opacity: 0, y: -40, x: '-50%' }}
+              animate={{ opacity: 1, y: 0, x: '-50%' }}
+              exit={{ opacity: 0, y: -20, x: '-50%' }}
+              style={{
+                position: 'fixed',
+                top: '1.5rem',
+                left: '50%',
+                zIndex: 9999,
+                background: '#b05a32', 
+                color: '#f9ecb6',      
+                padding: '0.85rem 1.25rem',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                boxShadow: '0 12px 32px rgba(176, 90, 50, 0.3)',
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                maxWidth: '90vw',
+                border: '1px solid rgba(249, 236, 182, 0.2)'
+              }}
+            >
+              <AlertCircle size={18} style={{ flexShrink: 0 }} />
+              <span>{authError}</span>
+              <button 
+                onClick={() => setAuthError(null)} 
+                style={{ background: 'transparent', border: 'none', color: '#f9ecb6', cursor: 'pointer', padding: 0, display: 'flex', marginLeft: '0.5rem' }}
+              >
+                <X size={16} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <nav className={`fixed top-0 w-full z-50 transition-all duration-300 bg-transparent py-4`}>
           <div className={styles.navInner}>
             <div className={styles.navLogo} onClick={() => window.scrollTo(0, 0)}>
-              <img src={leapLogo} alt="LEAP 2026" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
+              <img src={leapLogo} alt="LEAP 2026" width="60" height="34" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
             </div>
             <div />
           </div>
         </nav>
-        {HeroSection}
+        <main>
+          {HeroSection}
+        </main>
+        
 
       </div>
     );
@@ -1504,7 +1555,7 @@ const LeapApp = () => {
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${navClass}`}>
         <div className={styles.navInner}>
           <div className={styles.navLogo} onClick={() => navigateTo('home')}>
-            <img src={leapLogo} alt="LEAP 2026" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
+            <img src={leapLogo} alt="LEAP 2026" width="60" height="34"className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
           </div>
           <div className={styles.navCenter}>
             <button onClick={() => navigateTo('home')} className={`nav-link ${currentView === 'home' ? 'active' : ''}`}>Home</button>
@@ -1571,40 +1622,42 @@ const LeapApp = () => {
       </AnimatePresence>
 
       {/* ── ROUTES ── */}
-      {currentView === 'home' && (
-        <Home
-          user={user} classes={classes}
-          searchQuery={searchQuery} onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
-          sortBy={sortBy} onSortChange={(s) => setSortBy(s)}
-          filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
-          selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
-          viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c) }}
-          onSignIn={handleSignIn} onHeroScroll={() => navigateTo('classes')}
-          HeroSection={HeroSection} HeroExtras={HeroExtras} renderClassCard={renderClassCard}
-        />
-      )}
-      {currentView === 'about' && <About />}
-      {currentView === 'major-events' && <MainEvents />}
-      {currentView === 'classes' && (
-        <Classes
-          user={user} searchQuery={searchQuery} onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
-          sortBy={sortBy} onSortChange={(s) => setSortBy(s)}
-          filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
-          selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
-          currentPage={currentPage} onPageChange={(p) => { setCurrentPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c) }}
-          onSignIn={handleSignIn} renderClassCard={renderClassCard}
-        />
-      )}
-      {currentView === 'faq' && <FAQs />}
-      {currentView === 'contact' && <Contact />}
+      <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: '6rem 0' }}><div className="leap-spinner" /></div>}>
+        {currentView === 'home' && (
+          <Home
+            user={user} classes={classes}
+            searchQuery={searchQuery} onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+            sortBy={sortBy} onSortChange={(s) => setSortBy(s)}
+            filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
+            selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
+            viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c) }}
+            onSignIn={handleSignIn} onHeroScroll={() => navigateTo('classes')}
+            HeroSection={HeroSection} HeroExtras={HeroExtras} renderClassCard={renderClassCard}
+          />
+        )}
+        {currentView === 'about' && <About />}
+        {currentView === 'major-events' && <MainEvents />}
+        {currentView === 'classes' && (
+          <Classes
+            user={user} searchQuery={searchQuery} onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+            sortBy={sortBy} onSortChange={(s) => setSortBy(s)}
+            filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
+            selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
+            currentPage={currentPage} onPageChange={(p) => { setCurrentPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c) }}
+            onSignIn={handleSignIn} renderClassCard={renderClassCard}
+          />
+        )}
+        {currentView === 'faq' && <FAQs />}
+        {currentView === 'contact' && <Contact />}
+      </Suspense>
 
       {/* ── FOOTER ── */}
       <footer className={styles.footer}>
         <div className={styles.footerContainer}>
           <div className={styles.footerBrand}>
             <div className={styles.footerLogoWrapper}>
-              <img src={leapLogo} alt="LEAP 2026" className={styles.footerLogo} />
+              <img src={leapLogo} alt="LEAP 2026" width="120" height="68" className={styles.footerLogo} />
             </div>
             <p className={styles.footerBrandText}>Lasallian Enrichment Alternative Program. Empowering students through diverse learning experiences and community building.</p>
             <div className={styles.footerSocialIcons}>
