@@ -8,7 +8,7 @@ import {
   Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft,
   Menu, X, Info, LogOut, LogIn, AlertCircle,
   Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Mail, Clock,
-  Bookmark, User, BookOpen, Wrench, Handshake, HeartPulse
+  User, BookOpen, Wrench, Handshake, HeartPulse
 } from 'lucide-react';
 
 import { contentfulClient } from './services/contentful';
