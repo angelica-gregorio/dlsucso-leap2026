@@ -25,7 +25,6 @@ import FAQs from './pages/FAQs';
 import Classes from './pages/Classes';
 
 import leapLogo from './assets/leap.webp';
-import salakotCursor from './assets/salakot_cursor.webp';
 import styles from './App.module.css';
 
 interface ErrorBoundaryProps { children: ReactNode; }
@@ -90,52 +89,7 @@ const ScrollProgress = () => {
   );
 };
 
-/* ══════════════════════════════════════════════════════
-   CUSTOM CURSOR
-══════════════════════════════════════════════════════ */
-const CustomCursor = () => {
-  const [dot, setDot] = useState({ x: -100, y: -100 });
-  const [isVisible, setIsVisible] = useState(false);
-  const [isPointerDevice, setIsPointerDevice] = useState(false);
 
-  useEffect(() => {
-    const mq = window.matchMedia('(pointer: fine)');
-    setIsPointerDevice(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsPointerDevice(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  useEffect(() => {
-    if (!isPointerDevice) return;
-    const mv = (e: MouseEvent) => {
-      setDot({ x: e.clientX, y: e.clientY });
-      setIsVisible(true);
-    };
-    const leave = () => setIsVisible(false);
-    const enter = () => setIsVisible(true);
-    window.addEventListener('mousemove', mv);
-    document.addEventListener('mouseleave', leave);
-    document.addEventListener('mouseenter', enter);
-    return () => {
-      window.removeEventListener('mousemove', mv);
-      document.removeEventListener('mouseleave', leave);
-      document.removeEventListener('mouseenter', enter);
-    };
-  }, [isPointerDevice]);
-
-  if (!isPointerDevice) return null;
-
-  return (
-    <div style={{
-      position: 'fixed', pointerEvents: 'none', zIndex: 99999,
-      left: dot.x, top: dot.y, transform: 'translate(-15%, -15%)',
-      opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease'
-    }}>
-      <img src={salakotCursor} alt="Cursor" style={{ width: 32, height: 32, display: 'block' }} />
-    </div>
-  );
-};
 
 /* ══════════════════════════════════════════════════════
    PARALLAX MOUSE HOOK
@@ -1469,7 +1423,7 @@ const LeapApp = () => {
           </div>
         </nav>
         {HeroSection}
-        <CustomCursor />
+
       </div>
     );
   }
@@ -1612,7 +1566,6 @@ const LeapApp = () => {
       </footer>
 
       <ScrollProgress />
-      <CustomCursor />
     </div>
   );
 };
