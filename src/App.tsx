@@ -883,9 +883,8 @@ const MainEventsSection = () => {
             const isLeft = slot === 0;
 
             return (
-              <motion.button
+              <motion.div
                 key={`${event.id}-slot${slot}`}
-                type="button"
                 onClick={() => goTo(eventIndex)}
                 initial={false}
                 animate={{
@@ -999,7 +998,7 @@ const MainEventsSection = () => {
                     </motion.div>
                   </>
                 )}
-              </motion.button>
+              </motion.div>
             );
           })}
         </div>
@@ -1011,11 +1010,36 @@ const MainEventsSection = () => {
               style={{ width: 38, height: 38, borderRadius: '50%', border: '1px solid rgba(249,236,182,0.28)', background: 'rgba(12,9,4,0.72)', color: '#f9ecb6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s', backdropFilter: 'blur(8px)' }}>
               <ChevronLeft size={16} />
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {events.map((_, index) => (
-                <button key={index} type="button" aria-label={`Event ${index + 1}`}
+                <button 
+                  key={index} 
+                  type="button" 
+                  aria-label={`Event ${index + 1}`}
                   onClick={() => goTo(index)}
-                  style={{ height: 9, width: index === activeIndex ? 34 : 9, borderRadius: 999, background: index === activeIndex ? '#fae185' : 'rgba(249,236,182,0.32)', border: 'none', cursor: 'pointer', transition: 'all 0.32s ease', boxShadow: index === activeIndex ? '0 0 12px rgba(250,225,133,0.7)' : 'none', padding: 0 }} />
+                  style={{ 
+                    height: 44, 
+                    width: index === activeIndex ? 50 : 36, 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 0
+                  }}
+                >
+                  {/* The actual visual dot */}
+                  <span style={{
+                    display: 'block',
+                    height: 9, 
+                    width: index === activeIndex ? 34 : 9, 
+                    borderRadius: 999, 
+                    background: index === activeIndex ? '#fae185' : 'rgba(249,236,182,0.32)', 
+                    transition: 'all 0.32s ease', 
+                    boxShadow: index === activeIndex ? '0 0 12px rgba(250,225,133,0.7)' : 'none'
+                  }} />
+                </button>
               ))}
             </div>
             <button type="button" aria-label="Next" onClick={goNext}
