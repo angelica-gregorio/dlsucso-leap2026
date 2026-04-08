@@ -1370,7 +1370,7 @@ const LeapApp = () => {
                   cursor: 'pointer'
                 }}
               >
-                <LogIn size={20} /> Register / Sign In
+                <LogIn size={20} /> Sign In
               </button>
             </motion.div>
           )}

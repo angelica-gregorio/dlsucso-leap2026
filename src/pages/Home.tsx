@@ -38,12 +38,12 @@ function useWindowWidth() {
 
 export default function Home({
   user, searchQuery, onSearchChange, sortBy, onSortChange,
-  filteredAndSortedClasses, uniqueDays, selectedDay, onDaySelect,
+  filteredAndSortedClasses, uniqueDays, onDaySelect,
   viewingClass, onClassSelect, onSignIn, HeroSection, HeroExtras, renderClassCard,
 }: HomeProps) {
   const w = useWindowWidth();
   const isDesktop = w >= 1024;
-  const isWide = w >= 1280;
+  // const isWide = w >= 1280;
 
   const displayedDays = uniqueDays.slice(0, 5);
   const [activeDay, setActiveDay] = useState<string | null>(displayedDays[0] ?? null);
