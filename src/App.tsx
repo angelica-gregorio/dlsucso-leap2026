@@ -1446,6 +1446,7 @@ const LeapApp = () => {
           </div>
           <div className="leap-nav-right hidden md:flex">
             <button className="nav-icon-btn" onClick={() => navigateTo('classes')} title="Search classes"><Search size={15} /></button>
+            <button className="nav-icon-btn" title="Saved classes"><Bookmark size={15} /></button>
             {user ? (
               <>
                 <button className="nav-icon-btn" title={user.displayName || 'Profile'}>
