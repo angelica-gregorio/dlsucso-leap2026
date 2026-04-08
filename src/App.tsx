@@ -8,7 +8,7 @@ import {
   Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft,
   Menu, X, Info, LogOut, LogIn, AlertCircle,
   Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Mail, Clock,
-  Bookmark, User, BookOpen, Wrench, Handshake, HeartPulse
+  User, BookOpen, Wrench, Handshake, HeartPulse
 } from 'lucide-react';
 
 import { contentfulClient } from './services/contentful';
@@ -25,7 +25,6 @@ import FAQs from './pages/FAQs';
 import Classes from './pages/Classes';
 
 import leapLogo from './assets/leap.webp';
-import salakotCursor from './assets/salakot_cursor.webp';
 import styles from './App.module.css';
 
 interface ErrorBoundaryProps { children: ReactNode; }
@@ -90,52 +89,7 @@ const ScrollProgress = () => {
   );
 };
 
-/* ══════════════════════════════════════════════════════
-   CUSTOM CURSOR
-══════════════════════════════════════════════════════ */
-const CustomCursor = () => {
-  const [dot, setDot] = useState({ x: -100, y: -100 });
-  const [isVisible, setIsVisible] = useState(false);
-  const [isPointerDevice, setIsPointerDevice] = useState(false);
 
-  useEffect(() => {
-    const mq = window.matchMedia('(pointer: fine)');
-    setIsPointerDevice(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsPointerDevice(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  useEffect(() => {
-    if (!isPointerDevice) return;
-    const mv = (e: MouseEvent) => {
-      setDot({ x: e.clientX, y: e.clientY });
-      setIsVisible(true);
-    };
-    const leave = () => setIsVisible(false);
-    const enter = () => setIsVisible(true);
-    window.addEventListener('mousemove', mv);
-    document.addEventListener('mouseleave', leave);
-    document.addEventListener('mouseenter', enter);
-    return () => {
-      window.removeEventListener('mousemove', mv);
-      document.removeEventListener('mouseleave', leave);
-      document.removeEventListener('mouseenter', enter);
-    };
-  }, [isPointerDevice]);
-
-  if (!isPointerDevice) return null;
-
-  return (
-    <div style={{
-      position: 'fixed', pointerEvents: 'none', zIndex: 99999,
-      left: dot.x, top: dot.y, transform: 'translate(-15%, -15%)',
-      opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease'
-    }}>
-      <img src={salakotCursor} alt="Cursor" style={{ width: 32, height: 32, display: 'block' }} />
-    </div>
-  );
-};
 
 /* ══════════════════════════════════════════════════════
    PARALLAX MOUSE HOOK
@@ -200,6 +154,21 @@ const TOOLTIPS: Record<string, { label: string; desc: string }> = {
 const NayonScene = () => {
   useParallaxMouse();
   const [hovered, setHovered] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  const handleMouseEnter = (key: string, e: React.MouseEvent) => {
+    setHovered(key);
+    setMousePos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    setMousePos({ x: e.clientX, y: e.clientY });
+  };
+
+  const TOOLTIP_W = 240;
+  const TOOLTIP_H = 60;
+  const tipX = Math.min(mousePos.x + 16, window.innerWidth - TOOLTIP_W - 12);
+  const tipY = Math.max(mousePos.y - TOOLTIP_H - 14, 8);
 
   return (
     <>
@@ -211,7 +180,20 @@ const NayonScene = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.96 }}
             transition={{ duration: 0.18, ease: [0.34, 1.4, 0.64, 1] }}
-            style={{ position: 'fixed', bottom: 'auto', top: '80px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(8,5,2,0.94)', border: '1px solid rgba(222,154,73,0.52)', borderRadius: 8, padding: '8px 18px', pointerEvents: 'none', zIndex: 20, backdropFilter: 'blur(14px)', boxShadow: '0 8px 32px rgba(0,0,0,0.55)', whiteSpace: 'nowrap' }}
+            style={{
+              position: 'fixed',
+              left: tipX,
+              top: tipY,
+              background: 'rgba(8,5,2,0.94)',
+              border: '1px solid rgba(222,154,73,0.52)',
+              borderRadius: 8,
+              padding: '8px 18px',
+              pointerEvents: 'none',
+              zIndex: 9998,
+              backdropFilter: 'blur(14px)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.55)',
+              whiteSpace: 'nowrap',
+            }}
           >
             <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 14, color: '#fae185', margin: 0, fontWeight: 700 }}>{TOOLTIPS[hovered]?.label}</p>
             <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: 'rgba(249,236,182,0.52)', margin: 0, marginTop: 2 }}>{TOOLTIPS[hovered]?.desc}</p>
@@ -364,8 +346,11 @@ const NayonScene = () => {
           <ellipse cx="4" cy="4" rx="5" ry="6" fill="#5a3a18"/>
         </g>
 
+        {/* ── hut1 ── */}
         <g style={{ transform: 'translate(calc(108px + var(--px, 0) * 5px), calc(230px + var(--py, 0) * 3px))', cursor:'pointer', pointerEvents:'all' }}
-          onMouseEnter={() => setHovered('hut1')} onMouseLeave={() => setHovered(null)}
+          onMouseEnter={(e) => handleMouseEnter('hut1', e)}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHovered(null)}
           filter={hovered==='hut1' ? 'url(#glowF)' : undefined}>
           <ellipse cx="94" cy="190" rx="80" ry="13" fill="url(#hutGlowG)"/>
           <rect x="18" y="118" width="7" height="68" rx="3" fill="#7a5030" />
@@ -408,8 +393,11 @@ const NayonScene = () => {
           <line x1="88" y1="174" x2="103" y2="170" stroke="#7a5030" strokeWidth="3" strokeLinecap="round" />
         </g>
 
+        {/* ── hut2 ── */}
         <g style={{ transform: 'translate(calc(980px + var(--px, 0) * 3px), calc(255px + var(--py, 0) * 2px))', cursor:'pointer', pointerEvents:'all' }}
-          onMouseEnter={() => setHovered('hut2')} onMouseLeave={() => setHovered(null)}
+          onMouseEnter={(e) => handleMouseEnter('hut2', e)}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHovered(null)}
           filter={hovered==='hut2' ? 'url(#softGlowF)' : undefined}>
           <ellipse cx="80" cy="162" rx="66" ry="11" fill="url(#hutGlowG)"/>
           <rect x="16" y="104" width="6" height="58" rx="2.5" fill="#7a5030" />
@@ -440,8 +428,11 @@ const NayonScene = () => {
           <rect x="8" y="46" width="170" height="4" rx="2" fill="#c89850" opacity="0.4"/>
         </g>
 
+        {/* ── palay ── */}
         <g style={{ transform: 'translate(calc(610px + var(--px, 0) * 2px), calc(270px + var(--py, 0) * 1.5px))', cursor:'pointer', pointerEvents:'all' }}
-          onMouseEnter={() => setHovered('palay')} onMouseLeave={() => setHovered(null)}
+          onMouseEnter={(e) => handleMouseEnter('palay', e)}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHovered(null)}
           filter={hovered==='palay' ? 'url(#softGlowF)' : undefined}>
           <ellipse cx="90" cy="152" rx="92" ry="8" fill="rgba(12,35,12,0.24)"/>
           <g className="palay-stalk sway-a" style={{ animationDelay:'0s', transformOrigin:'30px 150px' }}>
@@ -484,8 +475,11 @@ const NayonScene = () => {
           ))}
         </g>
 
+        {/* ── salakot ── */}
         <g style={{ transform: 'translate(calc(1218px + var(--px, 0) * 4px), calc(315px + var(--py, 0) * 2px))', cursor:'pointer', pointerEvents:'all' }}
-          onMouseEnter={() => setHovered('salakot')} onMouseLeave={() => setHovered(null)}
+          onMouseEnter={(e) => handleMouseEnter('salakot', e)}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHovered(null)}
           filter={hovered==='salakot' ? 'url(#glowF)' : undefined}>
           <ellipse cx="0" cy="155" rx="70" ry="10" fill="rgba(0,0,0,0.25)"/>
           <path d="M0 0 L-85 85 Q-90 95 -80 100 Q0 108 80 100 Q90 95 85 85 Z" fill="url(#salakotG)"/>
@@ -506,8 +500,11 @@ const NayonScene = () => {
           <ellipse cx="0" cy="155" rx="30" ry="4" fill="#7a4c10" opacity="0.6" />
         </g>
 
+        {/* ── bayong ── */}
         <g style={{ transform: 'translate(calc(1340px + var(--px, 0) * 5px), calc(348px + var(--py, 0) * 3px))', cursor:'pointer', pointerEvents:'all' }}
-          onMouseEnter={() => setHovered('bayong')} onMouseLeave={() => setHovered(null)}
+          onMouseEnter={(e) => handleMouseEnter('bayong', e)}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHovered(null)}
           filter={hovered==='bayong' ? 'url(#softGlowF)' : undefined}>
           <ellipse cx="40" cy="96" rx="44" ry="7" fill="rgba(12,35,12,0.22)"/>
           <path d="M10 8 Q4 4 2 0 Q0 -4 4 -8 Q10 -10 16 -8 Q22 -4 20 0 Q18 4 12 8 Z" fill="#de9a49" />
@@ -528,8 +525,11 @@ const NayonScene = () => {
           <path d="M22 -4 Q32 -24 48 -4" fill="none" stroke="rgba(255,200,80,0.4)" strokeWidth="2" strokeLinecap="round" />
         </g>
 
+        {/* ── pandesal ── */}
         <g style={{ transform: 'translate(calc(408px + var(--px, 0) * 3px), calc(352px + var(--py, 0) * 2px))', cursor:'pointer', pointerEvents:'all' }}
-          onMouseEnter={() => setHovered('pandesal')} onMouseLeave={() => setHovered(null)}
+          onMouseEnter={(e) => handleMouseEnter('pandesal', e)}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHovered(null)}
           filter={hovered==='pandesal' ? 'url(#glowF)' : undefined}>
           <ellipse cx="55" cy="108" rx="68" ry="9" fill="rgba(12,35,12,0.24)"/>
           <ellipse cx="72" cy="52" rx="62" ry="46" fill="#d4881c" opacity="0.85" />
@@ -755,7 +755,7 @@ const StarParticles = () => {
 };
 
 /* ══════════════════════════════════════════════════════
-   MAIN EVENTS SECTION — fully animated carousel
+   MAIN EVENTS SECTION 
 ══════════════════════════════════════════════════════ */
 const MainEventsSection = () => {
   const [events, setEvents] = useState<any[]>([]);
@@ -883,9 +883,8 @@ const MainEventsSection = () => {
             const isLeft = slot === 0;
 
             return (
-              <motion.button
+              <motion.div
                 key={`${event.id}-slot${slot}`}
-                type="button"
                 onClick={() => goTo(eventIndex)}
                 initial={false}
                 animate={{
@@ -999,7 +998,7 @@ const MainEventsSection = () => {
                     </motion.div>
                   </>
                 )}
-              </motion.button>
+              </motion.div>
             );
           })}
         </div>
@@ -1011,11 +1010,36 @@ const MainEventsSection = () => {
               style={{ width: 38, height: 38, borderRadius: '50%', border: '1px solid rgba(249,236,182,0.28)', background: 'rgba(12,9,4,0.72)', color: '#f9ecb6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s', backdropFilter: 'blur(8px)' }}>
               <ChevronLeft size={16} />
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {events.map((_, index) => (
-                <button key={index} type="button" aria-label={`Event ${index + 1}`}
+                <button 
+                  key={index} 
+                  type="button" 
+                  aria-label={`Event ${index + 1}`}
                   onClick={() => goTo(index)}
-                  style={{ height: 9, width: index === activeIndex ? 34 : 9, borderRadius: 999, background: index === activeIndex ? '#fae185' : 'rgba(249,236,182,0.32)', border: 'none', cursor: 'pointer', transition: 'all 0.32s ease', boxShadow: index === activeIndex ? '0 0 12px rgba(250,225,133,0.7)' : 'none', padding: 0 }} />
+                  style={{ 
+                    height: 44, 
+                    width: index === activeIndex ? 50 : 36, 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 0
+                  }}
+                >
+                  {/* The actual visual dot */}
+                  <span style={{
+                    display: 'block',
+                    height: 9, 
+                    width: index === activeIndex ? 34 : 9, 
+                    borderRadius: 999, 
+                    background: index === activeIndex ? '#fae185' : 'rgba(249,236,182,0.32)', 
+                    transition: 'all 0.32s ease', 
+                    boxShadow: index === activeIndex ? '0 0 12px rgba(250,225,133,0.7)' : 'none'
+                  }} />
+                </button>
               ))}
             </div>
             <button type="button" aria-label="Next" onClick={goNext}
@@ -1469,7 +1493,7 @@ const LeapApp = () => {
           </div>
         </nav>
         {HeroSection}
-        <CustomCursor />
+
       </div>
     );
   }
@@ -1492,7 +1516,6 @@ const LeapApp = () => {
           </div>
           <div className="leap-nav-right hidden md:flex">
             <button className="nav-icon-btn" onClick={() => navigateTo('classes')} title="Search classes"><Search size={15} /></button>
-            <button className="nav-icon-btn" title="Saved classes"><Bookmark size={15} /></button>
             {user ? (
               <>
                 <button className="nav-icon-btn" title={user.displayName || 'Profile'}>
@@ -1612,7 +1635,6 @@ const LeapApp = () => {
       </footer>
 
       <ScrollProgress />
-      <CustomCursor />
     </div>
   );
 };

@@ -855,7 +855,8 @@
 ═══════════════════════════════════════════════════════════ */
 .appContainer {
   @apply min-h-screen flex flex-col;
-  overflow-x: hidden;
+  overflow: clip;
+  overflow-x: clip;
   max-width: 100vw;
 }
 
