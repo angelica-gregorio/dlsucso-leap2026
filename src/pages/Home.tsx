@@ -40,7 +40,7 @@ function useWindowWidth() {
 
 export default function Home({
   user, searchQuery, onSearchChange, sortBy, onSortChange,
-  filteredAndSortedClasses, uniqueDays, selectedDay, onDaySelect,
+  filteredAndSortedClasses, uniqueDays, onDaySelect,
   viewingClass, onClassSelect, onSignIn, HeroSection, HeroExtras, renderClassCard,
 }: HomeProps) {
   const w = useWindowWidth();
