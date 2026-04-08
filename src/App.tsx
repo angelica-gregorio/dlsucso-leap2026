@@ -837,9 +837,8 @@ const MainEventsSection = () => {
             const isLeft = slot === 0;
 
             return (
-              <motion.button
+              <motion.div
                 key={`${event.id}-slot${slot}`}
-                type="button"
                 onClick={() => goTo(eventIndex)}
                 initial={false}
                 animate={{
@@ -953,7 +952,7 @@ const MainEventsSection = () => {
                     </motion.div>
                   </>
                 )}
-              </motion.button>
+              </motion.div>
             );
           })}
         </div>
