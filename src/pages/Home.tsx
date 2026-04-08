@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, Calendar, MapPin, Users, ExternalLink, Info, X } from 'lucide-react';
 import type { User as FirebaseUser } from 'firebase/auth';
@@ -46,16 +46,50 @@ export default function Home({
   const isWide = w >= 1280;
 
   const displayedDays = uniqueDays.slice(0, 5);
-  const activeDay = selectedDay && displayedDays.includes(selectedDay) ? selectedDay : (displayedDays[0] ?? null);
-  const activeDayClasses = activeDay ? filteredAndSortedClasses.filter(i => i.date === activeDay) : [];
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeDay, setActiveDay] = useState<string | null>(displayedDays[0] ?? null);
+  const daySectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const catalogRef = useRef<HTMLDivElement | null>(null);
 
-  const handleDaySelect = (day: string) => {
+  // Track which day section is in view via IntersectionObserver
+  useEffect(() => {
+    if (!user || displayedDays.length === 0) return;
+
+    const NAV_OFFSET = 100;
+    const observers: IntersectionObserver[] = [];
+
+    displayedDays.forEach((day) => {
+      const el = daySectionRefs.current[day];
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setActiveDay(day);
+            onDaySelect(day);
+          }
+        },
+        {
+          rootMargin: `-${NAV_OFFSET}px 0px -55% 0px`,
+          threshold: 0,
+        }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, [user, displayedDays.join(',')]);
+
+  const scrollToDay = (day: string) => {
+    const el = daySectionRefs.current[day];
+    if (!el) return;
+    const NAV_OFFSET = 88;
+    const top = el.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
+    window.scrollTo({ top, behavior: 'smooth' });
+    setActiveDay(day);
     onDaySelect(day);
-    if (!isDesktop) setMobileOpen(true);
   };
 
-  /* shared card style helpers */
   const panelStyle = {
     background: 'linear-gradient(145deg, rgba(255,252,241,0.98), rgba(253,247,228,0.96))',
     backdropFilter: 'blur(12px)',
@@ -86,15 +120,19 @@ export default function Home({
         {HeroExtras}
 
         {/* ── CLASS CATALOG ── */}
-        <section id="classes-section" style={{
-          padding: '2rem 0 6rem',
-          background: `
-            radial-gradient(ellipse 55% 35% at 15% 25%, rgba(74,176,154,0.07) 0%, transparent 55%),
-            radial-gradient(ellipse 45% 30% at 88% 75%, rgba(222,154,73,0.07) 0%, transparent 50%),
-            linear-gradient(180deg, #fffdf6 0%, #fdf8ec 25%, #f9f1da 55%, #f4e8c4 80%, #efdba8 100%)
-          `,
-          width: '100%', boxSizing: 'border-box', overflowX: 'hidden', position: 'relative',
-        }}>
+        <section
+          ref={catalogRef}
+          id="classes-section"
+          style={{
+            padding: '2rem 0 6rem',
+            background: `
+              radial-gradient(ellipse 55% 35% at 15% 25%, rgba(74,176,154,0.07) 0%, transparent 55%),
+              radial-gradient(ellipse 45% 30% at 88% 75%, rgba(222,154,73,0.07) 0%, transparent 50%),
+              linear-gradient(180deg, #fffdf6 0%, #fdf8ec 25%, #f9f1da 55%, #f4e8c4 80%, #efdba8 100%)
+            `,
+            width: '100%', boxSizing: 'border-box', overflowX: 'hidden', position: 'relative',
+          }}
+        >
           {/* top accent stripe */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, transparent 0%, rgba(222,154,73,0.4) 20%, rgba(250,225,133,0.7) 50%, rgba(222,154,73,0.4) 80%, transparent 100%)' }} />
 
@@ -119,102 +157,160 @@ export default function Home({
             {/* Layout grid */}
             <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '240px 1fr' : '1fr', gap: '1.25rem', alignItems: 'start', width: '100%', boxSizing: 'border-box' }}>
 
-              {/* Sidebar */}
-              <aside style={{ ...panelStyle, padding: '1.25rem 1.05rem', position: isDesktop ? 'sticky' : 'static', top: '5rem', boxSizing: 'border-box' as const }}>
+              {/* Sidebar — sticky day navigator */}
+              <aside
+                ref={sidebarRef}
+                style={{
+                  ...panelStyle,
+                  padding: '1.25rem 1.05rem',
+                  position: isDesktop ? 'sticky' : 'static',
+                  top: '5.5rem',
+                  boxSizing: 'border-box' as const,
+                  alignSelf: 'start',
+                }}
+              >
                 {accentLine}
                 <p style={{ fontFamily: "'Tropikal', serif", fontSize: '1.2rem', fontWeight: 700, color: '#334b46', marginBottom: '0.15rem' }}>LEAP</p>
                 <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#de9a49', marginBottom: '0.2rem' }}>Days</p>
                 <p style={{ fontSize: '0.72rem', color: '#567069', marginBottom: '1rem', fontWeight: 500 }}>
-                  {isDesktop ? 'Choose a day to focus your class list.' : 'Tap a day to preview its classes.'}
+                  Choose a day to jump to its classes.
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.42rem' }}>
-                  {displayedDays.map((day, idx) => {
-                    const isActive = activeDay === day;
-                    return (
-                      <button key={day} onClick={() => handleDaySelect(day)} style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-                        padding: '0.72rem 0.8rem', borderRadius: 14,
-                        border: isActive ? '1px solid rgba(250,225,133,0.5)' : '1px solid rgba(222,154,73,0.12)',
-                        background: isActive ? 'linear-gradient(145deg, rgba(222,154,73,0.18), rgba(250,225,133,0.14))' : 'rgba(255,255,255,0.6)',
-                        cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left', position: 'relative',
-                        boxShadow: isActive ? '0 8px 22px rgba(222,154,73,0.22), inset 0 1px 0 rgba(255,255,255,0.6)' : '0 1px 4px rgba(51,75,70,0.06)',
-                        width: '100%',
-                      }}>
-                        {isActive && <div style={{ position: 'absolute', left: -1, top: '17%', bottom: '17%', width: 4, borderRadius: 99, background: 'linear-gradient(180deg,#fae185,#de9a49)' }} />}
-                        <span style={{ fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: isActive ? '#b05a32' : '#7c6b4b' }}>Day {String(idx + 1).padStart(2, '0')}</span>
-                        <span style={{ fontFamily: "'Tropikal', serif", fontSize: '1rem', fontWeight: 700, color: isActive ? '#334b46' : '#567069', marginTop: '0.15rem' }}>{day}</span>
-                        <span style={{ marginTop: '0.2rem', fontSize: '0.68rem', fontWeight: 600, color: isActive ? '#de9a49' : '#7c6b4b' }}>Tap to preview classes</span>
-                      </button>
-                    );
-                  })}
-                </div>
+
+                {/* Mobile horizontal scroll for days */}
+                {!isDesktop && (
+                  <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem', scrollbarWidth: 'none' }}>
+                    {displayedDays.map((day, idx) => {
+                      const isActive = activeDay === day;
+                      return (
+                        <button
+                          key={day}
+                          onClick={() => scrollToDay(day)}
+                          style={{
+                            flexShrink: 0,
+                            padding: '0.5rem 0.85rem',
+                            borderRadius: 10,
+                            border: isActive ? '1px solid rgba(250,225,133,0.5)' : '1px solid rgba(222,154,73,0.18)',
+                            background: isActive ? 'linear-gradient(145deg, rgba(222,154,73,0.18), rgba(250,225,133,0.14))' : 'rgba(255,255,255,0.6)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: isActive ? '0 4px 14px rgba(222,154,73,0.2)' : 'none',
+                          }}
+                        >
+                          <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: isActive ? '#b05a32' : '#7c6b4b', display: 'block' }}>Day {String(idx + 1).padStart(2, '0')}</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: isActive ? '#334b46' : '#567069', display: 'block', marginTop: 2 }}>{day}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Desktop vertical day list */}
+                {isDesktop && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.42rem' }}>
+                    {displayedDays.map((day, idx) => {
+                      const isActive = activeDay === day;
+                      return (
+                        <button
+                          key={day}
+                          onClick={() => scrollToDay(day)}
+                          style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+                            padding: '0.72rem 0.8rem', borderRadius: 14,
+                            border: isActive ? '1px solid rgba(250,225,133,0.5)' : '1px solid rgba(222,154,73,0.12)',
+                            background: isActive ? 'linear-gradient(145deg, rgba(222,154,73,0.18), rgba(250,225,133,0.14))' : 'rgba(255,255,255,0.6)',
+                            cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left', position: 'relative',
+                            boxShadow: isActive ? '0 8px 22px rgba(222,154,73,0.22), inset 0 1px 0 rgba(255,255,255,0.6)' : '0 1px 4px rgba(51,75,70,0.06)',
+                            width: '100%',
+                          }}
+                        >
+                          {isActive && <div style={{ position: 'absolute', left: -1, top: '17%', bottom: '17%', width: 4, borderRadius: 99, background: 'linear-gradient(180deg,#fae185,#de9a49)' }} />}
+                          <span style={{ fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: isActive ? '#b05a32' : '#7c6b4b' }}>Day {String(idx + 1).padStart(2, '0')}</span>
+                          <span style={{ fontFamily: "'Tropikal', serif", fontSize: '1rem', fontWeight: 700, color: isActive ? '#334b46' : '#567069', marginTop: '0.15rem' }}>{day}</span>
+                          <span style={{ marginTop: '0.2rem', fontSize: '0.68rem', fontWeight: 600, color: isActive ? '#de9a49' : '#7c6b4b' }}>
+                            {filteredAndSortedClasses.filter(c => c.date === day).length} classes
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </aside>
 
-              {/* Main preview — desktop only */}
-              {isDesktop && (
-                <div>
-                  {!user ? (
-                    <div style={{ ...panelStyle, padding: '3.5rem 2rem', textAlign: 'center' }}>
-                      <div className="leap-detail-icon-wrap" style={{ width: 64, height: 64, margin: '0 auto 1.5rem' }}><Info size={28} /></div>
-                      <h3 style={{ fontFamily: "'Tropikal', serif", fontSize: 'clamp(1.45rem, 2.4vw, 2rem)', fontWeight: 700, marginBottom: '0.5rem', color: '#334b46' }}>Sign in to see classes</h3>
-                      <p style={{ color: '#567069', fontSize: '1rem', marginBottom: '2rem' }}>You must be signed in with your DLSU account to view and register for LEAP classes.</p>
-                      <button onClick={onSignIn} className="btn-leap-primary" style={{ padding: '0.95rem 2.4rem', fontSize: '0.95rem', borderRadius: 16 }}>Sign In Now</button>
+              {/* Main content: all day sections stacked */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                {!user ? (
+                  <div style={{ ...panelStyle, padding: '3.5rem 2rem', textAlign: 'center' }}>
+                    <div className="leap-detail-icon-wrap" style={{ width: 64, height: 64, margin: '0 auto 1.5rem' }}><Info size={28} /></div>
+                    <h3 style={{ fontFamily: "'Tropikal', serif", fontSize: 'clamp(1.45rem, 2.4vw, 2rem)', fontWeight: 700, marginBottom: '0.5rem', color: '#334b46' }}>Sign in to see classes</h3>
+                    <p style={{ color: '#567069', fontSize: '1rem', marginBottom: '2rem' }}>You must be signed in with your DLSU account to view and register for LEAP classes.</p>
+                    <button onClick={onSignIn} className="btn-leap-primary" style={{ padding: '0.95rem 2.4rem', fontSize: '0.95rem', borderRadius: 16 }}>Sign In Now</button>
+                  </div>
+                ) : (
+                  displayedDays.length === 0 ? (
+                    <div style={{ ...panelStyle, padding: '3rem 2rem', textAlign: 'center' }}>
+                      <p style={{ color: '#567069' }}>No classes available.</p>
                     </div>
                   ) : (
-                    <div style={{ ...panelStyle, padding: '1.5rem', position: 'relative' }}>
-                      {accentLine}
-                      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                        <div>
-                          <p style={{ fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.22em', color: '#de9a49', marginBottom: '0.25rem' }}>Day Preview</p>
-                          <h2 style={{ fontFamily: "'Tropikal', serif", fontSize: 'clamp(1.6rem, 2.4vw, 2.1rem)', fontWeight: 700, color: '#334b46', lineHeight: 1.05 }}>{activeDay ?? 'No day available'}</h2>
+                    displayedDays.map((day, idx) => {
+                      const dayClasses = filteredAndSortedClasses.filter(c => c.date === day);
+                      return (
+                        <div
+                          key={day}
+                          ref={el => { daySectionRefs.current[day] = el; }}
+                          style={{ ...panelStyle, padding: '1.5rem', position: 'relative', scrollMarginTop: '6rem' }}
+                        >
+                          {accentLine}
+                          {/* Day header */}
+                          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            <div>
+                              <p style={{ fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.22em', color: '#de9a49', marginBottom: '0.25rem' }}>
+                                Day {String(idx + 1).padStart(2, '0')}
+                              </p>
+                              <h2 style={{ fontFamily: "'Tropikal', serif", fontSize: 'clamp(1.4rem, 2.2vw, 2rem)', fontWeight: 700, color: '#334b46', lineHeight: 1.05 }}>
+                                {day}
+                              </h2>
+                            </div>
+                            <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#b05a32', border: '1px solid rgba(222,154,73,0.3)', background: 'rgba(255,252,241,0.9)', borderRadius: 999, padding: '0.26rem 0.72rem', boxShadow: '0 2px 8px rgba(222,154,73,0.15)', whiteSpace: 'nowrap' }}>
+                              {dayClasses.length} {dayClasses.length === 1 ? 'class' : 'classes'}
+                            </div>
+                          </div>
+
+                          {dayClasses.length === 0 ? (
+                            <p style={{ color: '#7c6b4b', fontSize: '0.9rem', padding: '1rem 0', textAlign: 'center' }}>
+                              No classes match your current filters for this day.
+                            </p>
+                          ) : (
+                            <>
+                              <style>{`
+                                .home-day-grid {
+                                  display: grid;
+                                  grid-template-columns: 1fr;
+                                  gap: 1rem;
+                                }
+                                @media (min-width: 640px) {
+                                  .home-day-grid { grid-template-columns: repeat(2, 1fr); }
+                                }
+                                @media (min-width: 1280px) {
+                                  .home-day-grid { grid-template-columns: repeat(3, 1fr); }
+                                }
+                              `}</style>
+                              <div className="home-day-grid">
+                                {dayClasses.map((item, i) => renderClassCard(item, i))}
+                              </div>
+                            </>
+                          )}
                         </div>
-                        <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#b05a32', border: '1px solid rgba(222,154,73,0.3)', background: 'rgba(255,252,241,0.9)', borderRadius: 999, padding: '0.26rem 0.72rem', boxShadow: '0 2px 8px rgba(222,154,73,0.15)' }}>{activeDayClasses.length} total</div>
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: isWide ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)', gap: '1rem' }}>
-                        {activeDayClasses.slice(0, isWide ? 3 : 2).map((item, idx) => renderClassCard(item, idx))}
-                      </div>
-                      {activeDayClasses.length > (isWide ? 3 : 2) && (
-                        <p style={{ marginTop: '1rem', fontSize: '0.78rem', color: '#7c6b4b', fontWeight: 500, textAlign: 'center' }}>
-                          Showing {isWide ? 3 : 2} of {activeDayClasses.length} classes for this day.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+                      );
+                    })
+                  )
+                )}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Mobile bottom-sheet drawer */}
-        {!isDesktop && mobileOpen && activeDay && user && createPortal (
-          <div onClick={() => setMobileOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 900, background: 'rgba(8,10,8,0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-            <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '100vw', maxHeight: '85dvh', background: 'linear-gradient(180deg, #fffdf6 0%, #f9f1da 100%)', borderRadius: '24px 24px 0 0', border: '1px solid rgba(222,154,73,0.3)', boxShadow: '0 -12px 48px rgba(51,75,70,0.18)', overflowY: 'auto', boxSizing: 'border-box' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '0.75rem 0 0' }}>
-                <div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(222,154,73,0.3)' }} />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1.25rem 0.5rem' }}>
-                <div>
-                  <p style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#de9a49', marginBottom: '0.2rem' }}>Day Preview</p>
-                  <h2 style={{ fontFamily: "'Tropikal', serif", fontSize: '1.4rem', fontWeight: 700, color: '#334b46', lineHeight: 1.1 }}>{activeDay}</h2>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#b05a32', border: '1px solid rgba(222,154,73,0.28)', background: 'rgba(255,252,241,0.9)', borderRadius: 999, padding: '0.22rem 0.55rem' }}>{activeDayClasses.length} total</span>
-                  <button onClick={() => setMobileOpen(false)} style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(51,75,70,0.08)', border: '1px solid rgba(224,183,136,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#334b46' }} aria-label="Close"><X size={16} /></button>
-                </div>
-              </div>
-              <div style={{ padding: '0.5rem 1rem 2rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                {activeDayClasses.length === 0
-                  ? <p style={{ textAlign: 'center', color: '#7c6b4b', fontSize: '0.9rem', padding: '2rem 0' }}>No classes found for this day.</p>
-                  : activeDayClasses.map((item, idx) => renderClassCard(item, idx))}
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
-
         {/* Class detail modal */}
-        {user && viewingClass && createPortal (
+        {user && viewingClass && createPortal(
           <div onClick={() => onClassSelect(null)} style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(8,10,8,0.78)', backdropFilter: 'blur(6px)', padding: 'clamp(0.5rem, 2vw, 1.5rem)', overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ width: 'min(1040px, 96vw)', maxHeight: 'calc(100dvh - 2rem)', background: 'linear-gradient(180deg, #fffdf6 0%, #f9f1da 100%)', borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(222,154,73,0.3)', boxShadow: '0 24px 64px rgba(51,75,70,0.18)', position: 'relative', margin: '1rem auto' }}>
               <button onClick={() => onClassSelect(null)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,252,241,0.96)', border: '1px solid rgba(222,154,73,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#334b46' }} aria-label="Close"><X size={18} /></button>
@@ -260,7 +356,7 @@ export default function Home({
           </div>,
           document.body
         )}
-      </div>
+      </div>  
     </main>
   );
 }
