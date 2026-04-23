@@ -1089,6 +1089,21 @@ const LeapApp = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const scrollToClassesSection = () => {
+    const section = document.getElementById('classes-section');
+    if (!section) return;
+    const NAV_OFFSET = 88;
+    const top = section.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  };
+
+  const handleSubthemeSelect = (theme: string | null) => {
+    setActiveSubtheme(theme);
+    setCurrentPage(1);
+    setSelectedDay(null);
+    requestAnimationFrame(() => scrollToClassesSection());
+  };
+
   const filteredAndSortedClasses: LeapClass[] = useMemo(() => {
     let result = classes.filter((c) => (
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1407,11 +1422,11 @@ const LeapApp = () => {
         <div style={{ width: 'min(1500px, 98vw)', margin: '0 auto', position: 'relative' }}>
           <div className={styles.subthemesBackdropTop} />
           <div className={styles.subthemesBackdropRight} />
-          <SubthemesStrip activeTheme={activeSubtheme} onSelect={(t) => { setActiveSubtheme(t); setCurrentPage(1); setSelectedDay(null); }} compact />
+          <SubthemesStrip activeTheme={activeSubtheme} onSelect={handleSubthemeSelect} compact />
           {activeSubtheme && (
             <div style={{ textAlign: 'center', paddingBottom: '1rem' }}>
               <button
-                onClick={() => { setActiveSubtheme(null); setCurrentPage(1); setSelectedDay(null); }}
+                onClick={() => handleSubthemeSelect(null)}
                 style={{ background: 'rgba(222,154,73,0.15)', border: '1px solid rgba(222,154,73,0.4)', borderRadius: 999, padding: '0.28rem 0.9rem', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fae185', cursor: 'pointer' }}
               >
                 Clear {activeSubtheme}

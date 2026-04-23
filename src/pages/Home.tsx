@@ -44,6 +44,7 @@ export default function Home({
   viewingClass, onClassSelect, onSignIn, HeroSection, HeroExtras, renderClassCard,
 }: HomeProps) {
   const w = useWindowWidth();
+  const isMobile = w < 640;
   const isDesktop = w >= 1024;
   // const isWide = w >= 1280;
 
@@ -98,6 +99,15 @@ export default function Home({
     setExpandedDays(prev => ({ ...prev, [day]: !prev[day] }));
   };
 
+  useEffect(() => {
+    if (!viewingClass) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [viewingClass]);
+
   const panelStyle = {
     background: 'linear-gradient(145deg, rgba(255,252,241,0.98), rgba(253,247,228,0.96))',
     backdropFilter: 'blur(12px)',
@@ -134,7 +144,7 @@ export default function Home({
           ref={catalogRef}
           id="classes-section"
           style={{
-            padding: '2rem 0 6rem',
+            padding: isMobile ? '1.25rem 0 4.5rem' : '2rem 0 6rem',
             background: `
               radial-gradient(ellipse 55% 35% at 15% 25%, rgba(74,176,154,0.07) 0%, transparent 55%),
               radial-gradient(ellipse 45% 30% at 88% 75%, rgba(222,154,73,0.07) 0%, transparent 50%),
@@ -156,10 +166,10 @@ export default function Home({
               <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
                 <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#7c6b4b', pointerEvents: 'none' }} />
                 <input type="text" placeholder="Search classes, orgs, or topics…" className="leap-search"
-                  style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: '1rem', paddingTop: '0.75rem', paddingBottom: '0.75rem', boxSizing: 'border-box' }}
+                  style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: '1rem', paddingTop: '0.75rem', paddingBottom: '0.75rem', boxSizing: 'border-box', minHeight: 46 }}
                   value={searchQuery} onChange={e => onSearchChange(e.target.value)} />
               </div>
-              <select value={sortBy} onChange={e => onSortChange(e.target.value as 'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc')} aria-label="Sort classes" className="leap-select" style={{ padding: '0.75rem 1.25rem', flexShrink: 0 }}>
+              <select value={sortBy} onChange={e => onSortChange(e.target.value as 'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc')} aria-label="Sort classes" className="leap-select" style={{ padding: '0.75rem 1.25rem', flexShrink: 0, minHeight: 46, width: isMobile ? '100%' : 'auto' }}>
                 <option value="title-asc">Title (A–Z)</option>
                 <option value="title-desc">Title (Z–A)</option>
                 <option value="slots-desc">Most Slots</option>
@@ -198,7 +208,7 @@ export default function Home({
 
                 {/* Mobile horizontal scroll for days */}
                 {!isDesktop && (
-                  <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem', scrollbarWidth: 'none' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem', scrollbarWidth: 'none', scrollSnapType: 'x proximity' }}>
                     {displayedDays.map((day, idx) => {
                       const isActive = activeDay === day;
                       return (
@@ -207,13 +217,15 @@ export default function Home({
                           onClick={() => scrollToDay(day)}
                           style={{
                             flexShrink: 0,
-                            padding: '0.5rem 0.85rem',
+                            padding: '0.62rem 0.9rem',
                             borderRadius: 10,
                             border: isActive ? '1px solid rgba(250,225,133,0.5)' : '1px solid rgba(222,154,73,0.18)',
                             background: isActive ? 'linear-gradient(145deg, rgba(222,154,73,0.18), rgba(250,225,133,0.14))' : 'rgba(255,255,255,0.6)',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             boxShadow: isActive ? '0 4px 14px rgba(222,154,73,0.2)' : 'none',
+                            minHeight: 52,
+                            scrollSnapAlign: 'start',
                           }}
                         >
                           <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: isActive ? '#b05a32' : '#7c6b4b', display: 'block' }}>Day {String(idx + 1).padStart(2, '0')}</span>
@@ -370,10 +382,10 @@ export default function Home({
 
         {/* Class detail modal */}
         {user && viewingClass && createPortal(
-          <div onClick={() => onClassSelect(null)} style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(8,10,8,0.78)', backdropFilter: 'blur(6px)', padding: 'clamp(0.5rem, 2vw, 1.5rem)', overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
-            <div onClick={e => e.stopPropagation()} style={{ width: 'min(1040px, 96vw)', maxHeight: 'calc(100dvh - 2rem)', background: 'linear-gradient(180deg, #fffdf6 0%, #f9f1da 100%)', borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(222,154,73,0.3)', boxShadow: '0 24px 64px rgba(51,75,70,0.18)', position: 'relative', margin: '1rem auto' }}>
-              <button onClick={() => onClassSelect(null)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,252,241,0.96)', border: '1px solid rgba(222,154,73,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#334b46' }} aria-label="Close"><X size={18} /></button>
-              <div style={{ display: 'grid', gridTemplateColumns: w >= 640 ? 'min(340px, 38%) 1fr' : '1fr', maxHeight: 'calc(100dvh - 2rem)', overflow: 'auto' }}>
+          <div onClick={() => onClassSelect(null)} style={{ position: 'fixed', inset: 0, zIndex: 1100, height: '100dvh', background: 'rgba(8,10,8,0.78)', backdropFilter: 'blur(6px)', padding: isMobile ? 0 : 'clamp(0.5rem, 2vw, 1.5rem)', overflow: 'hidden', display: 'grid', placeItems: 'center' }}>
+            <div onClick={e => e.stopPropagation()} style={{ width: isMobile ? '100vw' : 'min(1040px, 96vw)', maxHeight: isMobile ? '100dvh' : 'calc(100dvh - 2rem)', height: isMobile ? '100dvh' : 'auto', background: 'linear-gradient(180deg, #fffdf6 0%, #f9f1da 100%)', borderRadius: isMobile ? 0 : 18, overflow: 'auto', border: isMobile ? 'none' : '1px solid rgba(222,154,73,0.3)', boxShadow: isMobile ? 'none' : '0 24px 64px rgba(51,75,70,0.18)', position: 'relative', margin: 0 }}>
+              <button onClick={() => onClassSelect(null)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10, width: 42, height: 42, borderRadius: '50%', background: 'rgba(255,252,241,0.96)', border: '1px solid rgba(222,154,73,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#334b46' }} aria-label="Close"><X size={20} /></button>
+              <div style={{ display: 'grid', gridTemplateColumns: w >= 640 ? 'min(340px, 38%) 1fr' : '1fr', maxHeight: isMobile ? '100dvh' : 'calc(100dvh - 2rem)', overflow: 'auto' }}>
                 <div style={{ position: 'relative', minHeight: w >= 640 ? 300 : 200, maxHeight: w >= 640 ? 'calc(100dvh - 2rem)' : 240, overflow: 'hidden' }}>
                   <img src={viewingClass.image} alt={viewingClass.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} referrerPolicy="no-referrer" />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.38) 0%, transparent 55%)' }} />
@@ -382,7 +394,7 @@ export default function Home({
                     {viewingClass.subtheme && <span className="leap-detail-badge">{viewingClass.subtheme}</span>}
                   </div>
                 </div>
-                <div style={{ padding: 'clamp(1.1rem, 2.4vw, 2rem)', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ padding: isMobile ? '1rem 1rem 1.35rem' : 'clamp(1.1rem, 2.4vw, 2rem)', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div>
                     <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(1.4rem, 3vw, 2.1rem)', fontWeight: 800, color: '#334b46', lineHeight: 1.1, marginBottom: '0.4rem' }}>{viewingClass.title}</h1>
                     <p style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#de9a49' }}>Organized by {viewingClass.org}</p>
@@ -406,7 +418,7 @@ export default function Home({
                     <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.05rem', fontWeight: 700, color: '#334b46', marginBottom: '0.6rem' }}>About this class</h3>
                     <p style={{ color: '#567069', lineHeight: 1.75, fontSize: '0.95rem' }}>{viewingClass.description || 'No description provided.'}</p>
                   </div>
-                  <a href={viewingClass.googleFormUrl || '#'} target="_blank" rel="noopener noreferrer" className="btn-leap-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0.9rem 2rem', borderRadius: 14, fontSize: '0.9rem', textDecoration: 'none' }}>
+                  <a href={viewingClass.googleFormUrl || '#'} target="_blank" rel="noopener noreferrer" className="btn-leap-primary" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '0.9rem 2rem', borderRadius: 14, fontSize: '0.9rem', textDecoration: 'none', width: isMobile ? '100%' : 'fit-content' }}>
                     Register via Google Forms <ExternalLink size={16} />
                   </a>
                 </div>
