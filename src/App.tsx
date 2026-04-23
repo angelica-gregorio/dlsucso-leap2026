@@ -698,51 +698,6 @@ const GlowRing = () => (
 );
 
 /* ══════════════════════════════════════════════════════
-   AMBIENT ORBS — blurred background light blobs
-══════════════════════════════════════════════════════ */
-const AmbientOrbs = () => (
-  <>
-    <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: '#4ab09a', filter: 'blur(70px)', opacity: 0.14, top: '8%', left: '3%', animation: 'orbDrift 9s ease-in-out infinite', pointerEvents: 'none' }} />
-    <div style={{ position: 'absolute', width: 220, height: 220, borderRadius: '50%', background: '#de9a49', filter: 'blur(65px)', opacity: 0.12, top: '15%', right: '5%', animation: 'orbDrift 7s ease-in-out infinite 2.5s', pointerEvents: 'none' }} />
-    <div style={{ position: 'absolute', width: 200, height: 200, borderRadius: '50%', background: '#5ca0a8', filter: 'blur(60px)', opacity: 0.11, bottom: '10%', left: '18%', animation: 'orbDrift 11s ease-in-out infinite 1.2s', pointerEvents: 'none' }} />
-    <style>{`
-      @keyframes spinRing { to { transform: rotate(360deg); } }
-      @keyframes orbDrift { 0%,100%{transform:translate(0,0)} 50%{transform:translate(18px,-14px)} }
-      @keyframes starTwinkleAnim { 0%,100%{opacity:.08;transform:scale(1)} 50%{opacity:.75;transform:scale(1.5)} }
-      @keyframes cardSlideIn { from{opacity:0;transform:scale(.92) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
-    `}</style>
-  </>
-);
-
-/* ══════════════════════════════════════════════════════
-   STAR PARTICLES
-══════════════════════════════════════════════════════ */
-const StarParticles = () => {
-  const stars = Array.from({ length: 26 }, (_, i) => ({
-    x: ((i * 17.3 + (i % 4) * 22) % 92) + 4,
-    y: ((i * 11.9 + (i % 5) * 14) % 72) + 5,
-    size: 1.2 + (i % 3) * 0.7,
-    dur: 2.4 + (i % 5) * 0.55,
-    del: (i * 0.58) % 5.5,
-  }));
-  return (
-    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-      {stars.map((s, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: `${s.x}%`, top: `${s.y}%`,
-          width: s.size, height: s.size,
-          borderRadius: '50%',
-          background: '#fae185',
-          boxShadow: `0 0 ${s.size * 3}px ${s.size}px rgba(250,225,133,0.65)`,
-          animation: `starTwinkleAnim ${s.dur}s ease-in-out infinite ${s.del}s`,
-        } as CSSProperties} />
-      ))}
-    </div>
-  );
-};
-
-/* ══════════════════════════════════════════════════════
    MAIN EVENTS SECTION 
 ══════════════════════════════════════════════════════ */
 const MainEventsSection = ({ onEventSelect }: { onEventSelect?: (item: any) => void }) => {
@@ -1322,10 +1277,10 @@ const LeapApp = () => {
   }
 
   const navClass = scrolled
-  ? 'scrolled-nav py-2'
+  ? 'scrolled-nav py-3'
   : currentView === 'home'
-    ? 'bg-transparent py-4'
-    : 'dark-page-nav py-4';
+    ? 'bg-transparent py-5'
+    : 'dark-page-nav py-5';
 
   const HeroSection = (
     <header className={styles.heroSection}>
@@ -1524,10 +1479,10 @@ const LeapApp = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 bg-transparent py-4`}>
+        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 bg-transparent py-5`}>
           <div className={styles.navInner}>
             <div className={styles.navLogo} onClick={() => window.scrollTo(0, 0)}>
-              <img src={leapLogo} alt="LEAP 2026" width="60" height="34" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
+              <img src={leapLogo} alt="LEAP 2026" width="74" height="42" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
             </div>
             <div />
           </div>
@@ -1547,7 +1502,7 @@ const LeapApp = () => {
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${navClass}`}>
         <div className={styles.navInner}>
           <div className={styles.navLogo} onClick={() => navigateTo('home')}>
-            <img src={leapLogo} alt="LEAP 2026" width="60" height="34"className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
+            <img src={leapLogo} alt="LEAP 2026" width="74" height="42"className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
           </div>
           <div className={styles.navCenter}>
             <button onClick={() => navigateTo('home')} className={`nav-link ${currentView === 'home' ? 'active' : ''}`}>Home</button>
@@ -1558,23 +1513,23 @@ const LeapApp = () => {
             {userProfile?.role === 'admin' && <button onClick={() => setIsAdminView(true)} className="leap-admin-link">Admin</button>}
           </div>
           <div className="leap-nav-right hidden md:flex">
-            <button className="nav-icon-btn" onClick={() => navigateTo('classes')} title="Search classes"><Search size={15} /></button>
+            <button className="nav-icon-btn" onClick={() => navigateTo('classes')} title="Search classes"><Search size={17} /></button>
             {user ? (
               <>
                 <button className="nav-icon-btn" title={user.displayName || 'Profile'}>
                   {user.photoURL
                     ? <img src={user.photoURL} alt="Profile" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
-                    : <User size={15} />}
+                    : <User size={17} />}
                 </button>
-                <button onClick={handleSignOut} className="btn-leap-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.72rem', borderRadius: 6, gap: '0.4rem' }}>
-                  <LogOut size={13} /> Sign Out
+                <button onClick={handleSignOut} className="btn-leap-primary" style={{ padding: '0.55rem 1.1rem', fontSize: '0.76rem', borderRadius: 8, gap: '0.45rem' }}>
+                  <LogOut size={14} /> Sign Out
                 </button>
               </>
             ) : (
               <>
-                <button className="nav-icon-btn" title="Sign in" onClick={handleSignIn}><User size={15} /></button>
-                <button onClick={handleSignIn} className="btn-leap-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.72rem', borderRadius: 6, gap: '0.4rem' }}>
-                  <LogIn size={13} /> Register
+                <button className="nav-icon-btn" title="Sign in" onClick={handleSignIn}><User size={17} /></button>
+                <button onClick={handleSignIn} className="btn-leap-primary" style={{ padding: '0.55rem 1.1rem', fontSize: '0.76rem', borderRadius: 8, gap: '0.45rem' }}>
+                  <LogIn size={14} /> Register
                 </button>
               </>
             )}

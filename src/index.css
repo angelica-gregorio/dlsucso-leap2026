@@ -125,7 +125,7 @@ body::after {
   justify-self: center;
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 2.35rem;
 }
 
 .leap-nav-right {
@@ -136,9 +136,9 @@ body::after {
 }
 
 .nav-icon-btn {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -166,13 +166,13 @@ body::after {
 
 .nav-link {
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
+  font-size: 0.96rem;
+  font-weight: 600;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   color: rgba(249, 236, 182, 0.7);
   position: relative;
-  padding-bottom: 3px;
+  padding-bottom: 4px;
   transition: color 0.2s;
   background: none;
   border: none;
@@ -278,7 +278,7 @@ body::after {
 .leap-admin-link {
   font-family: 'DM Sans', sans-serif;
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #de9a49;
