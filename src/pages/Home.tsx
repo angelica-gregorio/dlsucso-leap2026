@@ -370,8 +370,8 @@ export default function Home({
 
         {/* Class detail modal */}
         {user && viewingClass && createPortal(
-          <div onClick={() => onClassSelect(null)} style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(8,10,8,0.78)', backdropFilter: 'blur(6px)', padding: 'clamp(0.5rem, 2vw, 1.5rem)', overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
-            <div onClick={e => e.stopPropagation()} style={{ width: 'min(1040px, 96vw)', maxHeight: 'calc(100dvh - 2rem)', background: 'linear-gradient(180deg, #fffdf6 0%, #f9f1da 100%)', borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(222,154,73,0.3)', boxShadow: '0 24px 64px rgba(51,75,70,0.18)', position: 'relative', margin: '1rem auto' }}>
+          <div onClick={() => onClassSelect(null)} style={{ position: 'fixed', inset: 0, zIndex: 1100, height: '100dvh', background: 'rgba(8,10,8,0.78)', backdropFilter: 'blur(6px)', padding: 'clamp(0.5rem, 2vw, 1.5rem)', overflow: 'hidden', display: 'grid', placeItems: 'center' }}>
+            <div onClick={e => e.stopPropagation()} style={{ width: 'min(1040px, 96vw)', maxHeight: 'calc(100dvh - 2rem)', background: 'linear-gradient(180deg, #fffdf6 0%, #f9f1da 100%)', borderRadius: 18, overflow: 'auto', border: '1px solid rgba(222,154,73,0.3)', boxShadow: '0 24px 64px rgba(51,75,70,0.18)', position: 'relative', margin: 0 }}>
               <button onClick={() => onClassSelect(null)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,252,241,0.96)', border: '1px solid rgba(222,154,73,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#334b46' }} aria-label="Close"><X size={18} /></button>
               <div style={{ display: 'grid', gridTemplateColumns: w >= 640 ? 'min(340px, 38%) 1fr' : '1fr', maxHeight: 'calc(100dvh - 2rem)', overflow: 'auto' }}>
                 <div style={{ position: 'relative', minHeight: w >= 640 ? 300 : 200, maxHeight: w >= 640 ? 'calc(100dvh - 2rem)' : 240, overflow: 'hidden' }}>

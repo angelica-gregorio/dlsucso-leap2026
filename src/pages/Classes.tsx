@@ -452,14 +452,14 @@ export default function Classes({
             position: 'fixed',
             inset: 0,
             zIndex: 1100,
-            overflowY: 'auto',
+            height: '100dvh',
+            overflow: 'hidden',
             background: 'rgba(8, 10, 8, 0.78)',
             backdropFilter: 'blur(6px)',
             WebkitBackdropFilter: 'blur(6px)',
             padding: 'clamp(0.5rem, 2vw, 1.5rem)',
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'center',
+            display: 'grid',
+            placeItems: 'center',
           }}
         >
           <motion.div
@@ -474,9 +474,9 @@ export default function Classes({
               boxShadow: '0 24px 64px rgba(51,75,70,0.18)',
               width: 'min(1040px, 96vw)',
               maxHeight: 'calc(100dvh - 2rem)',
-              overflow: 'hidden',
+              overflow: 'auto',
               position: 'relative',
-              margin: '1rem auto',
+              margin: 0,
               display: 'flex',
               flexDirection: 'column',
             }}
