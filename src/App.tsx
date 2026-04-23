@@ -853,15 +853,7 @@ const MainEventsSection = ({ onEventSelect }: { onEventSelect?: (item: any) => v
     : [(activeIndex - 1 + totalEvents) % totalEvents, activeIndex, (activeIndex + 1) % totalEvents];
 
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, padding: '0.75rem 0 1rem' }}>
-      {/* Ambient orbs + star particles */}
-      <AmbientOrbs />
-      <StarParticles />
-      {/* Radial center glow */}
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 65% 60% at 50% 45%, rgba(222,154,73,0.14) 0%, rgba(222,154,73,0) 70%)', pointerEvents: 'none' }} />
-      {/* Bottom fade */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120, background: 'linear-gradient(to bottom, transparent, rgba(14,26,12,0.8))', pointerEvents: 'none' }} />
-
+    <section style={{ position: 'relative', overflow: 'visible', padding: '0.25rem 0 0.25rem', background: 'transparent' }}>
       <div style={{ position: 'relative', zIndex: 5, maxWidth: 1500, margin: '0 auto', padding: '0 clamp(0.5rem, 2vw, 1rem)' }}>
         {/* Card fan */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem 0' }}>
@@ -1386,12 +1378,12 @@ const LeapApp = () => {
             </motion.div>
           )}
         </motion.div>
-        {hasAppAccess && currentView === 'home' && (
-          <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.45rem', marginLeft: '50%', transform: 'translateX(-50%)' }}>
-            <MainEventsSection onEventSelect={(item) => setViewingClass(item)} />
-          </div>
-        )}
       </div>
+      {hasAppAccess && currentView === 'home' && (
+        <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.45rem', marginLeft: '50%', transform: 'translateX(-50%)', position: 'relative', zIndex: 2 }}>
+          <MainEventsSection onEventSelect={(item) => setViewingClass(item)} />
+        </div>
+      )}
     </header>
   );
 
