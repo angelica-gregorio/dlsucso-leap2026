@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft,
   Menu, X, Info, LogOut, LogIn, AlertCircle,
-  Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Mail, Clock,
+  Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Mail, Clock, ChevronUp,
   User, BookOpen, Wrench, Handshake, HeartPulse
 } from 'lucide-react';
 
@@ -1014,6 +1014,7 @@ const LeapApp = () => {
   const [isAdminView, setIsAdminView] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'about' | 'major-events' | 'classes' | 'faq' | 'contact'>('home');
   const [scrolled, setScrolled] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc'>('title-asc');
@@ -1060,7 +1061,9 @@ const LeapApp = () => {
       c.org.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.subtheme.toLowerCase().includes(searchQuery.toLowerCase())
     ));
-    if (activeSubtheme) result = result.filter((c) => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
+    if (currentView === 'home' && activeSubtheme) {
+      result = result.filter((c) => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
+    }
     result.sort((a, b) => {
       if (sortBy === 'title-asc') return a.title.localeCompare(b.title);
       if (sortBy === 'title-desc') return b.title.localeCompare(a.title);
@@ -1069,7 +1072,7 @@ const LeapApp = () => {
       return 0;
     });
     return result;
-  }, [classes, searchQuery, sortBy, activeSubtheme]);
+  }, [classes, searchQuery, sortBy, activeSubtheme, currentView]);
 
   const uniqueDays: string[] = useMemo(() => (
     Array.from(new Set(filteredAndSortedClasses.map((c) => c.date)))
@@ -1160,10 +1163,29 @@ const LeapApp = () => {
   }, [user]);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+      setShowBackToTop(window.scrollY > 460);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!viewingClass) return;
+
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, [viewingClass]);
 
   const handleSignIn = async () => {
     setAuthError(null);
@@ -1651,6 +1673,22 @@ const LeapApp = () => {
           <p>© 2026 LEAP Operations Team · De La Salle University · Council of Student Organizations</p>
         </div>
       </footer>
+
+      <AnimatePresence>
+        {showBackToTop && !viewingClass && (
+          <motion.button
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className={styles.backToTopBtn}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="Back to top"
+          >
+            <ChevronUp size={14} />
+            Top
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       <ScrollProgress />
     </div>

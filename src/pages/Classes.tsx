@@ -211,10 +211,18 @@ export default function Classes({
             <>
               {/* ── SEARCH & FILTER ── */}
               <section
+                id="classes-sticky-filters"
+                className="classes-sticky-filter"
                 style={{
-                  padding: 'clamp(1rem, 3vw, 2rem)',
+                  position: 'sticky',
+                  top: '5.35rem',
+                  zIndex: 45,
+                  padding: 'clamp(0.9rem, 2.2vw, 1.25rem)',
                   borderRadius: '1rem',
-                  background: 'rgba(249,236,182,0.25)',
+                  background: 'linear-gradient(145deg, rgba(255,252,241,0.96), rgba(253,247,228,0.94))',
+                  border: '1px solid rgba(222,154,73,0.28)',
+                  boxShadow: '0 14px 34px rgba(51,75,70,0.08), inset 0 1px 0 rgba(255,255,255,0.84)',
+                  backdropFilter: 'blur(8px)',
                   marginBottom: '2rem',
                   width: '100%',
                   boxSizing: 'border-box',
@@ -234,6 +242,39 @@ export default function Classes({
                       @media (min-width: 640px) {
                         .classes-search-row {
                           flex-direction: row !important;
+                        }
+                      }
+
+                      @media (max-width: 768px) {
+                        .classes-sticky-filter {
+                          top: 4.85rem !important;
+                          margin-bottom: 1.25rem !important;
+                          border-radius: 0.9rem !important;
+                          padding: 0.72rem !important;
+                        }
+
+                        .classes-date-row {
+                          flex-wrap: nowrap !important;
+                          overflow-x: auto;
+                          overflow-y: hidden;
+                          -webkit-overflow-scrolling: touch;
+                          scrollbar-width: none;
+                          padding-bottom: 0.2rem;
+                        }
+
+                        .classes-date-row::-webkit-scrollbar {
+                          display: none;
+                        }
+
+                        .classes-date-pill {
+                          flex: 0 0 auto;
+                          white-space: nowrap;
+                          padding: 0.48rem 0.9rem !important;
+                          font-size: 0.74rem !important;
+                        }
+
+                        .classes-sort-select {
+                          width: 100%;
                         }
                       }
                     `}</style>
@@ -268,7 +309,7 @@ export default function Classes({
                           onSortChange(e.target.value as 'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc')
                         }
                         aria-label="Sort classes"
-                        className="leap-select"
+                        className="leap-select classes-sort-select"
                         style={{ padding: '0.875rem 1.25rem', flexShrink: 0, boxSizing: 'border-box' }}
                       >
                         <option value="title-asc">Title (A–Z)</option>
@@ -281,6 +322,7 @@ export default function Classes({
 
                   {/* Date filter pills */}
                   <div
+                    className="classes-date-row"
                     style={{
                       display: 'flex',
                       flexWrap: 'wrap',
@@ -289,6 +331,7 @@ export default function Classes({
                     }}
                   >
                     <button
+                      className="classes-date-pill"
                       onClick={() => onDaySelect(null)}
                       style={{
                         padding: '0.4rem 1rem',
@@ -308,6 +351,7 @@ export default function Classes({
                     {uniqueDays.map((day) => (
                       <button
                         key={day}
+                        className="classes-date-pill"
                         onClick={() => onDaySelect(day)}
                         style={{
                           padding: '0.4rem 1rem',
