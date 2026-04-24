@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft, Info, X } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { User as FirebaseUser } from 'firebase/auth';
 
 interface LeapClass {
@@ -135,13 +136,36 @@ export default function Classes({
   renderClassCard,
 }: ClassesPageProps) {
   const ITEMS_PER_PAGE = 6;
-  const dateFilteredClasses = selectedDay 
+  const dateFilteredClasses = (selectedDay 
     ? filteredAndSortedClasses.filter((c) => c.date === selectedDay)
-    : filteredAndSortedClasses;
-  const totalPages = Math.ceil(dateFilteredClasses.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIdx = startIdx + ITEMS_PER_PAGE;
-  const paginatedClasses = dateFilteredClasses.slice(startIdx, endIdx);
+    : filteredAndSortedClasses
+    ).slice().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+useEffect(() => {
+  setVisibleCount(ITEMS_PER_PAGE);
+}, [searchQuery, sortBy, selectedDay]);
+
+const visibleClasses = dateFilteredClasses.slice(0, visibleCount);
+const hasMore = visibleCount < dateFilteredClasses.length;
+
+useEffect(() => {
+  const sentinel = sentinelRef.current;
+  if (!sentinel) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && hasMore) {
+        setVisibleCount((prev) => Math.min(prev + ITEMS_PER_PAGE, dateFilteredClasses.length));
+      }
+    },
+    { rootMargin: '200px' }
+  );
+
+  observer.observe(sentinel);
+  return () => observer.disconnect();
+}, [hasMore, dateFilteredClasses.length]);
 
   return (
     <PageWrapper>
@@ -373,19 +397,21 @@ export default function Classes({
                 </div>
               </section>
 
+              <div style={{ height: '0.5rem' }} />
+
               {/* ── RESULTS COUNT ── */}
-              <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
-                <p
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: '0.85rem',
-                    color: '#7c6b4b',
-                    fontWeight: 500,
-                  }}
-                >
-                  Showing {Math.min(startIdx + 1, dateFilteredClasses.length)}–{Math.min(endIdx, dateFilteredClasses.length)} of {dateFilteredClasses.length} classes
-                </p>
-              </div>
+                <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
+                  <p
+                    style={{
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: '0.85rem',
+                      color: '#7c6b4b',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Showing {visibleClasses.length} of {dateFilteredClasses.length} classes
+                  </p>
+                </div>
 
               {/* ── CLASSES GRID ── */}
               {dateFilteredClasses.length === 0 ? (
@@ -412,72 +438,28 @@ export default function Classes({
                     }
                   `}</style>
                   <div className="classes-grid" style={{ marginBottom: '2rem' }}>
-                    {paginatedClasses.map((item, index) => renderClassCard(item, index))}
+                    {visibleClasses.map((item, index) => renderClassCard(item, index))}
                   </div>
 
                   {/* ── PAGINATION ── */}
-                  {totalPages > 1 && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.75rem',
-                        padding: '2rem 0',
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <button
-                        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                        disabled={currentPage === 1}
-                        className="leap-page-btn"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.4rem',
-                          padding: '0.6rem 1.1rem',
-                        }}
-                      >
-                        <ChevronLeft size={16} /> Prev
-                      </button>
-
-                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                          <button
-                            key={page}
-                            onClick={() => onPageChange(page)}
-                            className="leap-page-btn"
-                            style={{
-                              width: 38,
-                              height: 38,
-                              padding: 0,
-                              borderRadius: '0.5rem',
-                              fontWeight: 700,
-                              background: currentPage === page ? '#de9a49' : undefined,
-                              color: currentPage === page ? '#1a1008' : undefined,
-                              borderColor: currentPage === page ? '#de9a49' : undefined,
-                            }}
-                          >
-                            {page}
-                          </button>
-                        ))}
+                  {/* Infinite scroll sentinel */}
+                    <div ref={sentinelRef} style={{ height: 1 }} />
+                    {hasMore && (
+                      <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                        <div
+                          style={{
+                            width: 32,
+                            height: 32,
+                            border: '3px solid rgba(222,154,73,0.25)',
+                            borderTopColor: '#de9a49',
+                            borderRadius: '50%',
+                            animation: 'leap-spin 0.7s linear infinite',
+                            margin: '0 auto',
+                          }}
+                        />
+                        <style>{`@keyframes leap-spin { to { transform: rotate(360deg); } }`}</style>
                       </div>
-
-                      <button
-                        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                        disabled={currentPage === totalPages}
-                        className="leap-page-btn"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.4rem',
-                          padding: '0.6rem 1.1rem',
-                        }}
-                      >
-                        Next <ChevronRight size={16} />
-                      </button>
-                    </div>
-                  )}
+                    )}
                 </>
               )}
             </>
