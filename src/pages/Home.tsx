@@ -46,6 +46,8 @@ export default function Home({
   const w = useWindowWidth();
   const isMobile = w < 640;
   const isDesktop = w >= 1024;
+  const searchStickyTop = isDesktop ? 84 : 76;
+  const daysStickyTop = isDesktop ? 172 : 146;
   // const isWide = w >= 1280;
 
   const displayedDays = uniqueDays.slice(0, 5);
@@ -162,7 +164,7 @@ export default function Home({
           <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(0.75rem, 3vw, 1.5rem)', boxSizing: 'border-box', width: '100%' }}>
 
             {/* Search bar */}
-            <div style={{ ...panelStyle, padding: '1rem 1.25rem', marginBottom: '1.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' as const, alignItems: 'center', boxSizing: 'border-box' as const, width: '100%' }}>
+            <div id="home-search-bar" style={{ ...panelStyle, position: 'sticky', top: `${searchStickyTop}px`, zIndex: 90, padding: '1rem 1.25rem', marginBottom: '1.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' as const, alignItems: 'center', boxSizing: 'border-box' as const, width: '100%' }}>
               <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
                 <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#7c6b4b', pointerEvents: 'none' }} />
                 <input type="text" placeholder="Search classes, orgs, or topics…" className="leap-search"
@@ -187,11 +189,11 @@ export default function Home({
                   ...panelStyle,
                   padding: '1.25rem 1.05rem',
                   // Sticky: stays in view as you scroll through day sections
-                  position: isDesktop ? 'sticky' : 'static',
-                  top: '5.5rem',
+                  position: 'sticky',
+                  top: `${daysStickyTop}px`,
                   // Critical: limits height so it never overflows the viewport,
                   // allowing CSS sticky to actually work
-                  maxHeight: isDesktop ? 'calc(100vh - 7rem)' : 'none',
+                  maxHeight: isDesktop ? `calc(100vh - ${daysStickyTop + 20}px)` : 'none',
                   overflowY: isDesktop ? 'auto' : 'visible',
                   alignSelf: 'start',
                   boxSizing: 'border-box' as const,

@@ -12,7 +12,7 @@ export default function About() {
 
   return (
     <PageWrapper>
-      <PageHero title="About LEAP 2026" subtitle="Isang Nayon, Isang Layunin — One Village, One Purpose" accent="DLSU · Central Student Organization" />
+      <PageHero title="About LEAP 2026" subtitle="Isang Nayon, Isang Layunin — One Village, One Purpose" accent="DLSU · Council of Student Organization" />
       <main className="container mx-auto px-4 pb-24 max-w-5xl">
         <div className="about-intro-grid">
           <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>

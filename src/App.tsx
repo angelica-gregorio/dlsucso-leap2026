@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Calendar, MapPin, Users, ChevronRight, ChevronLeft,
   Menu, X, Info, LogOut, LogIn, AlertCircle,
-  Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Mail, Clock,
+  Edit, ArrowLeft, ExternalLink, Sparkles, Palette, Mail, Clock, ChevronUp,
   User, BookOpen, Wrench, Handshake, HeartPulse
 } from 'lucide-react';
 
@@ -698,51 +698,6 @@ const GlowRing = () => (
 );
 
 /* ══════════════════════════════════════════════════════
-   AMBIENT ORBS — blurred background light blobs
-══════════════════════════════════════════════════════ */
-const AmbientOrbs = () => (
-  <>
-    <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: '#4ab09a', filter: 'blur(70px)', opacity: 0.14, top: '8%', left: '3%', animation: 'orbDrift 9s ease-in-out infinite', pointerEvents: 'none' }} />
-    <div style={{ position: 'absolute', width: 220, height: 220, borderRadius: '50%', background: '#de9a49', filter: 'blur(65px)', opacity: 0.12, top: '15%', right: '5%', animation: 'orbDrift 7s ease-in-out infinite 2.5s', pointerEvents: 'none' }} />
-    <div style={{ position: 'absolute', width: 200, height: 200, borderRadius: '50%', background: '#5ca0a8', filter: 'blur(60px)', opacity: 0.11, bottom: '10%', left: '18%', animation: 'orbDrift 11s ease-in-out infinite 1.2s', pointerEvents: 'none' }} />
-    <style>{`
-      @keyframes spinRing { to { transform: rotate(360deg); } }
-      @keyframes orbDrift { 0%,100%{transform:translate(0,0)} 50%{transform:translate(18px,-14px)} }
-      @keyframes starTwinkleAnim { 0%,100%{opacity:.08;transform:scale(1)} 50%{opacity:.75;transform:scale(1.5)} }
-      @keyframes cardSlideIn { from{opacity:0;transform:scale(.92) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
-    `}</style>
-  </>
-);
-
-/* ══════════════════════════════════════════════════════
-   STAR PARTICLES
-══════════════════════════════════════════════════════ */
-const StarParticles = () => {
-  const stars = Array.from({ length: 26 }, (_, i) => ({
-    x: ((i * 17.3 + (i % 4) * 22) % 92) + 4,
-    y: ((i * 11.9 + (i % 5) * 14) % 72) + 5,
-    size: 1.2 + (i % 3) * 0.7,
-    dur: 2.4 + (i % 5) * 0.55,
-    del: (i * 0.58) % 5.5,
-  }));
-  return (
-    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-      {stars.map((s, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: `${s.x}%`, top: `${s.y}%`,
-          width: s.size, height: s.size,
-          borderRadius: '50%',
-          background: '#fae185',
-          boxShadow: `0 0 ${s.size * 3}px ${s.size}px rgba(250,225,133,0.65)`,
-          animation: `starTwinkleAnim ${s.dur}s ease-in-out infinite ${s.del}s`,
-        } as CSSProperties} />
-      ))}
-    </div>
-  );
-};
-
-/* ══════════════════════════════════════════════════════
    MAIN EVENTS SECTION 
 ══════════════════════════════════════════════════════ */
 const MainEventsSection = ({ onEventSelect }: { onEventSelect?: (item: any) => void }) => {
@@ -853,15 +808,7 @@ const MainEventsSection = ({ onEventSelect }: { onEventSelect?: (item: any) => v
     : [(activeIndex - 1 + totalEvents) % totalEvents, activeIndex, (activeIndex + 1) % totalEvents];
 
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, padding: '0.75rem 0 1rem' }}>
-      {/* Ambient orbs + star particles */}
-      <AmbientOrbs />
-      <StarParticles />
-      {/* Radial center glow */}
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 65% 60% at 50% 45%, rgba(222,154,73,0.14) 0%, rgba(222,154,73,0) 70%)', pointerEvents: 'none' }} />
-      {/* Bottom fade */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120, background: 'linear-gradient(to bottom, transparent, rgba(14,26,12,0.8))', pointerEvents: 'none' }} />
-
+    <section style={{ position: 'relative', overflow: 'visible', padding: '0.25rem 0 0.25rem', background: 'transparent' }}>
       <div style={{ position: 'relative', zIndex: 5, maxWidth: 1500, margin: '0 auto', padding: '0 clamp(0.5rem, 2vw, 1rem)' }}>
         {/* Card fan */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem 0' }}>
@@ -1067,6 +1014,7 @@ const LeapApp = () => {
   const [isAdminView, setIsAdminView] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'about' | 'major-events' | 'classes' | 'faq' | 'contact'>('home');
   const [scrolled, setScrolled] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'title-asc' | 'title-desc' | 'slots-desc' | 'slots-asc'>('title-asc');
@@ -1092,7 +1040,7 @@ const LeapApp = () => {
   const scrollToClassesSection = () => {
     const section = document.getElementById('classes-section');
     if (!section) return;
-    const NAV_OFFSET = 88;
+    const NAV_OFFSET = 104;
     const top = section.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   };
@@ -1101,7 +1049,10 @@ const LeapApp = () => {
     setActiveSubtheme(theme);
     setCurrentPage(1);
     setSelectedDay(null);
-    requestAnimationFrame(() => scrollToClassesSection());
+    requestAnimationFrame(() => {
+      scrollToClassesSection();
+      setTimeout(scrollToClassesSection, 140);
+    });
   };
 
   const filteredAndSortedClasses: LeapClass[] = useMemo(() => {
@@ -1110,7 +1061,9 @@ const LeapApp = () => {
       c.org.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.subtheme.toLowerCase().includes(searchQuery.toLowerCase())
     ));
-    if (activeSubtheme) result = result.filter((c) => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
+    if (currentView === 'home' && activeSubtheme) {
+      result = result.filter((c) => c.subtheme.toLowerCase().includes(activeSubtheme.toLowerCase()));
+    }
     result.sort((a, b) => {
       if (sortBy === 'title-asc') return a.title.localeCompare(b.title);
       if (sortBy === 'title-desc') return b.title.localeCompare(a.title);
@@ -1119,7 +1072,7 @@ const LeapApp = () => {
       return 0;
     });
     return result;
-  }, [classes, searchQuery, sortBy, activeSubtheme]);
+  }, [classes, searchQuery, sortBy, activeSubtheme, currentView]);
 
   const uniqueDays: string[] = useMemo(() => (
     Array.from(new Set(filteredAndSortedClasses.map((c) => c.date)))
@@ -1210,10 +1163,29 @@ const LeapApp = () => {
   }, [user]);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+      setShowBackToTop(window.scrollY > 460);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!viewingClass) return;
+
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, [viewingClass]);
 
   const handleSignIn = async () => {
     setAuthError(null);
@@ -1345,10 +1317,10 @@ const LeapApp = () => {
   }
 
   const navClass = scrolled
-  ? 'scrolled-nav py-2'
+  ? 'scrolled-nav py-3'
   : currentView === 'home'
-    ? 'bg-transparent py-4'
-    : 'dark-page-nav py-4';
+    ? 'bg-transparent py-5'
+    : 'dark-page-nav py-5';
 
   const HeroSection = (
     <header className={styles.heroSection}>
@@ -1401,12 +1373,12 @@ const LeapApp = () => {
             </motion.div>
           )}
         </motion.div>
-        {hasAppAccess && currentView === 'home' && (
-          <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.45rem', marginLeft: '50%', transform: 'translateX(-50%)' }}>
-            <MainEventsSection onEventSelect={(item) => setViewingClass(item)} />
-          </div>
-        )}
       </div>
+      {hasAppAccess && currentView === 'home' && (
+        <div style={{ width: 'min(1500px, 98vw)', marginTop: '0.45rem', marginLeft: '50%', transform: 'translateX(-50%)', position: 'relative', zIndex: 2 }}>
+          <MainEventsSection onEventSelect={(item) => setViewingClass(item)} />
+        </div>
+      )}
     </header>
   );
 
@@ -1547,10 +1519,10 @@ const LeapApp = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 bg-transparent py-4`}>
+        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 bg-transparent py-5`}>
           <div className={styles.navInner}>
             <div className={styles.navLogo} onClick={() => window.scrollTo(0, 0)}>
-              <img src={leapLogo} alt="LEAP 2026" width="60" height="34" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
+              <img src={leapLogo} alt="LEAP 2026" width="74" height="42" className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
             </div>
             <div />
           </div>
@@ -1570,7 +1542,7 @@ const LeapApp = () => {
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${navClass}`}>
         <div className={styles.navInner}>
           <div className={styles.navLogo} onClick={() => navigateTo('home')}>
-            <img src={leapLogo} alt="LEAP 2026" width="60" height="34"className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
+            <img src={leapLogo} alt="LEAP 2026" width="74" height="42"className={styles.navLogoImg} style={{ mixBlendMode: 'screen' }} />
           </div>
           <div className={styles.navCenter}>
             <button onClick={() => navigateTo('home')} className={`nav-link ${currentView === 'home' ? 'active' : ''}`}>Home</button>
@@ -1581,23 +1553,23 @@ const LeapApp = () => {
             {userProfile?.role === 'admin' && <button onClick={() => setIsAdminView(true)} className="leap-admin-link">Admin</button>}
           </div>
           <div className="leap-nav-right hidden md:flex">
-            <button className="nav-icon-btn" onClick={() => navigateTo('classes')} title="Search classes"><Search size={15} /></button>
+            <button className="nav-icon-btn" onClick={() => navigateTo('classes')} title="Search classes"><Search size={17} /></button>
             {user ? (
               <>
                 <button className="nav-icon-btn" title={user.displayName || 'Profile'}>
                   {user.photoURL
                     ? <img src={user.photoURL} alt="Profile" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
-                    : <User size={15} />}
+                    : <User size={17} />}
                 </button>
-                <button onClick={handleSignOut} className="btn-leap-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.72rem', borderRadius: 6, gap: '0.4rem' }}>
-                  <LogOut size={13} /> Sign Out
+                <button onClick={handleSignOut} className="btn-leap-primary" style={{ padding: '0.55rem 1.1rem', fontSize: '0.76rem', borderRadius: 8, gap: '0.45rem' }}>
+                  <LogOut size={14} /> Sign Out
                 </button>
               </>
             ) : (
               <>
-                <button className="nav-icon-btn" title="Sign in" onClick={handleSignIn}><User size={15} /></button>
-                <button onClick={handleSignIn} className="btn-leap-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.72rem', borderRadius: 6, gap: '0.4rem' }}>
-                  <LogIn size={13} /> Register
+                <button className="nav-icon-btn" title="Sign in" onClick={handleSignIn}><User size={17} /></button>
+                <button onClick={handleSignIn} className="btn-leap-primary" style={{ padding: '0.55rem 1.1rem', fontSize: '0.76rem', borderRadius: 8, gap: '0.45rem' }}>
+                  <LogIn size={14} /> Register
                 </button>
               </>
             )}
@@ -1701,6 +1673,22 @@ const LeapApp = () => {
           <p>© 2026 LEAP Operations Team · De La Salle University · Council of Student Organizations</p>
         </div>
       </footer>
+
+      <AnimatePresence>
+        {showBackToTop && !viewingClass && (
+          <motion.button
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className={styles.backToTopBtn}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="Back to top"
+          >
+            <ChevronUp size={14} />
+            Top
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       <ScrollProgress />
     </div>
