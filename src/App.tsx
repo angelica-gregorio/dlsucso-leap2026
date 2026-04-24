@@ -1616,7 +1616,7 @@ const LeapApp = () => {
             searchQuery={searchQuery} onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
             sortBy={sortBy} onSortChange={(s) => setSortBy(s)}
             filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
-            selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
+            selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(null); setCurrentPage(1); }}
             viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c) }}
             onSignIn={handleSignIn} onHeroScroll={() => navigateTo('classes')}
             HeroSection={HeroSection} HeroExtras={HeroExtras} renderClassCard={renderClassCard}
@@ -1629,7 +1629,7 @@ const LeapApp = () => {
             user={user} searchQuery={searchQuery} onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
             sortBy={sortBy} onSortChange={(s) => setSortBy(s)}
             filteredAndSortedClasses={filteredAndSortedClasses} uniqueDays={uniqueDays}
-            selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(d); setCurrentPage(1); }}
+            selectedDay={selectedDay} onDaySelect={(d) => { setSelectedDay(null); setCurrentPage(1); }}
             currentPage={currentPage} onPageChange={(p) => { setCurrentPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             viewingClass={viewingClass} onClassSelect={(c) => { setViewingClass(c) }}
             onSignIn={handleSignIn} renderClassCard={renderClassCard}

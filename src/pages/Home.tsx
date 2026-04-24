@@ -162,7 +162,23 @@ export default function Home({
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, transparent 0%, rgba(222,154,73,0.4) 20%, rgba(250,225,133,0.7) 50%, rgba(222,154,73,0.4) 80%, transparent 100%)' }} />
 
           <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(0.75rem, 3vw, 1.5rem)', boxSizing: 'border-box', width: '100%' }}>
-
+            <div style={{
+              position: 'sticky',
+              top: `${searchStickyTop}px`,
+              zIndex: 89,
+              height: 0,
+              marginBottom: 0,
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: -20,
+                left: '-2rem',
+                right: '-2rem',
+                height: 'calc(100% + 20px)',
+                background: 'linear-gradient(180deg, #fffdf6 0%, #fdf8ec 60%, #f9f1da 100%)',
+                pointerEvents: 'none',
+              }} />
+            </div>
             {/* Search bar */}
             <div id="home-search-bar" style={{ ...panelStyle, position: 'sticky', top: `${searchStickyTop}px`, zIndex: 90, padding: '1rem 1.25rem', marginBottom: '1.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' as const, alignItems: 'center', boxSizing: 'border-box' as const, width: '100%' }}>
               <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
@@ -180,7 +196,7 @@ export default function Home({
             </div>
 
             {/* Layout grid — NOTE: overflow visible on wrapper so sticky works */}
-            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '240px 1fr' : '1fr', gap: '1.25rem', alignItems: 'start', width: '100%', boxSizing: 'border-box' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '240px 1fr' : '1fr', gap: '1.25rem', alignItems: 'start', width: '100%', boxSizing: 'border-box', position: 'relative', zIndex: 1 }}>
 
               {/* ── STICKY SIDEBAR ── */}
               <aside
