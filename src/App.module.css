@@ -345,15 +345,15 @@
 }
 
 .subthemeAssetLabel {
-  font-family: 'Tropikal', serif;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(249, 236, 182, 0.78);
+  font-family: 'Tropikal', 'Playfair Display', serif !important;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: rgba(249, 236, 182, 0.85);
   max-width: 132px;
   text-align: center;
-  line-height: 1.25;
+  line-height: 1.3;
   white-space: normal; 
   word-wrap: break-word;
 }
@@ -596,10 +596,23 @@
 
 .cardBadge {
   composes: card-badge from global;
+  font-family: 'Tropikal', 'Playfair Display', serif !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: none !important;
+  padding: 0.32rem 0.85rem !important;
+  border-radius: 6px !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(250, 225, 133, 0.15);
 }
 
 .cardBadgeTheme {
   composes: card-badge-theme from global;
+  background: rgba(20, 30, 25, 0.92) !important;
+  color: #ffeaa3 !important;
+  border: 1.5px solid rgba(250, 225, 133, 0.45) !important;
+  backdrop-filter: blur(12px);
 }
 
 .cardBadgeDay {
@@ -952,7 +965,10 @@
 }
 
 .navBarHome {
-  @apply bg-transparent py-4;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-bottom: none !important;
+  padding: 1rem 0;
 }
 
 .navBarLight {
@@ -1229,10 +1245,11 @@
   position: relative;
   overflow: hidden;
   min-height: clamp(440px, 68vh, 760px);
-  padding-top: 6.3rem;
+  padding-top: 0;
   padding-bottom: clamp(18px, 3vw, 34px);
   width: 100%;
   box-sizing: border-box;
+  margin-top: -1px;
 }
 
 .heroBackdropTop {
@@ -1280,7 +1297,7 @@
 }
 
 .heroLogo {
-  width: min(600px, 90vw);
+  width: min(480px, 85vw);
   display: block;
   margin: 0 auto;
   mix-blend-mode: screen;

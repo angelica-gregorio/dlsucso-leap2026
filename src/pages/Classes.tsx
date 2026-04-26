@@ -49,7 +49,7 @@ const PageWrapper = ({ children }: PageWrapperProps) => (
     transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     style={{
       flexGrow: 1,
-      background: 'linear-gradient(180deg, #fffdf6 0%, #fff9eb 100%)',
+      background: 'linear-gradient(180deg, #f5f3ec 0%, #ebe8dd 60%, #d8e0d8 100%)',
       width: '100%',
       maxWidth: '100vw',
       overflowX: 'hidden',
@@ -71,8 +71,13 @@ const PageHero = ({ title, subtitle, accent }: { title: string; subtitle: string
       overflow: 'hidden',
     }}
   >
+    <div className="page-hero-fireflies">
+        <span/><span/><span/><span/><span/><span/>
+      </div>
+      
+
     <div className="page-hero-glow" />
-    <motion.p
+    <motion.p 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
@@ -170,7 +175,7 @@ useEffect(() => {
   return (
     <PageWrapper>
       {/* ── HERO ── */}
-      <div style={{ background: 'linear-gradient(180deg, #fffdf6 0%, #fff9eb 100%)' }}>
+      <div style={{ background: 'linear-gradient(180deg, #f5f3ec 0%, #ebe8dd 100%)' }}>
         <PageHero
           title="All Classes"
           subtitle="Choose from 200+ workshops, talks, and experiences"

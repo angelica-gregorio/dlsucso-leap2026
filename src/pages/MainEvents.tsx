@@ -95,7 +95,14 @@ export default function MainEvents() {
 
   return (
     <PageWrapper>
-      <PageHero title="Major Events" subtitle="Landmark moments that define the LEAP experience" accent="LEAP 2026 · Schedule" />
+      <div className="page-hero" style={{ paddingTop: 'clamp(6rem, 12vw, 10rem)', paddingBottom: 'clamp(2rem, 4vw, 4rem)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div className="page-hero-fireflies"><span/><span/><span/><span/><span/><span/></div>
+        <div className="page-hero-glow" />
+        <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#de9a49', marginBottom: '1rem', position: 'relative', zIndex: 2 }}>LEAP 2026 · Schedule</p>
+        <h1 className="page-hero-title" style={{ position: 'relative', zIndex: 2 }}>Major Events</h1>
+        <p className="page-hero-subtitle" style={{ position: 'relative', zIndex: 2 }}>Landmark moments that define the LEAP experience</p>
+        <div style={{ width: 60, height: 2, background: 'linear-gradient(90deg,transparent,#de9a49,transparent)', margin: '2rem auto 0', position: 'relative', zIndex: 2 }} />
+      </div>
       <main className="container mx-auto px-4 pb-24 max-w-5xl pt-8">
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '6rem 0' }}>
